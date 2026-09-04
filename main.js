@@ -1,17 +1,126 @@
 // =============================================================================
 // HÉROE TUCUMANO 2D ARCADE - ARCHIVO PRINCIPAL: main.js
-// Mejoras: Naranjo/Cascotes latentes, IA con detención de disparo,
-// Puñetazos del Grandote, Tráfico de Autos en Ruta, Buses Imponentes y Transiciones.
+// Corrección Total: Fondo Panorámico Visible, Fin del Temblor en Carril Inferior,
+// Salto Estable, Autos Chicos Plataformeables, Buses Gigantes, Diálogos con Tecla Z
+// y Sánguches que Curan al Máximo.
 // =============================================================================
 
 const ANCHO_VISTA = 800;
 const ALTO_VISTA = 450;
-const ANCHO_MUNDO = 14400;
+const ANCHO_MUNDO = 8000;
 
 // Carriles 2.5D
 const CARRIL_SUPERIOR_Y = 370;
-const CARRIL_INFERIOR_Y = 420;
+const CARRIL_INFERIOR_Y = 415;
 const Y_ESCENARIO = 345;
+
+// =============================================================================
+// SINTETIZADOR DE AUDIO RETRO (Web Audio API)
+// =============================================================================
+const AudioSFX = {
+    ctx: null,
+    init() {
+        if (!this.ctx) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (AudioContext) {
+                this.ctx = new AudioContext();
+            }
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+            this.ctx.resume();
+        }
+    },
+    play(tipo) {
+        if (!this.ctx) return;
+        try {
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+
+            if (tipo === 'salto') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(160, now);
+                osc.frequency.exponentialRampToValueAtTime(480, now + 0.12);
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+                osc.start(now);
+                osc.stop(now + 0.12);
+            } else if (tipo === 'disparo_naranja') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(420, now);
+                osc.frequency.exponentialRampToValueAtTime(140, now + 0.10);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.10);
+                osc.start(now);
+                osc.stop(now + 0.10);
+            } else if (tipo === 'disparo_cascote') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(240, now);
+                osc.frequency.exponentialRampToValueAtTime(70, now + 0.14);
+                gain.gain.setValueAtTime(0.18, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.14);
+                osc.start(now);
+                osc.stop(now + 0.14);
+            } else if (tipo === 'empanada') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, now);
+                osc.frequency.setValueAtTime(659.25, now + 0.05);
+                osc.frequency.setValueAtTime(783.99, now + 0.10);
+                gain.gain.setValueAtTime(0.14, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.20);
+                osc.start(now);
+                osc.stop(now + 0.20);
+            } else if (tipo === 'achilata') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.exponentialRampToValueAtTime(950, now + 0.15);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
+                osc.start(now);
+                osc.stop(now + 0.18);
+            } else if (tipo === 'sanguche') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.setValueAtTime(420, now + 0.08);
+                osc.frequency.setValueAtTime(560, now + 0.16);
+                osc.frequency.setValueAtTime(800, now + 0.24);
+                gain.gain.setValueAtTime(0.18, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.38);
+                osc.start(now);
+                osc.stop(now + 0.38);
+            } else if (tipo === 'golpe') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(40, now + 0.15);
+                gain.gain.setValueAtTime(0.20, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                osc.start(now);
+                osc.stop(now + 0.15);
+            } else if (tipo === 'danio') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.linearRampToValueAtTime(70, now + 0.22);
+                gain.gain.setValueAtTime(0.22, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.22);
+                osc.start(now);
+                osc.stop(now + 0.22);
+            } else if (tipo === 'victoria') {
+                osc.type = 'triangle';
+                [261.63, 329.63, 392.00, 523.25].forEach((freq, idx) => {
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.12);
+                });
+                gain.gain.setValueAtTime(0.20, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.55);
+                osc.start(now);
+                osc.stop(now + 0.55);
+            }
+        } catch (e) {
+            // Audio no disponible
+        }
+    }
+};
 
 const config = {
     type: Phaser.AUTO,
@@ -19,6 +128,10 @@ const config = {
     height: ALTO_VISTA,
     parent: 'contenedor-juego',
     pixelArt: true,
+    scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH
+    },
     physics: {
         default: 'arcade',
         arcade: {
@@ -36,8 +149,8 @@ const config = {
 const game = new Phaser.Game(config);
 
 // Variables de estado del jugador y del juego
-let jugador, cursores, teclaZ, teclaX;
-let fondoCerros, fondoArboleda, sueloRuta, sueloRuta2;
+let jugador, cursores, teclaZ, teclaX, teclaEnter;
+let fondoCerros, fondoUnificado, sueloRuta, sueloRuta2;
 let proyectilesJugador, proyectilesEnemigos, hipsters, agentes, grandotes, colectivos, autosRuta, empanadas, potenciadores, achilatas, metaFinal;
 let vidas = 3, salud = 3;
 const MAX_SALUD = 3;
@@ -45,38 +158,36 @@ let puntos = 0, armaActual = 'NINGUNA', municion = 0, modoSanguchazo = false;
 let textoVidas, barraVidaGrafico, textoPuntos, textoArma, textoEspecial, textoVidaJefe, bannerNotificacion;
 let esInvulnerable = false, disparoPresionado = false, disparando = false, juegoTerminado = false;
 
-// Variables de salto y carril 2.5D
+// Variables de salto y control 2.5D
 let estaSaltando = false;
 let carrilActual = CARRIL_SUPERIOR_Y;
+let tiempoInicioSalto = 0;
+let vehiculoApoyado = null;
 
 // Variables del Jefe Final y Progresión
 let jefe, jefeActivo = false, vidaJefe = 45, jefeInvulnerable = false, jefeAtacando = false;
 let oleadasActivadas = [];
 let arbolSaqueado = false;
 let cascotesLevantados = false;
-let arbolNaranjasIntro, monticuloCascotesVisual;
+let arbolNaranjasIntro;
 
-// Variables de Cinemática e Insolación
+// Variables de Cinemática, Diálogos e Insolación
 let enCinematica = true;
+let pasoCinematica = 0;
+let textoNarradoGlobal, cajaTextoGlobal, actoresCinematica = {};
 let solSprite, barraCalorGrafico, textoCalor, capaTinteCalor;
 let nivelInsolacion = 0;
 let insolacionActiva = false;
 let tiempoUltimoDanioSol = 0;
 
 function preload() {
-    // Fondos de localidades para el Parallax
+    // Fondo de cielo y cerros lejanos
     this.load.image('fondo_cerros', 'assets/fondo_cerros.png');
-    this.load.image('fondo_arboleda', 'assets/fondo_arboleda.png');
-    this.load.image('cañas', 'assets/cañas.png');
-    this.load.image('acheral', 'assets/acheral.png');
-    this.load.image('puente', 'assets/puente.png');
-    this.load.image('monteros', 'assets/monteros.png');
-    this.load.image('leon_rouges', 'assets/leon_rouges.png');
-    this.load.image('villa_quinteros', 'assets/villa_quinteros.png');
-    this.load.image('rio_seco', 'assets/rio_seco.png');
-    this.load.image('ingenio', 'assets/ingenio.png');
 
-    // Suelos de los dos carriles
+    // Carga corregida del fondo panorámico unificado (.png)
+    this.load.image('fusion_fondo', 'assets/fusion_fondos.png');
+
+    // Suelos de la ruta
     this.load.image('suelo_ruta', 'assets/suelo_ruta.png');
     this.load.image('suelo_ruta2', 'assets/suelo_ruta2.png');
 
@@ -163,6 +274,7 @@ function preload() {
 function create() {
     juegoTerminado = false;
     enCinematica = true;
+    pasoCinematica = 0;
     vidas = 3;
     salud = MAX_SALUD;
     puntos = 0;
@@ -172,6 +284,7 @@ function create() {
     disparando = false;
     esInvulnerable = false;
     estaSaltando = false;
+    vehiculoApoyado = null;
     carrilActual = CARRIL_SUPERIOR_Y;
 
     jefeActivo = false;
@@ -186,75 +299,51 @@ function create() {
 
     this.physics.world.setBounds(0, 0, ANCHO_MUNDO + 400, ALTO_VISTA);
 
-    // Fondos Parallax
+    // =========================================================================
+    // CONFIGURACIÓN DE FONDOS: CERROS LEJANOS Y FUSIÓN VISIBLE
+    // =========================================================================
     fondoCerros = this.add.tileSprite(0, 0, ANCHO_VISTA, ALTO_VISTA, 'fondo_cerros')
         .setOrigin(0, 0).setScrollFactor(0).setDepth(0);
 
-    fondoArboleda = this.add.tileSprite(0, 0, ANCHO_VISTA, ALTO_VISTA, 'fondo_arboleda')
-        .setOrigin(0, 0).setScrollFactor(0).setDepth(1);
+    // Montaje del lienzo fusionado panorámico
+    fondoUnificado = this.add.image(0, 0, 'fusion_fondo')
+        .setOrigin(0, 0)
+        .setDisplaySize(ANCHO_MUNDO, ALTO_VISTA)
+        .setDepth(1.2);
 
-    // =========================================================================
-    // FONDOS EXTENDIDOS CON TRANSICIÓN SUAVE (DIFUMINADO)
-    // =========================================================================
-    crearFondoConTransicion(this, 1900, 'cañas', 900);
-    crearFondoConTransicion(this, 2750, 'cañas', 900);
-
-    crearFondoConTransicion(this, 3600, 'acheral', 900);
-    crearFondoConTransicion(this, 4450, 'acheral', 900);
-
-    crearFondoConTransicion(this, 5300, 'cañas', 850);
-    crearFondoConTransicion(this, 6100, 'cañas', 850);
-
-    crearFondoConTransicion(this, 6900, 'puente', 850);
-    crearFondoConTransicion(this, 7700, 'monteros', 900);
-    crearFondoConTransicion(this, 8550, 'monteros', 900);
-
-    crearFondoConTransicion(this, 9400, 'leon_rouges', 900);
-    crearFondoConTransicion(this, 10250, 'leon_rouges', 900);
-
-    // Villa Quinteros: encuadre limpio sin cortes
-    crearFondoConTransicion(this, 11100, 'villa_quinteros', 950);
-    crearFondoConTransicion(this, 12000, 'villa_quinteros', 950);
-
-    crearFondoConTransicion(this, 12900, 'rio_seco', 850);
-    crearFondoConTransicion(this, 13700, 'ingenio', 900);
-
-    // Carretera con sus dos carriles
+    // Suelos de los dos carriles
     sueloRuta = this.add.tileSprite(0, Y_ESCENARIO - 20, ANCHO_VISTA, 160, 'suelo_ruta').setOrigin(0, 0).setScrollFactor(0).setDepth(1.5);
     sueloRuta2 = this.add.tileSprite(0, Y_ESCENARIO + 85, ANCHO_VISTA, 160, 'suelo_ruta2').setOrigin(0, 0).setScrollFactor(0).setDepth(1.6);
 
-    // =========================================================================
-    // ESCENOGRAFÍA Y PROPS (SIN PALMERAS FUERA DE FAMAILLÁ)
-    // =========================================================================
+    // Escenografía Famaillá
     this.add.image(130, Y_ESCENARIO, 'cartel_famailla').setOrigin(0.5, 1).setScale(1.10).setDepth(2);
     this.add.image(350, Y_ESCENARIO, 'gruta_virgen').setOrigin(0.5, 1).setScale(0.72).setDepth(2);
 
-    // Nota para mí: Naranjo inicial con brillo y latido visual continuo
+    // Naranjo interactivo pulsante
     arbolNaranjasIntro = this.add.image(520, Y_ESCENARIO, 'arbol_naranjas').setOrigin(0.5, 1).setScale(0.85).setDepth(2);
     this.tweens.add({
         targets: arbolNaranjasIntro,
-        scaleX: 0.90,
-        scaleY: 0.90,
+        scaleX: 0.92,
+        scaleY: 0.92,
         duration: 550,
         yoyo: true,
         repeat: -1,
         ease: 'Sine.easeInOut'
     });
 
-    // Palmeras exclusivas de Famaillá
+    // Palmeras en Famaillá
     this.add.image(680, Y_ESCENARIO, 'palmera').setOrigin(0.5, 1).setScale(0.90).setDepth(2);
     this.add.image(880, Y_ESCENARIO, 'kiosco_coca').setOrigin(0.5, 1).setScale(1.05).setDepth(2);
-    this.add.image(1250, Y_ESCENARIO, 'palmera').setOrigin(0.5, 1).setScale(0.90).setDepth(2);
-    this.add.image(1650, Y_ESCENARIO, 'palmera').setOrigin(0.5, 1).setScale(0.90).setDepth(2);
+    this.add.image(1150, Y_ESCENARIO, 'palmera').setOrigin(0.5, 1).setScale(0.90).setDepth(2);
 
-    // Paradas de colectivo y naranjos en la ruta
-    [2400, 4100, 5800, 7300, 9050, 10800, 12500].forEach(px => {
+    // Paradas de colectivos y naranjos distribuidos
+    [2100, 3600, 4800, 6100, 7100].forEach(px => {
         this.add.image(px, Y_ESCENARIO, 'parada_colectivo').setOrigin(0.5, 1).setScale(0.85).setDepth(2);
-        this.add.image(px + 450, Y_ESCENARIO, 'arbol_naranjas').setOrigin(0.5, 1).setScale(0.85).setDepth(2);
+        this.add.image(px + 320, Y_ESCENARIO, 'arbol_naranjas').setOrigin(0.5, 1).setScale(0.85).setDepth(2);
     });
 
-    // Postes de luz reubicados en los laterales de los objetos (sin superponerse)
-    const posicionesPostes = [1050, 1450, 2150, 2650, 3850, 4350, 5550, 6050, 7050, 7550, 8750, 9300, 10500, 11050, 12250, 12750];
+    // Postes de luz reubicados en laterales libres
+    const posicionesPostes = [1000, 1350, 1850, 2500, 3200, 3950, 4500, 5200, 5800, 6450, 7400];
     posicionesPostes.forEach(px => {
         this.add.image(px, Y_ESCENARIO, 'poste_luz').setOrigin(0.5, 1).setScale(0.85).setDepth(2);
     });
@@ -262,29 +351,31 @@ function create() {
     // =========================================================================
     // ANIMACIONES
     // =========================================================================
-    this.anims.create({ key: 'correr', frames: [{ key: 'ciruja_run1' }, { key: 'ciruja_run2' }, { key: 'ciruja_run3' }], frameRate: 12, repeat: -1 });
-    this.anims.create({ key: 'idle', frames: [{ key: 'ciruja_idle' }], frameRate: 1 });
-    this.anims.create({ key: 'salto', frames: [{ key: 'ciruja_salto' }], frameRate: 1 });
-    this.anims.create({ key: 'disparar_naranja', frames: [{ key: 'ciruja_disparo_naranja1' }, { key: 'ciruja_disparo_naranja2' }], frameRate: 14, repeat: 0 });
-    this.anims.create({ key: 'disparar_cascote', frames: [{ key: 'ciruja_disparo_cascote1' }, { key: 'ciruja_disparo_cascote2' }], frameRate: 14, repeat: 0 });
+    if (!this.anims.exists('correr')) {
+        this.anims.create({ key: 'correr', frames: [{ key: 'ciruja_run1' }, { key: 'ciruja_run2' }, { key: 'ciruja_run3' }], frameRate: 12, repeat: -1 });
+        this.anims.create({ key: 'idle', frames: [{ key: 'ciruja_idle' }], frameRate: 1 });
+        this.anims.create({ key: 'salto', frames: [{ key: 'ciruja_salto' }], frameRate: 1 });
+        this.anims.create({ key: 'disparar_naranja', frames: [{ key: 'ciruja_disparo_naranja1' }, { key: 'ciruja_disparo_naranja2' }], frameRate: 14, repeat: 0 });
+        this.anims.create({ key: 'disparar_cascote', frames: [{ key: 'ciruja_disparo_cascote1' }, { key: 'ciruja_disparo_cascote2' }], frameRate: 14, repeat: 0 });
 
-    this.anims.create({ key: 'hipster_run', frames: [{ key: 'hipster_run1' }, { key: 'hipster_run2' }, { key: 'hipster_run3' }], frameRate: 8, repeat: -1 });
-    this.anims.create({ key: 'hipster_salto', frames: [{ key: 'hipster_salto' }], frameRate: 1 });
-    this.anims.create({ key: 'hipster_lanzar', frames: [{ key: 'hipster_agua1' }, { key: 'hipster_agua2' }], frameRate: 6, repeat: 0 });
+        this.anims.create({ key: 'hipster_run', frames: [{ key: 'hipster_run1' }, { key: 'hipster_run2' }, { key: 'hipster_run3' }], frameRate: 8, repeat: -1 });
+        this.anims.create({ key: 'hipster_salto', frames: [{ key: 'hipster_salto' }], frameRate: 1 });
+        this.anims.create({ key: 'hipster_lanzar', frames: [{ key: 'hipster_agua1' }, { key: 'hipster_agua2' }], frameRate: 6, repeat: 0 });
 
-    this.anims.create({ key: 'agente_run', frames: [{ key: 'agente_run1' }, { key: 'agente_run2' }, { key: 'agente_run3' }], frameRate: 7, repeat: -1 });
-    this.anims.create({ key: 'agente_salto', frames: [{ key: 'agente_salto' }], frameRate: 1 });
-    this.anims.create({ key: 'agente_disparar', frames: [{ key: 'agente_disparo_bala1' }, { key: 'agente_disparo_bala2' }], frameRate: 7, repeat: 0 });
+        this.anims.create({ key: 'agente_run', frames: [{ key: 'agente_run1' }, { key: 'agente_run2' }, { key: 'agente_run3' }], frameRate: 7, repeat: -1 });
+        this.anims.create({ key: 'agente_salto', frames: [{ key: 'agente_salto' }], frameRate: 1 });
+        this.anims.create({ key: 'agente_disparar', frames: [{ key: 'agente_disparo_bala1' }, { key: 'agente_disparo_bala2' }], frameRate: 7, repeat: 0 });
 
-    this.anims.create({ key: 'grandote_run', frames: [{ key: 'grandote_run1' }, { key: 'grandote_run2' }], frameRate: 6, repeat: -1 });
-    this.anims.create({ key: 'grandote_salto', frames: [{ key: 'grandote_salto' }], frameRate: 1 });
-    this.anims.create({ key: 'grandote_punch', frames: [{ key: 'grandote_punch1' }, { key: 'grandote_punch2' }, { key: 'grandote_punch3' }], frameRate: 9, repeat: 0 });
+        this.anims.create({ key: 'grandote_run', frames: [{ key: 'grandote_run1' }, { key: 'grandote_run2' }], frameRate: 6, repeat: -1 });
+        this.anims.create({ key: 'grandote_salto', frames: [{ key: 'grandote_salto' }], frameRate: 1 });
+        this.anims.create({ key: 'grandote_punch', frames: [{ key: 'grandote_punch1' }, { key: 'grandote_punch2' }, { key: 'grandote_punch3' }], frameRate: 9, repeat: 0 });
 
-    this.anims.create({ key: 'boss_run', frames: [{ key: 'final_boss_run1' }, { key: 'final_boss_run2' }, { key: 'final_boss_run3' }], frameRate: 10, repeat: -1 });
-    this.anims.create({ key: 'boss_salto', frames: [{ key: 'final_boss_salto1' }, { key: 'final_boss_salto2' }], frameRate: 6, repeat: 0 });
-    this.anims.create({ key: 'boss_punch', frames: [{ key: 'final_boss_punch1' }, { key: 'final_boss_punch2' }], frameRate: 8, repeat: 0 });
-    this.anims.create({ key: 'boss_joke', frames: [{ key: 'final_boss_joke1' }, { key: 'final_boss_joke2' }], frameRate: 4, repeat: -1 });
-    this.anims.create({ key: 'boss_cofee', frames: [{ key: 'final_boss_cofee1' }, { key: 'final_boss_cofee2' }], frameRate: 9, repeat: 0 });
+        this.anims.create({ key: 'boss_run', frames: [{ key: 'final_boss_run1' }, { key: 'final_boss_run2' }, { key: 'final_boss_run3' }], frameRate: 10, repeat: -1 });
+        this.anims.create({ key: 'boss_salto', frames: [{ key: 'final_boss_salto1' }, { key: 'final_boss_salto2' }], frameRate: 6, repeat: 0 });
+        this.anims.create({ key: 'boss_punch', frames: [{ key: 'final_boss_punch1' }, { key: 'final_boss_punch2' }], frameRate: 8, repeat: 0 });
+        this.anims.create({ key: 'boss_joke', frames: [{ key: 'final_boss_joke1' }, { key: 'final_boss_joke2' }], frameRate: 4, repeat: -1 });
+        this.anims.create({ key: 'boss_cofee', frames: [{ key: 'final_boss_cofee1' }, { key: 'final_boss_cofee2' }], frameRate: 9, repeat: 0 });
+    }
 
     // =========================================================================
     // JUGADOR Y GRUPOS FÍSICOS
@@ -297,7 +388,6 @@ function create() {
     jugador.body.allowGravity = false;
 
     this.cameras.main.setBounds(0, 0, ANCHO_MUNDO, ALTO_VISTA);
-    this.cameras.main.startFollow(jugador, true, 0.08, 0.08);
 
     proyectilesJugador = this.physics.add.group({ allowGravity: false });
     proyectilesEnemigos = this.physics.add.group({ allowGravity: false });
@@ -308,20 +398,20 @@ function create() {
     grandotes = this.physics.add.group();
     achilatas = this.physics.add.group();
 
-    // Colisiones con vehículos
-    this.physics.add.overlap(jugador, colectivos, manejarColisionVehiculo, null, this);
+    // Colisiones con vehículos: plataformas y daño frontal
+    this.physics.add.collider(jugador, autosRuta, pararseSobreVehiculo, null, this);
+    this.physics.add.collider(jugador, colectivos, pararseSobreVehiculo, null, this);
     this.physics.add.overlap(proyectilesJugador, colectivos, impactarVehiculo, null, this);
-    this.physics.add.overlap(jugador, autosRuta, manejarColisionVehiculo, null, this);
     this.physics.add.overlap(proyectilesJugador, autosRuta, impactarVehiculo, null, this);
 
-    // Autos integrados en la calzada (quietos y en movimiento)
-    crearAutoEnRuta(this, 3100, CARRIL_SUPERIOR_Y, 'auto1', 0); // Estacionado
-    crearAutoEnRuta(this, 5400, CARRIL_INFERIOR_Y, 'camion_limones', -35); // En marcha lenta
-    crearAutoEnRuta(this, 8100, CARRIL_SUPERIOR_Y, 'auto2', 0); // Estacionado
-    crearAutoEnRuta(this, 10400, CARRIL_INFERIOR_Y, 'auto3', -45); // En marcha
+    // Autos en calzada
+    crearAutoEnRuta(this, 1900, CARRIL_SUPERIOR_Y, 'auto1', 0);
+    crearAutoEnRuta(this, 3100, CARRIL_INFERIOR_Y, 'camion_limones', -35);
+    crearAutoEnRuta(this, 5000, CARRIL_SUPERIOR_Y, 'auto2', 0);
+    crearAutoEnRuta(this, 6700, CARRIL_INFERIOR_Y, 'auto3', -45);
 
     // Jefe Palermitano Malvado esperando en el Ingenio
-    jefe = this.physics.add.sprite(14050, CARRIL_INFERIOR_Y, 'final_boss_joke1');
+    jefe = this.physics.add.sprite(7650, CARRIL_INFERIOR_Y, 'final_boss_joke1');
     jefe.setScale(0.78);
     jefe.setCollideWorldBounds(true);
     jefe.body.allowGravity = false;
@@ -329,45 +419,46 @@ function create() {
 
     // Empanadas
     empanadas = this.physics.add.group();
-    [240, 750, 1400, 2200, 3100, 3900, 4800, 5600, 6500, 7400, 8300, 9200, 10100, 11000, 11900, 12800, 13700].forEach(posX => {
+    [240, 750, 1350, 2000, 2700, 3400, 4100, 4900, 5600, 6300, 7000, 7500].forEach(posX => {
         let carril = (Math.random() > 0.5) ? CARRIL_SUPERIOR_Y : CARRIL_INFERIOR_Y;
         let emp = empanadas.create(posX, carril, 'empanada');
         emp.setScale(0.14);
         emp.body.allowGravity = false;
-        emp.postFX.addGlow(0xffd700, 2, 0, false);
+        if (emp.postFX && emp.postFX.addGlow) {
+            emp.postFX.addGlow(0xffd700, 2, 0, false);
+        }
     });
 
-    // Achilatas más proporcionadas (escala 0.22)
-    [5800, 6900, 8200, 9500, 10900, 12100, 13200].forEach(posX => {
+    // Achilatas
+    [3200, 4300, 5400, 6500, 7200].forEach(posX => {
         let carril = (Math.random() > 0.5) ? CARRIL_SUPERIOR_Y : CARRIL_INFERIOR_Y;
         let ach = achilatas.create(posX, carril, 'achilata');
         ach.setScale(0.22);
         ach.body.allowGravity = false;
-        ach.postFX.addGlow(0xff00ff, 2, 0, false);
+        if (ach.postFX && ach.postFX.addGlow) {
+            ach.postFX.addGlow(0xff00ff, 2, 0, false);
+        }
     });
 
-    // Montañas de cascotes con latido pulsante
+    // Montañas de cascotes con latido
     potenciadores = this.physics.add.group();
-    let montaña1 = potenciadores.create(1550, CARRIL_SUPERIOR_Y, 'montaña_cascote');
+    let montaña1 = potenciadores.create(1450, CARRIL_SUPERIOR_Y, 'montaña_cascote');
     montaña1.setScale(0.65);
     montaña1.body.allowGravity = false;
     montaña1.tipo = 'CASCOTES';
     this.tweens.add({ targets: montaña1, scaleX: 0.70, scaleY: 0.70, duration: 500, yoyo: true, repeat: -1 });
 
-    let montaña2 = potenciadores.create(7200, CARRIL_SUPERIOR_Y, 'montaña_cascote');
+    let montaña2 = potenciadores.create(4400, CARRIL_SUPERIOR_Y, 'montaña_cascote');
     montaña2.setScale(0.65);
     montaña2.body.allowGravity = false;
     montaña2.tipo = 'CASCOTES';
     this.tweens.add({ targets: montaña2, scaleX: 0.70, scaleY: 0.70, duration: 500, yoyo: true, repeat: -1 });
 
-    // Sánguche de milanesa más grande (escala 0.25)
-    let sangucheItem = potenciadores.create(9600, CARRIL_INFERIOR_Y, 'sanguche');
-    sangucheItem.setScale(0.25);
-    sangucheItem.body.allowGravity = false;
-    sangucheItem.tipo = 'SANGUCHE';
-    this.tweens.add({ targets: sangucheItem, scaleX: 0.28, scaleY: 0.28, duration: 400, yoyo: true, repeat: -1 });
+    // Dos Sánguches de Milanesa en el trayecto
+    crearSangucheMilanesa(this, 2800, CARRIL_INFERIOR_Y);
+    crearSangucheMilanesa(this, 6200, CARRIL_INFERIOR_Y);
 
-    metaFinal = this.add.rectangle(14300, 400, 60, 140, 0x00ff00, 0);
+    metaFinal = this.add.rectangle(7900, 400, 80, 160, 0x00ff00, 0);
     this.physics.add.existing(metaFinal, true);
 
     // Overlaps
@@ -413,21 +504,35 @@ function create() {
     cursores = this.input.keyboard.createCursorKeys();
     teclaZ = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
     teclaX = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X);
+    teclaEnter = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
 
     this.time.addEvent({ delay: 2200, callback: ejecutarRutinaJefe, callbackScope: this, loop: true });
 
-    ejecutarCinematicaPrologo(this);
+    // Habilitar audio al primer clic o pulsación
+    this.input.once('pointerdown', () => AudioSFX.init());
+    this.input.keyboard.once('keydown', () => AudioSFX.init());
+
+    iniciarCinematicaInteractiva(this);
 }
 
 function update(time, delta) {
     if (!jugador.active || juegoTerminado) return;
 
+    // Scroll Parallax sincronizado
     fondoCerros.tilePositionX = this.cameras.main.scrollX * 0.05;
-    fondoArboleda.tilePositionX = this.cameras.main.scrollX * 0.25;
     sueloRuta.tilePositionX = this.cameras.main.scrollX * 1.0;
     sueloRuta2.tilePositionX = this.cameras.main.scrollX * 1.0;
 
-    if (enCinematica) return;
+    // Gestión interactiva de la cinemática con tecla Z, X, Espacio, Enter o clic
+    if (enCinematica) {
+        if (Phaser.Input.Keyboard.JustDown(teclaZ) ||
+            Phaser.Input.Keyboard.JustDown(teclaX) ||
+            Phaser.Input.Keyboard.JustDown(cursores.space) ||
+            Phaser.Input.Keyboard.JustDown(teclaEnter)) {
+            avanzarCinematica(this);
+        }
+        return;
+    }
 
     verificarProgresionOleadas(this);
     actualizarSistemaInsolacion(this, time);
@@ -448,32 +553,64 @@ function update(time, delta) {
         if (!estaSaltando && !disparando) jugador.anims.play('idle', true);
     }
 
-    // Control de carril 2.5D
+    // =========================================================================
+    // SALTO, CARRILES Y PLATAFORMAS EN VEHÍCULOS
+    // =========================================================================
     if (!estaSaltando) {
-        jugador.body.allowGravity = false;
-        jugador.setVelocityY(0);
+        // Si estamos sobre el techo de un vehículo, comprobar que sigamos encima
+        if (vehiculoApoyado) {
+            let medioAncho = (vehiculoApoyado.displayWidth * 0.5) + 15;
+            let fueraDelVehiculo = !vehiculoApoyado.active || Math.abs(jugador.x - vehiculoApoyado.x) > medioAncho;
 
-        if (Phaser.Input.Keyboard.JustDown(cursores.up) && carrilActual === CARRIL_INFERIOR_Y) {
-            carrilActual = CARRIL_SUPERIOR_Y;
-            jugador.y = CARRIL_SUPERIOR_Y;
-        } else if (Phaser.Input.Keyboard.JustDown(cursores.down) && carrilActual === CARRIL_SUPERIOR_Y) {
-            carrilActual = CARRIL_INFERIOR_Y;
-            jugador.y = CARRIL_INFERIOR_Y;
+            if (fueraDelVehiculo) {
+                vehiculoApoyado = null;
+                if (jugador.y < carrilActual) {
+                    estaSaltando = true;
+                    jugador.body.allowGravity = true;
+                }
+            } else {
+                // El jugador acompaña el movimiento del vehículo
+                if (vehiculoApoyado.body && vehiculoApoyado.body.velocity.x !== 0) {
+                    jugador.x += (vehiculoApoyado.body.velocity.x * delta) / 1000;
+                }
+            }
+        } else {
+            // En el suelo normal
+            jugador.body.allowGravity = false;
+            jugador.setVelocityY(0);
+
+            // Cambio limpio entre carriles con Arriba y Abajo
+            if (Phaser.Input.Keyboard.JustDown(cursores.up) && carrilActual === CARRIL_INFERIOR_Y) {
+                carrilActual = CARRIL_SUPERIOR_Y;
+                jugador.y = CARRIL_SUPERIOR_Y;
+            } else if (Phaser.Input.Keyboard.JustDown(cursores.down) && carrilActual === CARRIL_SUPERIOR_Y) {
+                carrilActual = CARRIL_INFERIOR_Y;
+                jugador.y = CARRIL_INFERIOR_Y;
+            }
         }
 
+        // Salto con barra espaciadora
         if (Phaser.Input.Keyboard.JustDown(cursores.space)) {
             estaSaltando = true;
+            vehiculoApoyado = null;
+            tiempoInicioSalto = time;
             jugador.body.allowGravity = true;
             jugador.setVelocityY(-580);
+            AudioSFX.play('salto');
             if (!disparando) jugador.anims.play('salto', true);
         }
     } else {
-        if (jugador.body.velocity.y > 0 && jugador.y >= carrilActual) {
+        // En el aire: cae por gravedad hacia su carril
+        const superoUmbralAterrizaje = (jugador.y >= carrilActual - 4 && jugador.body.velocity.y >= 0);
+        const excedioTiempoVuelo = (time - tiempoInicioSalto > 950);
+
+        if (superoUmbralAterrizaje || excedioTiempoVuelo) {
             jugador.y = carrilActual;
             jugador.body.allowGravity = false;
             jugador.setVelocityY(0);
             estaSaltando = false;
-            jugador.anims.play('idle', true);
+            vehiculoApoyado = null;
+            if (!disparando) jugador.anims.play('idle', true);
         }
 
         if (cursores.space.isUp && jugador.body.velocity.y < -120) {
@@ -491,29 +628,31 @@ function update(time, delta) {
         disparoPresionado = false;
     }
 
-    actualizarColectivos();
-    actualizarAutosRuta();
+    actualizarColectivos(this);
+    actualizarAutosRuta(this);
     actualizarIAHipsters(this);
     actualizarIAAgentes(this);
     actualizarIAGrandotes(this);
 
-    // Profundidad dinámica
+    // Profundidad z-index dinámica
     jugador.setDepth(carrilActual + (jugador.displayHeight * 0.5));
-    hipsters.children.iterate(e => { if (e) e.setDepth(e.y + (e.displayHeight * 0.5)); });
-    agentes.children.iterate(e => { if (e) e.setDepth(e.y + (e.displayHeight * 0.5)); });
-    grandotes.children.iterate(e => { if (e) e.setDepth(e.y + (e.displayHeight * 0.5)); });
-    autosRuta.children.iterate(a => { if (a) a.setDepth(a.y); });
-    empanadas.children.iterate(e => { if (e) e.setDepth(e.y); });
-    achilatas.children.iterate(e => { if (e) e.setDepth(e.y); });
-    potenciadores.children.iterate(e => { if (e) e.setDepth(e.y); });
+    hipsters.children.iterate(e => { if (e && e.active) e.setDepth(e.y + (e.displayHeight * 0.5)); });
+    agentes.children.iterate(e => { if (e && e.active) e.setDepth(e.y + (e.displayHeight * 0.5)); });
+    grandotes.children.iterate(e => { if (e && e.active) e.setDepth(e.y + (e.displayHeight * 0.5)); });
+    autosRuta.children.iterate(a => { if (a && a.active) a.setDepth(a.y); });
+    empanadas.children.iterate(e => { if (e && e.active) e.setDepth(e.y); });
+    achilatas.children.iterate(e => { if (e && e.active) e.setDepth(e.y); });
+    potenciadores.children.iterate(e => { if (e && e.active) e.setDepth(e.y); });
     if (jefe && jefe.active) jefe.setDepth(jefe.y + (jefe.displayHeight * 0.5));
 
-    // Limpieza de proyectiles
+    // Limpieza de proyectiles fuera de pantalla
     const margen = 120;
+    const scrollX = this.cameras.main.scrollX;
+
     proyectilesJugador.children.iterate((p) => {
         if (p && p.active) {
-            p.angle += p.velocidadGiro;
-            if (p.x < this.cameras.main.scrollX - margen || p.x > this.cameras.main.scrollX + ANCHO_VISTA + margen) {
+            p.angle += (p.velocidadGiro || 0);
+            if (p.x < scrollX - margen || p.x > scrollX + ANCHO_VISTA + margen) {
                 p.destroy();
             }
         }
@@ -521,191 +660,106 @@ function update(time, delta) {
 
     proyectilesEnemigos.children.iterate((p) => {
         if (p && p.active) {
-            p.angle += p.velocidadGiro || 0;
-            if (p.x < this.cameras.main.scrollX - margen || p.x > this.cameras.main.scrollX + ANCHO_VISTA + margen) {
+            p.angle += (p.velocidadGiro || 0);
+            if (p.x < scrollX - margen || p.x > scrollX + ANCHO_VISTA + margen) {
                 p.destroy();
             }
         }
     });
 
-    if (jefe && jefe.active && !jefeActivo && jugador.x > 13800) {
+    // Activar combate con el Jefe al llegar a su zona
+    if (jefe && jefe.active && !jefeActivo && jugador.x > 7300) {
         jefeActivo = true;
         actualizarBarraJefe();
+        mostrarMensaje(this, '¡EL PALERMITANO MALVADO ESTÁ EN EL INGENIO!\n¡Derrótalo para salvar las empanadas!');
     }
 }
 
 // =============================================================================
-// HELPER PARA TRANSICIÓN DE FONDOS CON DIFUMINADO
+// CINEMÁTICA INTERACTIVA
 // =============================================================================
-function crearFondoConTransicion(escena, posX, spriteKey, anchoCustom) {
-    let ancho = anchoCustom || 850;
-    let img = escena.add.image(posX, 0, spriteKey)
-        .setOrigin(0, 0)
-        .setDisplaySize(ancho, ALTO_VISTA)
-        .setDepth(1.2);
-
-    // Nota para mí: Creo un suave fundido al inicio de la imagen para que no corte tajante con el fondo previo
-    let sombraTransicion = escena.add.rectangle(posX + 40, ALTO_VISTA / 2, 80, ALTO_VISTA, 0x000000, 0.12)
-        .setOrigin(0.5, 0.5)
-        .setDepth(1.25);
-
-    return img;
-}
-
-// =============================================================================
-// CINEMÁTICA OFICIAL: EL PALERMITANO AL MANDO
-// =============================================================================
-function ejecutarCinematicaPrologo(escena) {
+function iniciarCinematicaInteractiva(escena) {
     jugador.setVisible(false);
+    escena.cameras.main.stopFollow();
 
-    let mesa = escena.add.image(190, CARRIL_SUPERIOR_Y, 'ciruja_comiendo').setScale(0.85).setDepth(50);
-    let campeona = escena.add.image(290, CARRIL_SUPERIOR_Y - 5, 'campeona_empanadas').setScale(0.80).setDepth(50);
+    actoresCinematica.mesa = escena.add.image(190, CARRIL_SUPERIOR_Y, 'ciruja_comiendo').setScale(0.85).setDepth(50);
+    actoresCinematica.campeona = escena.add.image(290, CARRIL_SUPERIOR_Y - 5, 'campeona_empanadas').setScale(0.80).setDepth(50);
 
-    let cajaTexto = escena.add.rectangle(ANCHO_VISTA / 2, ALTO_VISTA - 60, ANCHO_VISTA - 80, 70, 0x000000, 0.85).setScrollFactor(0).setDepth(200);
-    let textoNarrado = escena.add.text(ANCHO_VISTA / 2, ALTO_VISTA - 60, 'FAMAILLÁ, CAPITAL DE LA EMPANADA.\nEL CIRUJA DISFRUTA DE UN MEDIODÍA DE PAZ...', {
-        fontSize: '15px', fontFamily: 'Arial Black', fill: '#00ffcc', align: 'center'
+    cajaTextoGlobal = escena.add.rectangle(ANCHO_VISTA / 2, ALTO_VISTA - 60, ANCHO_VISTA - 60, 75, 0x000000, 0.90)
+        .setScrollFactor(0).setDepth(200);
+
+    textoNarradoGlobal = escena.add.text(ANCHO_VISTA / 2, ALTO_VISTA - 60, 'FAMAILLÁ, CAPITAL DE LA EMPANADA.\nEL CIRUJA DISFRUTA DE UN MEDIODÍA DE PAZ...\n(Presiona Z, Espacio o Clic para continuar)', {
+        fontSize: '14px', fontFamily: 'Arial Black', fill: '#00ffcc', align: 'center'
     }).setOrigin(0.5).setScrollFactor(0).setDepth(201);
 
-    escena.cameras.main.pan(500, ALTO_VISTA / 2, 2800, 'Sine.easeInOut');
+    escena.cameras.main.pan(400, ALTO_VISTA / 2, 1800, 'Sine.easeInOut');
 
-    escena.time.delayedCall(3000, () => {
-        escena.cameras.main.pan(320, ALTO_VISTA / 2, 1000, 'Sine.easeInOut');
-        textoNarrado.setText('¡ATAQUE SORPRESA!\nLOS AGENTES PALERMITANOS ATRAPAN A LA CAMPEONA...');
-        textoNarrado.setFill('#ff3333');
-
-        campeona.destroy();
-
-        let raptores = escena.add.image(290, CARRIL_SUPERIOR_Y - 5, 'secuestro_campeona').setScale(0.85).setDepth(55);
-        let palermitanoJefeIntro = escena.add.sprite(200, CARRIL_SUPERIOR_Y - 10, 'final_boss_joke1').setScale(0.75).setDepth(56);
-        palermitanoJefeIntro.anims.play('boss_joke', true);
-
-        escena.time.delayedCall(2200, () => {
-            textoNarrado.setText('PALERMITANO MALVADO: "¡LLEVENLA A PALERMO!\n¡VAMOS A SERVIR LA EMPANADA DECONSTRUIDA EN FRASCO!"');
-            textoNarrado.setFill('#ffff00');
-
-            escena.tweens.add({
-                targets: raptores,
-                x: 1100,
-                duration: 2600,
-                ease: 'Linear'
-            });
-
-            escena.time.delayedCall(500, () => {
-                palermitanoJefeIntro.anims.play('boss_run', true);
-                escena.tweens.add({
-                    targets: palermitanoJefeIntro,
-                    x: 1150,
-                    duration: 2400,
-                    ease: 'Linear',
-                    onComplete: () => {
-                        raptores.destroy();
-                        palermitanoJefeIntro.destroy();
-                    }
-                });
-            });
-        });
+    // Permitir clic para avanzar
+    escena.input.once('pointerdown', () => {
+        if (enCinematica) avanzarCinematica(escena);
     });
+}
 
-    escena.time.delayedCall(9500, () => {
-        cajaTexto.destroy();
-        textoNarrado.destroy();
-        mesa.destroy();
+function avanzarCinematica(escena) {
+    pasoCinematica++;
+
+    if (pasoCinematica === 1) {
+        escena.cameras.main.pan(300, ALTO_VISTA / 2, 800, 'Sine.easeInOut');
+        textoNarradoGlobal.setText('¡ATAQUE SORPRESA!\nLOS AGENTES ATRAPAN A LA CAMPEONA DE LA EMPANADA...\n(Presiona Z para continuar)');
+        textoNarradoGlobal.setFill('#ff3333');
+
+        if (actoresCinematica.campeona) actoresCinematica.campeona.destroy();
+        actoresCinematica.raptores = escena.add.image(290, CARRIL_SUPERIOR_Y - 5, 'secuestro_campeona').setScale(0.85).setDepth(55);
+        actoresCinematica.jefeIntro = escena.add.sprite(200, CARRIL_SUPERIOR_Y - 10, 'final_boss_joke1').setScale(0.75).setDepth(56);
+        actoresCinematica.jefeIntro.anims.play('boss_joke', true);
+
+        AudioSFX.play('danio');
+    } else if (pasoCinematica === 2) {
+        textoNarradoGlobal.setText('PALERMITANO MALVADO: "¡LLEVENLA AL INGENIO!\n¡VAMOS A SERVIR LA EMPANADA DECONSTRUIDA EN FRASCO!"\n(Presiona Z para salir a perseguirlos)');
+        textoNarradoGlobal.setFill('#ffff00');
+
+        escena.tweens.add({
+            targets: actoresCinematica.raptores,
+            x: 1100,
+            duration: 2200,
+            ease: 'Linear'
+        });
+
+        actoresCinematica.jefeIntro.anims.play('boss_run', true);
+        escena.tweens.add({
+            targets: actoresCinematica.jefeIntro,
+            x: 1150,
+            duration: 2000,
+            ease: 'Linear',
+            onComplete: () => {
+                if (actoresCinematica.raptores) actoresCinematica.raptores.destroy();
+                if (actoresCinematica.jefeIntro) actoresCinematica.jefeIntro.destroy();
+            }
+        });
+    } else if (pasoCinematica === 3) {
+        if (cajaTextoGlobal) cajaTextoGlobal.destroy();
+        if (textoNarradoGlobal) textoNarradoGlobal.destroy();
+        if (actoresCinematica.mesa) actoresCinematica.mesa.destroy();
 
         jugador.setPosition(80, CARRIL_SUPERIOR_Y);
         carrilActual = CARRIL_SUPERIOR_Y;
         estaSaltando = false;
+        vehiculoApoyado = null;
         jugador.setVisible(true);
         enCinematica = false;
-        mostrarMensaje(escena, '¡SALVA LA RECETA TRADICIONAL!\nPERSEVERA POR LA RUTA 38');
-    });
-}
 
-// =============================================================================
-// SISTEMA DE INSOLACIÓN ACELERADA
-// =============================================================================
-function actualizarSistemaInsolacion(escena, time) {
-    if (jugador.x > 5000) {
-        if (!insolacionActiva) {
-            insolacionActiva = true;
-            solSprite.setAlpha(1);
-            mostrarMensaje(escena, '¡EL SOL DE LA SIESTA APRIETA!\nBusca Achilatas para no insolarte');
-        }
-
-        let progreso = Math.min(1, (jugador.x - 5000) / 7500);
-        solSprite.setScale(0.40 + (progreso * 0.70));
-        capaTinteCalor.setAlpha(progreso * 0.22);
-
-        // Nota para mí: Subo el incremento a 0.075 para que la insolación sea una amenaza palpable
-        nivelInsolacion = Math.min(100, nivelInsolacion + 0.075);
-        dibujarBarraInsolacion();
-
-        if (nivelInsolacion >= 100 && time > tiempoUltimoDanioSol + 2000) {
-            tiempoUltimoDanioSol = time;
-            mostrarMensaje(escena, '¡ESTÁS INSOLADO! PIERDES ENERGÍA');
-            recibirDanioJugador(escena);
-        }
+        escena.cameras.main.startFollow(jugador, true, 0.08, 0.08);
+        mostrarMensaje(escena, '¡SALVA LA RECETA TRADICIONAL!\nAVANZA POR LA RUTA 38');
     }
 }
 
-function dibujarBarraInsolacion() {
-    barraCalorGrafico.clear();
-    if (!insolacionActiva) return;
-
-    const x = ANCHO_VISTA - 160;
-    const y = 95;
-    const ancho = 120;
-    const alto = 12;
-
-    barraCalorGrafico.lineStyle(2, 0x000000, 1);
-    barraCalorGrafico.strokeRect(x, y, ancho, alto);
-
-    let color = (nivelInsolacion > 75) ? 0xff0000 : (nivelInsolacion > 45) ? 0xffaa00 : 0xffff00;
-    barraCalorGrafico.fillStyle(color, 1);
-    barraCalorGrafico.fillRect(x, y, (ancho * (nivelInsolacion / 100)), alto);
-
-    textoCalor.setText('INSOLACIÓN: ' + Math.floor(nivelInsolacion) + '%');
-}
-
-function recolectarAchilata(jugadorRef, achilata) {
-    if (Math.abs(carrilActual - achilata.y) > 25) return;
-    achilata.destroy();
-    nivelInsolacion = Math.max(0, nivelInsolacion - 50);
-    puntos += 100;
-    dibujarBarraInsolacion();
-    actualizarHUD();
-    mostrarMensaje(jugadorRef.scene, '¡QUÉ RICA ACHILATA!\nInsolación reducida');
-}
-
 // =============================================================================
-// VEHÍCULOS (BUSES GRANDES Y AUTOS EN RUTA)
+// PLATAFORMAS Y VEHÍCULOS
 // =============================================================================
-function lanzarColectivo(escena, x, spriteKey, velocidad) {
-    let carrilY = (Math.random() > 0.5) ? CARRIL_SUPERIOR_Y + 15 : CARRIL_INFERIOR_Y + 10;
-    let bus = colectivos.create(x, carrilY, spriteKey);
-    bus.setOrigin(0.5, 1);
-    // Nota para mí: Escala subida a 2.15 para tamaño real imponente
-    bus.setScale(2.15);
-    bus.setDepth(carrilY);
-    bus.vida = 10;
-    bus.velocidadX = velocidad;
-    bus.averiado = false;
-    bus.setImmovable(true);
-    bus.body.allowGravity = false;
-
-    let anchoReal = bus.displayWidth * 0.85;
-    let altoReal = bus.displayHeight * 0.88;
-    bus.body.setSize(anchoReal, altoReal);
-    bus.body.setOffset((bus.displayWidth - anchoReal) / 2, bus.displayHeight - altoReal);
-
-    escena.tweens.add({
-        targets: bus, y: carrilY - 2, duration: 180, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
-    });
-}
-
 function crearAutoEnRuta(escena, x, carrilY, spriteKey, velX) {
-    let auto = autosRuta.create(x, carrilY + 8, spriteKey);
+    let auto = autosRuta.create(x, carrilY + 4, spriteKey);
     auto.setOrigin(0.5, 1);
-    auto.setScale(1.15);
+    auto.setScale(0.80);
     auto.setDepth(carrilY);
     auto.vida = 4;
     auto.velocidadX = velX;
@@ -713,43 +767,104 @@ function crearAutoEnRuta(escena, x, carrilY, spriteKey, velX) {
     auto.setImmovable(true);
     auto.body.allowGravity = false;
 
-    let ancho = auto.displayWidth * 0.80;
-    let alto = auto.displayHeight * 0.80;
+    // Dimensiones de colisión proporcionales sin duplicar escala
+    let ancho = auto.width * 0.85;
+    let alto = auto.height * 0.75;
     auto.body.setSize(ancho, alto);
-    auto.body.setOffset((auto.displayWidth - ancho) / 2, auto.displayHeight - alto);
+    auto.body.setOffset((auto.width - ancho) / 2, auto.height - alto);
 }
 
-function actualizarColectivos() {
-    colectivos.children.iterate((bus) => {
-        if (!bus || !bus.active) return;
-        bus.setVelocityX(!bus.averiado ? bus.velocidadX : 0);
+function lanzarColectivo(escena, x, spriteKey, velocidad) {
+    let carrilY = (Math.random() > 0.5) ? CARRIL_SUPERIOR_Y + 15 : CARRIL_INFERIOR_Y + 10;
+    let bus = colectivos.create(x, carrilY, spriteKey);
+    bus.setOrigin(0.5, 1);
+    bus.setScale(2.35);
+    bus.setDepth(carrilY);
+    bus.vida = 10;
+    bus.velocidadX = velocidad;
+    bus.averiado = false;
+    bus.setImmovable(true);
+    bus.body.allowGravity = false;
+
+    // Dimensiones de colisión proporcionales
+    let anchoReal = bus.width * 0.88;
+    let altoReal = bus.height * 0.88;
+    bus.body.setSize(anchoReal, altoReal);
+    bus.body.setOffset((bus.width - anchoReal) / 2, bus.height - altoReal);
+
+    escena.tweens.add({
+        targets: bus, y: carrilY - 2, duration: 180, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
     });
 }
 
-function actualizarAutosRuta() {
-    autosRuta.children.iterate((auto) => {
-        if (!auto || !auto.active) return;
-        auto.setVelocityX(!auto.averiado ? auto.velocidadX : 0);
-    });
-}
+function pararseSobreVehiculo(jugadorRef, vehiculo) {
+    if (!vehiculo || !vehiculo.active) return;
 
-function manejarColisionVehiculo(jugadorRef, vehiculo) {
-    if (jugadorRef.y < vehiculo.body.top) return;
-    if (Math.abs(carrilActual - vehiculo.y) > 35) return;
+    // Si viene cayendo desde arriba del techo, se apoya sólidamente como plataforma
+    if (jugadorRef.body.velocity.y >= 0 && jugadorRef.y <= vehiculo.body.top + 20) {
+        jugadorRef.y = vehiculo.body.top;
+        jugadorRef.setVelocityY(0);
+        jugadorRef.body.allowGravity = false;
+        estaSaltando = false;
+        vehiculoApoyado = vehiculo;
+        return;
+    }
 
-    if (!vehiculo.averiado) {
-        recibirDanioJugador(jugadorRef.scene);
+    // Si choca de frente estando en su mismo carril, recibe daño (salvo en modo sánguche)
+    if (Math.abs(carrilActual - vehiculo.y) < 35 && !vehiculo.averiado) {
+        if (modoSanguchazo) {
+            vehiculo.vida -= 3;
+            vehiculo.setTint(0xff2222);
+            jugadorRef.scene.time.delayedCall(120, () => {
+                if (vehiculo && vehiculo.active && !vehiculo.averiado) vehiculo.clearTint();
+            });
+            if (vehiculo.vida <= 0) {
+                vehiculo.averiado = true;
+                vehiculo.setTint(0x666666);
+                puntos += 250;
+                actualizarHUD();
+            }
+        } else {
+            recibirDanioJugador(jugadorRef.scene);
+        }
     }
 }
 
-function impactarVehiculo(proyectil, vehiculo) {
-    if (!vehiculo || !vehiculo.active || vehiculo.averiado) return;
-    if (Math.abs(proyectil.y - (vehiculo.y - vehiculo.displayHeight / 2)) > 70) return;
+function actualizarColectivos(escena) {
+    const scrollX = escena.cameras.main.scrollX;
+    colectivos.children.iterate((bus) => {
+        if (!bus || !bus.active) return;
+        bus.setVelocityX(!bus.averiado ? bus.velocidadX : 0);
 
-    let danio = (armaActual === 'CASCOTE') ? 3 : 1;
+        // Limpieza de colectivos que quedan muy atrás
+        if (bus.x < scrollX - 500) {
+            bus.destroy();
+        }
+    });
+}
+
+function actualizarAutosRuta(escena) {
+    const scrollX = escena.cameras.main.scrollX;
+    autosRuta.children.iterate((auto) => {
+        if (!auto || !auto.active) return;
+        auto.setVelocityX(!auto.averiado ? auto.velocidadX : 0);
+
+        // Limpieza de autos que quedan muy atrás
+        if (auto.x < scrollX - 500) {
+            auto.destroy();
+        }
+    });
+}
+
+function impactarVehiculo(proyectil, vehiculo) {
+    if (!proyectil || !proyectil.active || !vehiculo || !vehiculo.active || vehiculo.averiado) return;
+    if (Math.abs(proyectil.y - (vehiculo.y - vehiculo.displayHeight / 2)) > 75) return;
+
+    let danio = proyectil.danio || 1;
     vehiculo.vida -= danio;
     proyectil.destroy();
     vehiculo.setTint(0xff2222);
+    AudioSFX.play('golpe');
 
     vehiculo.scene.time.delayedCall(120, () => {
         if (vehiculo && vehiculo.active && !vehiculo.averiado) vehiculo.clearTint();
@@ -772,15 +887,59 @@ function impactarVehiculo(proyectil, vehiculo) {
 }
 
 // =============================================================================
-// OLEADAS Y SPAWN DE ENEMIGOS
+// SÁNGUCHE DE MILANESA (CURA TOTAL + CABEZAZO)
+// =============================================================================
+function crearSangucheMilanesa(escena, x, carrilY) {
+    let sanguche = potenciadores.create(x, carrilY, 'sanguche');
+    sanguche.setScale(0.25);
+    sanguche.body.allowGravity = false;
+    sanguche.tipo = 'SANGUCHE';
+    escena.tweens.add({ targets: sanguche, scaleX: 0.28, scaleY: 0.28, duration: 400, yoyo: true, repeat: -1 });
+}
+
+function recolectarPotenciador(jugadorRef, item) {
+    if (!item || !item.active) return;
+    if (Math.abs(carrilActual - item.y) > 30) return;
+
+    if (item.tipo === 'SANGUCHE') {
+        salud = MAX_SALUD;
+        vidas = Math.min(3, vidas + 1);
+        AudioSFX.play('sanguche');
+        activarModoSanguchazo(jugadorRef.scene);
+        mostrarMensaje(jugadorRef.scene, '¡SÁNGUCHE DE MILANGA COMPLETO!\nSalud al 100% y Furia Activada');
+    } else if (item.tipo === 'CASCOTES') {
+        cascotesLevantados = true;
+        armaActual = 'CASCOTE';
+        municion = (municion || 0) + 20;
+        AudioSFX.play('achilata');
+        mostrarMensaje(jugadorRef.scene, '¡ENCONTRASTE UN MONTÓN DE CASCOTES!\nAhora tienes munición pesada (+20)');
+    }
+    actualizarHUD();
+    item.destroy();
+}
+
+function activarModoSanguchazo(escena) {
+    modoSanguchazo = true;
+    textoEspecial.setText('¡FURIA DE MILANGA: CABEZAZO ACTIVADO!');
+    jugador.setTint(0xffd700);
+    escena.time.delayedCall(8000, () => {
+        modoSanguchazo = false;
+        textoEspecial.setText('');
+        if (jugador && jugador.active && !esInvulnerable) jugador.clearTint();
+    });
+}
+
+// =============================================================================
+// OLEADAS Y SPAWN
 // =============================================================================
 function verificarProgresionOleadas(escena) {
     if (!arbolSaqueado && jugador.x >= 480 && jugador.x <= 560) {
         arbolSaqueado = true;
         armaActual = 'NARANJA';
         municion = 999;
+        AudioSFX.play('empanada');
         actualizarHUD();
-        mostrarMensaje(escena, '¡HAS CHOREADO NARANJAS!\nPuedes usarlas como arma');
+        mostrarMensaje(escena, '¡HAS CHOREADO NARANJAS!\nPresiona Z o X para disparar');
     }
 
     const oleadas = [
@@ -792,28 +951,28 @@ function verificarProgresionOleadas(escena) {
             }
         },
         {
-            id: 2, triggerX: 2500, ejecutar: () => {
+            id: 2, triggerX: 2200, ejecutar: () => {
                 lanzarColectivo(escena, escena.cameras.main.scrollX + ANCHO_VISTA + 80, 'tesa', -60);
                 spawnEnemigo(escena, 'AGENTE', 0);
                 spawnEnemigo(escena, 'HIPSTER', 600);
             }
         },
         {
-            id: 3, triggerX: 4500, ejecutar: () => {
+            id: 3, triggerX: 3500, ejecutar: () => {
                 lanzarColectivo(escena, escena.cameras.main.scrollX + ANCHO_VISTA + 80, 'exprebus', -65);
                 spawnEnemigo(escena, 'AGENTE', 0);
                 spawnEnemigo(escena, 'GRANDOTE', 600);
             }
         },
         {
-            id: 4, triggerX: 7000, ejecutar: () => {
+            id: 4, triggerX: 4700, ejecutar: () => {
                 lanzarColectivo(escena, escena.cameras.main.scrollX + ANCHO_VISTA + 80, 'tesa', -60);
                 spawnEnemigo(escena, 'GRANDOTE', 0);
                 spawnEnemigo(escena, 'AGENTE', 500);
             }
         },
         {
-            id: 5, triggerX: 9500, ejecutar: () => {
+            id: 5, triggerX: 5800, ejecutar: () => {
                 lanzarColectivo(escena, escena.cameras.main.scrollX + ANCHO_VISTA + 80, 'exprebus', -65);
                 spawnEnemigo(escena, 'GRANDOTE', 0);
                 spawnEnemigo(escena, 'AGENTE', 600);
@@ -821,7 +980,7 @@ function verificarProgresionOleadas(escena) {
             }
         },
         {
-            id: 6, triggerX: 12000, ejecutar: () => {
+            id: 6, triggerX: 6800, ejecutar: () => {
                 lanzarColectivo(escena, escena.cameras.main.scrollX + ANCHO_VISTA + 80, 'tesa', -65);
                 spawnEnemigo(escena, 'GRANDOTE', 0);
                 spawnEnemigo(escena, 'GRANDOTE', 800);
@@ -839,6 +998,7 @@ function verificarProgresionOleadas(escena) {
 
 function spawnEnemigo(escena, tipo, retrasoMs) {
     escena.time.delayedCall(retrasoMs, () => {
+        if (juegoTerminado) return;
         let posX = escena.cameras.main.scrollX + ANCHO_VISTA + 60;
         let carril = (Math.random() > 0.5) ? CARRIL_SUPERIOR_Y : CARRIL_INFERIOR_Y;
 
@@ -876,16 +1036,25 @@ function spawnEnemigo(escena, tipo, retrasoMs) {
 }
 
 // =============================================================================
-// COMPORTAMIENTOS E IA: DETENCIÓN PARA DISPARAR Y PUÑETAZOS
+// COMPORTAMIENTOS E IA DE ENEMIGOS
 // =============================================================================
 function actualizarIAHipsters(escena) {
+    const scrollX = escena.cameras.main.scrollX;
     hipsters.children.iterate((hipster) => {
         if (!hipster || !hipster.active) return;
+
+        // Limpieza de enemigos rezagados
+        if (hipster.x < scrollX - 300) {
+            hipster.destroy();
+            return;
+        }
+
         if (hipster.estaDisparando) return;
 
         let dist = Math.abs(hipster.x - jugador.x);
+        let dir = (jugador.x < hipster.x) ? -1 : 1;
+        hipster.setFlipX(dir > 0);
 
-        // Nota para mí: Si entra en rango de disparo, se frena completamente para arrojar la botella
         if (dist < 650 && escena.time.now > hipster.ultimoAtaque + 2400 && Math.abs(carrilActual - hipster.y) < 40) {
             hipster.estaDisparando = true;
             hipster.setVelocityX(0);
@@ -893,11 +1062,11 @@ function actualizarIAHipsters(escena) {
 
             escena.time.delayedCall(300, () => {
                 if (hipster && hipster.active) {
-                    let botella = proyectilesEnemigos.create(hipster.x - 16, hipster.y - 6, 'botella_agua');
+                    let botella = proyectilesEnemigos.create(hipster.x + (dir * 16), hipster.y - 6, 'botella_agua');
                     botella.setScale(0.14);
                     botella.setDepth(hipster.y + (hipster.displayHeight * 0.5));
-                    botella.setVelocity(-270, 0);
-                    botella.velocidadGiro = -16;
+                    botella.setVelocity(dir * 270, 0);
+                    botella.velocidadGiro = dir * 16;
                 }
             });
 
@@ -910,19 +1079,27 @@ function actualizarIAHipsters(escena) {
             return;
         }
 
-        hipster.setVelocityX(-65);
+        hipster.setVelocityX(dir * 65);
         hipster.anims.play('hipster_run', true);
     });
 }
 
 function actualizarIAAgentes(escena) {
+    const scrollX = escena.cameras.main.scrollX;
     agentes.children.iterate((agente) => {
         if (!agente || !agente.active) return;
+
+        if (agente.x < scrollX - 300) {
+            agente.destroy();
+            return;
+        }
+
         if (agente.estaDisparando) return;
 
         let dist = Math.abs(agente.x - jugador.x);
+        let dir = (jugador.x < agente.x) ? -1 : 1;
+        agente.setFlipX(dir > 0);
 
-        // Nota para mí: El agente frena en seco para apuntar y disparar con retroceso
         if (dist < 700 && escena.time.now > agente.ultimoDisparo + 2000 && Math.abs(carrilActual - agente.y) < 40) {
             agente.estaDisparando = true;
             agente.setVelocityX(0);
@@ -930,10 +1107,10 @@ function actualizarIAAgentes(escena) {
 
             escena.time.delayedCall(250, () => {
                 if (agente && agente.active) {
-                    let bala = proyectilesEnemigos.create(agente.x - 20, agente.y - 6, 'bala');
+                    let bala = proyectilesEnemigos.create(agente.x + (dir * 20), agente.y - 6, 'bala');
                     bala.setScale(0.20);
                     bala.setDepth(agente.y + (agente.displayHeight * 0.5));
-                    bala.setVelocity(-340, 0);
+                    bala.setVelocity(dir * 340, 0);
                 }
             });
 
@@ -947,22 +1124,31 @@ function actualizarIAAgentes(escena) {
         }
 
         if (dist > 180) {
-            agente.setVelocityX(-75);
+            agente.setVelocityX(dir * 75);
             agente.anims.play('agente_run', true);
         } else {
             agente.setVelocityX(0);
+            agente.anims.play('agente_run', true);
         }
     });
 }
 
 function actualizarIAGrandotes(escena) {
+    const scrollX = escena.cameras.main.scrollX;
     grandotes.children.iterate((grandote) => {
         if (!grandote || !grandote.active) return;
+
+        if (grandote.x < scrollX - 300) {
+            grandote.destroy();
+            return;
+        }
+
         if (grandote.atacandoCuerpoACuerpo) return;
 
         let dist = Math.abs(grandote.x - jugador.x);
+        let dir = (jugador.x < grandote.x) ? -1 : 1;
+        grandote.setFlipX(dir > 0);
 
-        // Nota para mí: Activación estricta de la animación de puñetazo al acercarse al Ciruja
         if (dist < 95 && Math.abs(carrilActual - grandote.y) < 35) {
             grandote.atacandoCuerpoACuerpo = true;
             grandote.setVelocityX(0);
@@ -982,17 +1168,21 @@ function actualizarIAGrandotes(escena) {
             return;
         }
 
-        grandote.setVelocityX(-100);
+        grandote.setVelocityX(dir * 100);
         grandote.anims.play('grandote_run', true);
     });
 }
 
 function impactarEnemigo(proyectil, enemigo) {
+    if (!proyectil || !proyectil.active || !enemigo || !enemigo.active) return;
     if (Math.abs(proyectil.y - enemigo.y) > 40) return;
+
+    let danio = proyectil.danio || 1;
     proyectil.destroy();
+    AudioSFX.play('golpe');
+
     if (enemigo.invulnerable) return;
 
-    let danio = (armaActual === 'CASCOTE') ? 3 : 1;
     enemigo.vida -= danio;
     enemigo.invulnerable = true;
     enemigo.setTint(0xff3333);
@@ -1029,6 +1219,7 @@ function intentarDisparo(escena) {
     let escalaProyectil = esCascote ? 0.14 : 0.095;
 
     jugador.anims.play(esCascote ? 'disparar_cascote' : 'disparar_naranja', true);
+    AudioSFX.play(esCascote ? 'disparo_cascote' : 'disparo_naranja');
 
     let spawnX = jugador.x + (dirX * 8);
     let spawnY = jugador.y - 4;
@@ -1037,6 +1228,7 @@ function intentarDisparo(escena) {
     proyectil.setDepth(carrilActual + (jugador.displayHeight * 0.5));
     proyectil.setVelocity(dirX * velocidadProyectil, 0);
     proyectil.velocidadGiro = (dirX !== 0 ? dirX : 1) * 20;
+    proyectil.danio = esCascote ? 3 : 1;
 
     if (esCascote) {
         municion -= 1;
@@ -1056,15 +1248,20 @@ function intentarDisparo(escena) {
 function ejecutarRutinaJefe() {
     if (!jefe || !jefe.active || !jefeActivo || jefeAtacando || juegoTerminado) return;
     jefeAtacando = true;
-    jefe.setFlipX(false);
+
+    // Orientarse hacia el jugador
+    let mirarIzquierda = (jugador.x < jefe.x);
+    jefe.setFlipX(!mirarIzquierda);
+    let dir = mirarIzquierda ? -1 : 1;
+
     let ataqueAleatorio = Math.random();
 
-    if (ataqueAleatorio < 0.45) {
+    if (ataqueAleatorio < 0.50) {
         jefe.anims.play('boss_cofee', true);
         jefe.setVelocityX(0);
         this.time.delayedCall(300, () => {
             if (jefe && jefe.active) {
-                lanzarVasoCafe(this, jefe.x - 30, jefe.y - 10, -340, 0);
+                lanzarVasoCafe(this, jefe.x + (dir * 30), jefe.y - 10, dir * 360, 0);
             }
         });
         this.time.delayedCall(850, () => {
@@ -1075,16 +1272,31 @@ function ejecutarRutinaJefe() {
         });
     } else {
         jefe.anims.play('boss_run', true);
-        jefe.setVelocityX(-220);
+        jefe.setVelocityX(dir * 220);
+
         this.time.delayedCall(450, () => {
             if (jefe && jefe.active) {
                 jefe.setVelocityX(0);
                 jefe.anims.play('boss_cofee', true);
-                lanzarVasoCafe(this, jefe.x - 30, jefe.y - 10, -420, 0);
+                lanzarVasoCafe(this, jefe.x + (dir * 30), jefe.y - 10, dir * 420, 0);
             }
         });
-        this.time.delayedCall(950, () => {
+
+        // Retorno gradual hacia su área de combate (7650)
+        this.time.delayedCall(800, () => {
             if (jefe && jefe.active) {
+                let distRetorno = 7650 - jefe.x;
+                if (Math.abs(distRetorno) > 50) {
+                    jefe.setVelocityX(Math.sign(distRetorno) * 160);
+                    jefe.setFlipX(distRetorno < 0);
+                    jefe.anims.play('boss_run', true);
+                }
+            }
+        });
+
+        this.time.delayedCall(1300, () => {
+            if (jefe && jefe.active) {
+                jefe.setVelocityX(0);
                 jefe.anims.play('boss_joke', true);
                 jefeAtacando = false;
             }
@@ -1101,11 +1313,15 @@ function lanzarVasoCafe(escena, x, y, velX, velY) {
 }
 
 function impactarJefe(proyectil, jefeRef) {
+    if (!proyectil || !proyectil.active || !jefeRef || !jefeRef.active) return;
     if (Math.abs(proyectil.y - jefeRef.y) > 50) return;
+
+    let danio = proyectil.danio || 1;
     proyectil.destroy();
+    AudioSFX.play('golpe');
+
     if (jefeInvulnerable || !jefeActivo) return;
 
-    let danio = (armaActual === 'CASCOTE') ? 3 : 1;
     vidaJefe -= danio;
     puntos += 60 * danio;
     actualizarHUD();
@@ -1135,16 +1351,33 @@ function derrotarJefe(escena) {
     puntos += 1500;
     actualizarHUD();
     textoVidaJefe.setText('¡RECETA SALVADA!');
+    AudioSFX.play('victoria');
+
     escena.tweens.add({
-        targets: jefe, angle: 180, y: jefe.y - 80, alpha: 0, duration: 900, onComplete: () => jefe.destroy()
+        targets: jefe,
+        angle: 180,
+        y: jefe.y - 80,
+        alpha: 0,
+        duration: 900,
+        onComplete: () => {
+            if (jefe) jefe.destroy();
+            mostrarMensaje(escena, '¡HAS VENCIDO AL PALERMITANO!\nAvanza a la meta');
+            // Si el jugador ya está cerca de la meta, activar victoria
+            if (jugador && jugador.x >= 7750) {
+                llegarALaMeta(jugador, metaFinal);
+            }
+        }
     });
 }
 
 function interaccionJugadorEnemigo(jugadorRef, enemigo) {
+    if (!enemigo || !enemigo.active) return;
     if (Math.abs(carrilActual - enemigo.y) > 30) return;
+
     if (modoSanguchazo) {
         enemigo.destroy();
         puntos += 100;
+        AudioSFX.play('golpe');
         actualizarHUD();
         return;
     }
@@ -1152,26 +1385,31 @@ function interaccionJugadorEnemigo(jugadorRef, enemigo) {
 }
 
 function interaccionJugadorJefe(jugadorRef, jefeRef) {
+    if (!jefeRef || !jefeRef.active) return;
     if (Math.abs(carrilActual - jefeRef.y) > 35) return;
+
     if (modoSanguchazo) {
-        impactarJefe({ destroy: () => { }, y: jugadorRef.y }, jefeRef);
+        impactarJefe({ destroy: () => { }, danio: 3, y: jugadorRef.y, active: true }, jefeRef);
         return;
     }
     recibirDanioJugador(jugadorRef.scene);
 }
 
 function impactarJugadorConProyectilEnemigo(jugadorRef, proyectil) {
+    if (!proyectil || !proyectil.active) return;
     if (Math.abs(carrilActual - proyectil.y) > 30) return;
     proyectil.destroy();
     recibirDanioJugador(jugadorRef.scene);
 }
 
 // =============================================================================
-// SALUD (SIN IMPULSOS VERTICALES)
+// SALUD Y DAÑO
 // =============================================================================
 function recibirDanioJugador(escena) {
     if (esInvulnerable || juegoTerminado) return;
     salud -= 1;
+    AudioSFX.play('danio');
+
     if (salud <= 0) {
         vidas -= 1;
         salud = MAX_SALUD;
@@ -1179,11 +1417,7 @@ function recibirDanioJugador(escena) {
     actualizarHUD();
 
     if (vidas <= 0) {
-        juegoTerminado = true;
-        jugador.setVelocity(0, 0);
-        jugador.setTint(0xff0000);
-        alert('¡Te liquidaron en la ruta! Reiniciando...');
-        location.reload();
+        mostrarGameOver(escena);
     } else {
         esInvulnerable = true;
         jugador.setVelocityX(jugador.flipX ? 160 : -160);
@@ -1191,52 +1425,120 @@ function recibirDanioJugador(escena) {
         let parpadeos = 0;
         escena.time.addEvent({
             delay: 100, repeat: 7, callback: () => {
-                jugador.alpha = (jugador.alpha === 1) ? 0.3 : 1;
-                parpadeos++;
-                if (parpadeos >= 8) {
-                    jugador.alpha = 1;
-                    esInvulnerable = false;
+                if (jugador && jugador.active) {
+                    jugador.alpha = (jugador.alpha === 1) ? 0.3 : 1;
+                    parpadeos++;
+                    if (parpadeos >= 8) {
+                        jugador.alpha = 1;
+                        esInvulnerable = false;
+                    }
                 }
             }
         });
     }
 }
 
+function mostrarGameOver(escena) {
+    juegoTerminado = true;
+    jugador.setVelocity(0, 0);
+    jugador.setTint(0xff2222);
+
+    escena.add.rectangle(ANCHO_VISTA / 2, ALTO_VISTA / 2, ANCHO_VISTA, ALTO_VISTA, 0x000000, 0.85)
+        .setScrollFactor(0).setDepth(300);
+
+    escena.add.text(ANCHO_VISTA / 2, ALTO_VISTA / 2 - 50, '¡TE LIQUIDARON EN LA RUTA!', {
+        fontSize: '28px', fontFamily: 'Arial Black', fill: '#ff3333', stroke: '#000000', strokeThickness: 5, align: 'center'
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(301);
+
+    escena.add.text(ANCHO_VISTA / 2, ALTO_VISTA / 2, 'PUNTOS: ' + puntos, {
+        fontSize: '20px', fontFamily: 'Arial Black', fill: '#ffd700', stroke: '#000000', strokeThickness: 4, align: 'center'
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(301);
+
+    let txtReintentar = escena.add.text(ANCHO_VISTA / 2, ALTO_VISTA / 2 + 60, 'Presiona ESPACIO o haz clic para REINTENTAR', {
+        fontSize: '16px', fontFamily: 'Arial Black', fill: '#00ffcc', stroke: '#000000', strokeThickness: 3, align: 'center'
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(301);
+
+    escena.tweens.add({
+        targets: txtReintentar, alpha: 0.3, duration: 500, yoyo: true, repeat: -1
+    });
+
+    const reiniciarCallback = () => {
+        escena.scene.restart();
+    };
+
+    escena.time.delayedCall(500, () => {
+        escena.input.keyboard.once('keydown-SPACE', reiniciarCallback);
+        escena.input.keyboard.once('keydown-Z', reiniciarCallback);
+        escena.input.keyboard.once('keydown-X', reiniciarCallback);
+        escena.input.keyboard.once('keydown-ENTER', reiniciarCallback);
+        escena.input.once('pointerdown', reiniciarCallback);
+    });
+}
+
 // =============================================================================
-// RECOLECCIÓN Y POTENCIADORES
+// RECOLECCIÓN
 // =============================================================================
 function recolectarEmpanada(jugadorRef, empanada) {
+    if (!empanada || !empanada.active) return;
     if (Math.abs(carrilActual - empanada.y) > 25) return;
     empanada.destroy();
     puntos += 25;
+    AudioSFX.play('empanada');
     actualizarHUD();
 }
 
-function recolectarPotenciador(jugadorRef, item) {
-    if (Math.abs(carrilActual - item.y) > 30) return;
-    if (item.tipo === 'SANGUCHE') {
-        activarModoSanguchazo(jugadorRef.scene);
-    } else if (item.tipo === 'CASCOTES') {
-        if (!cascotesLevantados) {
-            cascotesLevantados = true;
-            armaActual = 'CASCOTE';
-            municion = 20;
-            actualizarHUD();
-            mostrarMensaje(jugadorRef.scene, '¡ENCONTRASTE UN MONTÓN DE CASCOTES!\nAhora tienes munición pesada');
-        }
-    }
-    item.destroy();
+function recolectarAchilata(jugadorRef, achilata) {
+    if (!achilata || !achilata.active) return;
+    if (Math.abs(carrilActual - achilata.y) > 25) return;
+    achilata.destroy();
+    nivelInsolacion = Math.max(0, nivelInsolacion - 50);
+    puntos += 100;
+    AudioSFX.play('achilata');
+    dibujarBarraInsolacion();
+    actualizarHUD();
+    mostrarMensaje(jugadorRef.scene, '¡QUÉ RICA ACHILATA!\nInsolación reducida');
 }
 
-function activarModoSanguchazo(escena) {
-    modoSanguchazo = true;
-    textoEspecial.setText('¡FURIA DE MILANGA: CABEZAZO ACTIVADO!');
-    jugador.setTint(0xffd700);
-    escena.time.delayedCall(8000, () => {
-        modoSanguchazo = false;
-        textoEspecial.setText('');
-        jugador.clearTint();
-    });
+function actualizarSistemaInsolacion(escena, time) {
+    if (jugador.x > 3200) {
+        if (!insolacionActiva) {
+            insolacionActiva = true;
+            solSprite.setAlpha(1);
+            mostrarMensaje(escena, '¡EL SOL DE LA SIESTA APRIETA!\nBusca Achilatas para no insolarte');
+        }
+
+        let progreso = Math.min(1, (jugador.x - 3200) / 4500);
+        solSprite.setScale(0.40 + (progreso * 0.70));
+        capaTinteCalor.setAlpha(progreso * 0.22);
+
+        nivelInsolacion = Math.min(100, nivelInsolacion + 0.08);
+        dibujarBarraInsolacion();
+
+        if (nivelInsolacion >= 100 && time > tiempoUltimoDanioSol + 2000) {
+            tiempoUltimoDanioSol = time;
+            mostrarMensaje(escena, '¡ESTÁS INSOLADO! PIERDES ENERGÍA');
+            recibirDanioJugador(escena);
+        }
+    }
+}
+
+function dibujarBarraInsolacion() {
+    barraCalorGrafico.clear();
+    if (!insolacionActiva) return;
+
+    const x = ANCHO_VISTA - 160;
+    const y = 95;
+    const ancho = 120;
+    const alto = 12;
+
+    barraCalorGrafico.lineStyle(2, 0x000000, 1);
+    barraCalorGrafico.strokeRect(x, y, ancho, alto);
+
+    let color = (nivelInsolacion > 75) ? 0xff0000 : (nivelInsolacion > 45) ? 0xffaa00 : 0xffff00;
+    barraCalorGrafico.fillStyle(color, 1);
+    barraCalorGrafico.fillRect(x, y, (ancho * (nivelInsolacion / 100)), alto);
+
+    textoCalor.setText('INSOLACIÓN: ' + Math.floor(nivelInsolacion) + '%');
 }
 
 function dibujarBarraSalud() {
@@ -1283,13 +1585,13 @@ function mostrarMensaje(escena, texto) {
         targets: bannerNotificacion,
         scaleX: 1.15,
         scaleY: 1.15,
-        duration: 150,
+        duration: 180,
         yoyo: true,
         onComplete: () => {
             scene.tweens.add({
                 targets: bannerNotificacion,
                 alpha: 0,
-                delay: 2000,
+                delay: 2600,
                 duration: 600
             });
         }
@@ -1303,10 +1605,37 @@ function llegarALaMeta(jugadorRef, meta) {
     juegoTerminado = true;
     jugador.setVelocity(0, 0);
     jugador.anims.play('idle', true);
+    AudioSFX.play('victoria');
 
-    jugadorRef.scene.add.text(ANCHO_VISTA / 2, ALTO_VISTA / 2, '¡NIVEL 1 COMPLETADO!\nENTRANDO AL INGENIO...', {
-        fontSize: '36px', fontFamily: 'Arial Black', fill: '#00ff66', stroke: '#000000', strokeThickness: 6, align: 'center'
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(200);
+    let escena = jugadorRef.scene;
+    escena.add.rectangle(ANCHO_VISTA / 2, ALTO_VISTA / 2, ANCHO_VISTA, ALTO_VISTA, 0x000000, 0.85)
+        .setScrollFactor(0).setDepth(300);
 
-    setTimeout(() => { location.reload(); }, 3500);
+    escena.add.text(ANCHO_VISTA / 2, ALTO_VISTA / 2 - 60, '¡NIVEL 1 COMPLETADO!\n¡RECETA DE LA EMPANADA SALVADA!', {
+        fontSize: '26px', fontFamily: 'Arial Black', fill: '#00ff66', stroke: '#000000', strokeThickness: 5, align: 'center'
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(301);
+
+    escena.add.text(ANCHO_VISTA / 2, ALTO_VISTA / 2 + 10, 'PUNTOS TOTALES: ' + puntos, {
+        fontSize: '22px', fontFamily: 'Arial Black', fill: '#ffd700', stroke: '#000000', strokeThickness: 4, align: 'center'
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(301);
+
+    let txtReiniciar = escena.add.text(ANCHO_VISTA / 2, ALTO_VISTA / 2 + 70, 'Presiona ESPACIO para VOLVER A JUGAR', {
+        fontSize: '16px', fontFamily: 'Arial Black', fill: '#00ffcc', stroke: '#000000', strokeThickness: 3, align: 'center'
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(301);
+
+    escena.tweens.add({
+        targets: txtReiniciar, alpha: 0.3, duration: 500, yoyo: true, repeat: -1
+    });
+
+    const reiniciarCallback = () => {
+        escena.scene.restart();
+    };
+
+    escena.time.delayedCall(500, () => {
+        escena.input.keyboard.once('keydown-SPACE', reiniciarCallback);
+        escena.input.keyboard.once('keydown-Z', reiniciarCallback);
+        escena.input.keyboard.once('keydown-X', reiniciarCallback);
+        escena.input.keyboard.once('keydown-ENTER', reiniciarCallback);
+        escena.input.once('pointerdown', reiniciarCallback);
+    });
 }
