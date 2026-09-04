@@ -1,8 +1,18 @@
 // =============================================================================
 // HÉROE TUCUMANO 2D ARCADE - ARCHIVO PRINCIPAL: main.js
-// Corrección Total: Fondo Panorámico Visible, Fin del Temblor en Carril Inferior,
-// Salto Estable, Autos Chicos Plataformeables, Buses Gigantes, Diálogos con Tecla Z
-// y Sánguches que Curan al Máximo.
+// VERSIÓN CORREGIDA - Cambios aplicados (ver resumen en el chat):
+// 1) Animación de cambio de carril con "saltito" en arco
+// 2) Oleadas iniciales más numerosas y con spawn izquierda/derecha
+// 3) Fix de profundidad (depth) para que el jugador nunca quede tapado por vehículos
+// 4) Camión de limones del mismo tamaño que los colectivos
+// 5) Fondo de fusión más arriba y más grande
+// 6) Autos un poco más grandes
+// 7) Disparo de agentes más lento y en ráfaga de 2 tiros esquivables
+// 8) Enemigos aparecen de ambos lados (izquierda/derecha)
+// 9) Jefe final con más vida (más difícil)
+// 10) Insolación más lenta + sol crece con el nivel + cartel de alerta previo
+// 11) Sistema de "cabezazo" (placeholder funcional, listo para tus sprites)
+// 12) Vehículos estáticos: solo el jugador los salta/esquiva
 // =============================================================================
 
 const ANCHO_VISTA = 800;
@@ -115,6 +125,23 @@ const AudioSFX = {
                 gain.gain.exponentialRampToValueAtTime(0.01, now + 0.55);
                 osc.start(now);
                 osc.stop(now + 0.55);
+            } else if (tipo === 'cabezazo') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(500, now);
+                osc.frequency.exponentialRampToValueAtTime(90, now + 0.20);
+                gain.gain.setValueAtTime(0.22, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.20);
+                osc.start(now);
+                osc.stop(now + 0.20);
+            } else if (tipo === 'alerta') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(700, now);
+                osc.frequency.setValueAtTime(500, now + 0.10);
+                osc.frequency.setValueAtTime(700, now + 0.20);
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.32);
+                osc.start(now);
+                osc.stop(now + 0.32);
             }
         } catch (e) {
             // Audio no disponible
@@ -149,7 +176,7 @@ const config = {
 const game = new Phaser.Game(config);
 
 // Variables de estado del jugador y del juego
-let jugador, cursores, teclaZ, teclaX, teclaEnter;
+let jugador, cursores, teclaZ, teclaX, teclaEnter, teclaC;
 let fondoCerros, fondoUnificado, sueloRuta, sueloRuta2;
 let proyectilesJugador, proyectilesEnemigos, hipsters, agentes, grandotes, colectivos, autosRuta, empanadas, potenciadores, achilatas, metaFinal;
 let vidas = 3, salud = 3;
@@ -163,9 +190,10 @@ let estaSaltando = false;
 let carrilActual = CARRIL_SUPERIOR_Y;
 let tiempoInicioSalto = 0;
 let vehiculoApoyado = null;
+let cambiandoCarril = false; // FIX #1: bloquea input mientras dura la animación de cambio de carril
 
 // Variables del Jefe Final y Progresión
-let jefe, jefeActivo = false, vidaJefe = 45, jefeInvulnerable = false, jefeAtacando = false;
+let jefe, jefeActivo = false, vidaJefe = 90, jefeInvulnerable = false, jefeAtacando = false; // FIX #9: más vida
 let oleadasActivadas = [];
 let arbolSaqueado = false;
 let cascotesLevantados = false;
@@ -179,6 +207,12 @@ let solSprite, barraCalorGrafico, textoCalor, capaTinteCalor;
 let nivelInsolacion = 0;
 let insolacionActiva = false;
 let tiempoUltimoDanioSol = 0;
+
+// Variables del "Cabezazo" (FIX #11 - poder desbloqueado por empanadas)
+let empanadasRecolectadas = 0;
+let cabezazoDesbloqueado = false;
+let cabezazoActivo = false;
+const EMPANADAS_PARA_CABEZAZO = 5;
 
 function preload() {
     // Fondo de cielo y cerros lejanos
@@ -286,9 +320,10 @@ function create() {
     estaSaltando = false;
     vehiculoApoyado = null;
     carrilActual = CARRIL_SUPERIOR_Y;
+    cambiandoCarril = false;
 
     jefeActivo = false;
-    vidaJefe = 45;
+    vidaJefe = 90; // FIX #9: jefe más difícil
     jefeInvulnerable = false;
     jefeAtacando = false;
     oleadasActivadas = [];
@@ -297,18 +332,23 @@ function create() {
     nivelInsolacion = 0;
     insolacionActiva = false;
 
+    empanadasRecolectadas = 0;
+    cabezazoDesbloqueado = false;
+    cabezazoActivo = false;
+
     this.physics.world.setBounds(0, 0, ANCHO_MUNDO + 400, ALTO_VISTA);
 
     // =========================================================================
     // CONFIGURACIÓN DE FONDOS: CERROS LEJANOS Y FUSIÓN VISIBLE
+    // FIX #5: la fusión se sube y se agranda para que no quede oculta bajo la ruta
     // =========================================================================
     fondoCerros = this.add.tileSprite(0, 0, ANCHO_VISTA, ALTO_VISTA, 'fondo_cerros')
         .setOrigin(0, 0).setScrollFactor(0).setDepth(0);
 
-    // Montaje del lienzo fusionado panorámico
-    fondoUnificado = this.add.image(0, 0, 'fusion_fondo')
+    // Montaje del lienzo fusionado panorámico (más arriba y más grande)
+    fondoUnificado = this.add.image(0, -70, 'fusion_fondo')
         .setOrigin(0, 0)
-        .setDisplaySize(ANCHO_MUNDO, ALTO_VISTA)
+        .setDisplaySize(ANCHO_MUNDO, ALTO_VISTA + 90)
         .setDepth(1.2);
 
     // Suelos de los dos carriles
@@ -404,11 +444,12 @@ function create() {
     this.physics.add.overlap(proyectilesJugador, colectivos, impactarVehiculo, null, this);
     this.physics.add.overlap(proyectilesJugador, autosRuta, impactarVehiculo, null, this);
 
-    // Autos en calzada
-    crearAutoEnRuta(this, 1900, CARRIL_SUPERIOR_Y, 'auto1', 0);
-    crearAutoEnRuta(this, 3100, CARRIL_INFERIOR_Y, 'camion_limones', -35);
-    crearAutoEnRuta(this, 5000, CARRIL_SUPERIOR_Y, 'auto2', 0);
-    crearAutoEnRuta(this, 6700, CARRIL_INFERIOR_Y, 'auto3', -45);
+    // FIX #12: vehículos estáticos (velocidad 0) - el jugador es quien los esquiva/salta
+    // FIX #4: camión de limones ahora con la escala de los colectivos (2.35) para que se vea del mismo porte
+    crearAutoEnRuta(this, 1900, CARRIL_SUPERIOR_Y, 'auto1', 0, 0.95);
+    crearAutoEnRuta(this, 3100, CARRIL_INFERIOR_Y, 'camion_limones', 0, 2.35);
+    crearAutoEnRuta(this, 5000, CARRIL_SUPERIOR_Y, 'auto2', 0, 0.95);
+    crearAutoEnRuta(this, 6700, CARRIL_INFERIOR_Y, 'auto3', 0, 0.95);
 
     // Jefe Palermitano Malvado esperando en el Ingenio
     jefe = this.physics.add.sprite(7650, CARRIL_INFERIOR_Y, 'final_boss_joke1');
@@ -429,11 +470,11 @@ function create() {
         }
     });
 
-    // Achilatas
-    [3200, 4300, 5400, 6500, 7200].forEach(posX => {
+    // Achilatas (FIX #10: una queda pegada al arranque de la insolación, en x=3200, bien visible)
+    [3200, 3600, 4300, 5400, 6500, 7200].forEach(posX => {
         let carril = (Math.random() > 0.5) ? CARRIL_SUPERIOR_Y : CARRIL_INFERIOR_Y;
         let ach = achilatas.create(posX, carril, 'achilata');
-        ach.setScale(0.22);
+        ach.setScale(0.24);
         ach.body.allowGravity = false;
         if (ach.postFX && ach.postFX.addGlow) {
             ach.postFX.addGlow(0xff00ff, 2, 0, false);
@@ -505,6 +546,7 @@ function create() {
     teclaZ = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
     teclaX = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X);
     teclaEnter = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
+    teclaC = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.C); // FIX #11: tecla del cabezazo
 
     this.time.addEvent({ delay: 2200, callback: ejecutarRutinaJefe, callbackScope: this, loop: true });
 
@@ -543,14 +585,14 @@ function update(time, delta) {
     if (cursores.left.isDown) {
         jugador.setVelocityX(-velocidadBase);
         jugador.setFlipX(true);
-        if (!estaSaltando && !disparando) jugador.anims.play('correr', true);
+        if (!estaSaltando && !disparando && !cambiandoCarril) jugador.anims.play('correr', true);
     } else if (cursores.right.isDown) {
         jugador.setVelocityX(velocidadBase);
         jugador.setFlipX(false);
-        if (!estaSaltando && !disparando) jugador.anims.play('correr', true);
+        if (!estaSaltando && !disparando && !cambiandoCarril) jugador.anims.play('correr', true);
     } else {
         jugador.setVelocityX(0);
-        if (!estaSaltando && !disparando) jugador.anims.play('idle', true);
+        if (!estaSaltando && !disparando && !cambiandoCarril) jugador.anims.play('idle', true);
     }
 
     // =========================================================================
@@ -568,29 +610,24 @@ function update(time, delta) {
                     estaSaltando = true;
                     jugador.body.allowGravity = true;
                 }
-            } else {
-                // El jugador acompaña el movimiento del vehículo
-                if (vehiculoApoyado.body && vehiculoApoyado.body.velocity.x !== 0) {
-                    jugador.x += (vehiculoApoyado.body.velocity.x * delta) / 1000;
-                }
             }
-        } else {
+            // Como los vehículos ahora son estáticos (FIX #12) no hace falta
+            // acompañar ningún desplazamiento horizontal del vehículo.
+        } else if (!cambiandoCarril) {
             // En el suelo normal
             jugador.body.allowGravity = false;
             jugador.setVelocityY(0);
 
-            // Cambio limpio entre carriles con Arriba y Abajo
+            // FIX #1: Cambio de carril animado con un "saltito" en vez de teletransporte
             if (Phaser.Input.Keyboard.JustDown(cursores.up) && carrilActual === CARRIL_INFERIOR_Y) {
-                carrilActual = CARRIL_SUPERIOR_Y;
-                jugador.y = CARRIL_SUPERIOR_Y;
+                cambiarDeCarril(this, CARRIL_SUPERIOR_Y);
             } else if (Phaser.Input.Keyboard.JustDown(cursores.down) && carrilActual === CARRIL_SUPERIOR_Y) {
-                carrilActual = CARRIL_INFERIOR_Y;
-                jugador.y = CARRIL_INFERIOR_Y;
+                cambiarDeCarril(this, CARRIL_INFERIOR_Y);
             }
         }
 
         // Salto con barra espaciadora
-        if (Phaser.Input.Keyboard.JustDown(cursores.space)) {
+        if (Phaser.Input.Keyboard.JustDown(cursores.space) && !cambiandoCarril) {
             estaSaltando = true;
             vehiculoApoyado = null;
             tiempoInicioSalto = time;
@@ -628,18 +665,36 @@ function update(time, delta) {
         disparoPresionado = false;
     }
 
+    // FIX #11: Cabezazo (poder desbloqueado por empanadas)
+    if (cabezazoDesbloqueado && !cabezazoActivo && Phaser.Input.Keyboard.JustDown(teclaC) && !estaSaltando && !cambiandoCarril) {
+        ejecutarCabezazo(this);
+    }
+
     actualizarColectivos(this);
     actualizarAutosRuta(this);
     actualizarIAHipsters(this);
     actualizarIAAgentes(this);
     actualizarIAGrandotes(this);
 
-    // Profundidad z-index dinámica
-    jugador.setDepth(carrilActual + (jugador.displayHeight * 0.5));
+    // =========================================================================
+    // FIX #3: Profundidad (z-index) dinámica y correcta
+    // - Todos los vehículos (colectivos incluidos, antes no se actualizaban)
+    //   ahora recalculan su depth cuadro a cuadro según su Y real.
+    // - El jugador usa su Y real (no el carril lógico) para el cálculo normal,
+    //   pero si está parado sobre un vehículo, se fuerza su depth por encima
+    //   del vehículo para que nunca quede "tapado" por él.
+    // =========================================================================
+    if (vehiculoApoyado && vehiculoApoyado.active) {
+        jugador.setDepth(vehiculoApoyado.depth + 1);
+    } else {
+        jugador.setDepth(jugador.y + (jugador.displayHeight * 0.5));
+    }
+
     hipsters.children.iterate(e => { if (e && e.active) e.setDepth(e.y + (e.displayHeight * 0.5)); });
     agentes.children.iterate(e => { if (e && e.active) e.setDepth(e.y + (e.displayHeight * 0.5)); });
     grandotes.children.iterate(e => { if (e && e.active) e.setDepth(e.y + (e.displayHeight * 0.5)); });
     autosRuta.children.iterate(a => { if (a && a.active) a.setDepth(a.y); });
+    colectivos.children.iterate(b => { if (b && b.active) b.setDepth(b.y); }); // FIX #3: antes faltaba esta línea
     empanadas.children.iterate(e => { if (e && e.active) e.setDepth(e.y); });
     achilatas.children.iterate(e => { if (e && e.active) e.setDepth(e.y); });
     potenciadores.children.iterate(e => { if (e && e.active) e.setDepth(e.y); });
@@ -673,6 +728,41 @@ function update(time, delta) {
         actualizarBarraJefe();
         mostrarMensaje(this, '¡EL PALERMITANO MALVADO ESTÁ EN EL INGENIO!\n¡Derrótalo para salvar las empanadas!');
     }
+}
+
+// =============================================================================
+// FIX #1: CAMBIO DE CARRIL ANIMADO ("SALTITO")
+// =============================================================================
+function cambiarDeCarril(escena, nuevoCarril) {
+    cambiandoCarril = true;
+    let carrilOrigen = carrilActual;
+    carrilActual = nuevoCarril;
+
+    if (!disparando) jugador.anims.play('salto', true);
+    AudioSFX.play('salto');
+
+    // Pequeño arco: primero sube un poco, después cae al nuevo carril
+    escena.tweens.add({
+        targets: jugador,
+        y: carrilOrigen - 16,
+        duration: 90,
+        ease: 'Sine.easeOut',
+        onComplete: () => {
+            if (!jugador || !jugador.active) return;
+            escena.tweens.add({
+                targets: jugador,
+                y: nuevoCarril,
+                duration: 140,
+                ease: 'Sine.easeIn',
+                onComplete: () => {
+                    cambiandoCarril = false;
+                    if (jugador && jugador.active && !disparando && !estaSaltando) {
+                        jugador.anims.play('idle', true);
+                    }
+                }
+            });
+        }
+    });
 }
 
 // =============================================================================
@@ -754,15 +844,16 @@ function avanzarCinematica(escena) {
 }
 
 // =============================================================================
-// PLATAFORMAS Y VEHÍCULOS
+// PLATAFORMAS Y VEHÍCULOS (FIX #4, #6, #12)
 // =============================================================================
-function crearAutoEnRuta(escena, x, carrilY, spriteKey, velX) {
+function crearAutoEnRuta(escena, x, carrilY, spriteKey, velX, escala) {
+    let escalaFinal = (escala !== undefined) ? escala : 0.95; // FIX #6: autos un poco más grandes
     let auto = autosRuta.create(x, carrilY + 4, spriteKey);
     auto.setOrigin(0.5, 1);
-    auto.setScale(0.80);
+    auto.setScale(escalaFinal);
     auto.setDepth(carrilY);
-    auto.vida = 4;
-    auto.velocidadX = velX;
+    auto.vida = (escalaFinal >= 2) ? 10 : 4; // el camión de limones, al ser del porte de un bus, aguanta más
+    auto.velocidadX = velX; // FIX #12: se pasa 0 desde los llamados -> vehículo estático
     auto.averiado = false;
     auto.setImmovable(true);
     auto.body.allowGravity = false;
@@ -781,7 +872,7 @@ function lanzarColectivo(escena, x, spriteKey, velocidad) {
     bus.setScale(2.35);
     bus.setDepth(carrilY);
     bus.vida = 10;
-    bus.velocidadX = velocidad;
+    bus.velocidadX = velocidad; // FIX #12: se pasa 0 -> vehículo estático, el jugador lo esquiva/salta
     bus.averiado = false;
     bus.setImmovable(true);
     bus.body.allowGravity = false;
@@ -887,7 +978,7 @@ function impactarVehiculo(proyectil, vehiculo) {
 }
 
 // =============================================================================
-// SÁNGUCHE DE MILANESA (CURA TOTAL + CABEZAZO)
+// SÁNGUCHE DE MILANESA (CURA TOTAL + FURIA)
 // =============================================================================
 function crearSangucheMilanesa(escena, x, carrilY) {
     let sanguche = potenciadores.create(x, carrilY, 'sanguche');
@@ -920,7 +1011,7 @@ function recolectarPotenciador(jugadorRef, item) {
 
 function activarModoSanguchazo(escena) {
     modoSanguchazo = true;
-    textoEspecial.setText('¡FURIA DE MILANGA: CABEZAZO ACTIVADO!');
+    textoEspecial.setText('¡FURIA DE MILANGA ACTIVADA!');
     jugador.setTint(0xffd700);
     escena.time.delayedCall(8000, () => {
         modoSanguchazo = false;
@@ -930,7 +1021,49 @@ function activarModoSanguchazo(escena) {
 }
 
 // =============================================================================
-// OLEADAS Y SPAWN
+// FIX #11: CABEZAZO - poder desbloqueado al juntar empanadas
+// Placeholder funcional: usa el sprite actual con un tinte y un embiste rápido.
+// Cuando tengas los sprites del cabezazo, solo hay que reemplazar la animación
+// que se dispara acá adentro (buscá el comentario "SPRITES PENDIENTES").
+// =============================================================================
+function ejecutarCabezazo(escena) {
+    cabezazoActivo = true;
+    let dir = jugador.flipX ? -1 : 1;
+
+    // --- SPRITES PENDIENTES: reemplazar este tinte/lunge por la animación real ---
+    jugador.setTint(0x66ccff);
+    jugador.setVelocityX(dir * 520);
+    AudioSFX.play('cabezazo');
+
+    escena.time.delayedCall(180, () => {
+        if (!jugador || !jugador.active) return;
+
+        const rango = 75;
+        const dañarEnRango = (grupo, puntosBase) => {
+            grupo.children.iterate(e => {
+                if (e && e.active && Math.abs(e.x - jugador.x) < rango && Math.abs(carrilActual - e.y) < 35) {
+                    e.destroy();
+                    puntos += puntosBase;
+                }
+            });
+        };
+        dañarEnRango(hipsters, 75);
+        dañarEnRango(agentes, 150);
+        dañarEnRango(grandotes, 300);
+
+        if (jefe && jefe.active && !jefeInvulnerable && jefeActivo &&
+            Math.abs(jefe.x - jugador.x) < rango && Math.abs(carrilActual - jefe.y) < 35) {
+            impactarJefe({ destroy: () => { }, danio: 4, y: jugador.y, active: true }, jefe);
+        }
+
+        actualizarHUD();
+        if (jugador && jugador.active) jugador.clearTint();
+        cabezazoActivo = false;
+    });
+}
+
+// =============================================================================
+// OLEADAS Y SPAWN (FIX #2, #8)
 // =============================================================================
 function verificarProgresionOleadas(escena) {
     if (!arbolSaqueado && jugador.x >= 480 && jugador.x <= 560) {
@@ -942,48 +1075,55 @@ function verificarProgresionOleadas(escena) {
         mostrarMensaje(escena, '¡HAS CHOREADO NARANJAS!\nPresiona Z o X para disparar');
     }
 
+    // FIX #2: más enemigos por oleada / FIX #8: mezcla de izquierda y derecha
     const oleadas = [
         {
             id: 1, triggerX: 900, ejecutar: () => {
-                lanzarColectivo(escena, escena.cameras.main.scrollX + ANCHO_VISTA + 80, 'exprebus', -65);
-                spawnEnemigo(escena, 'HIPSTER', 0);
-                spawnEnemigo(escena, 'HIPSTER', 500);
+                lanzarColectivo(escena, escena.cameras.main.scrollX + ANCHO_VISTA + 80, 'exprebus', 0);
+                spawnEnemigo(escena, 'HIPSTER', 0, 'derecha');
+                spawnEnemigo(escena, 'HIPSTER', 350, 'derecha');
+                spawnEnemigo(escena, 'HIPSTER', 750, 'izquierda');
             }
         },
         {
             id: 2, triggerX: 2200, ejecutar: () => {
-                lanzarColectivo(escena, escena.cameras.main.scrollX + ANCHO_VISTA + 80, 'tesa', -60);
-                spawnEnemigo(escena, 'AGENTE', 0);
-                spawnEnemigo(escena, 'HIPSTER', 600);
+                lanzarColectivo(escena, escena.cameras.main.scrollX + ANCHO_VISTA + 80, 'tesa', 0);
+                spawnEnemigo(escena, 'AGENTE', 0, 'derecha');
+                spawnEnemigo(escena, 'HIPSTER', 400, 'izquierda');
+                spawnEnemigo(escena, 'HIPSTER', 800, 'derecha');
             }
         },
         {
             id: 3, triggerX: 3500, ejecutar: () => {
-                lanzarColectivo(escena, escena.cameras.main.scrollX + ANCHO_VISTA + 80, 'exprebus', -65);
-                spawnEnemigo(escena, 'AGENTE', 0);
-                spawnEnemigo(escena, 'GRANDOTE', 600);
+                lanzarColectivo(escena, escena.cameras.main.scrollX + ANCHO_VISTA + 80, 'exprebus', 0);
+                spawnEnemigo(escena, 'AGENTE', 0, 'derecha');
+                spawnEnemigo(escena, 'AGENTE', 450, 'izquierda');
+                spawnEnemigo(escena, 'GRANDOTE', 900, 'derecha');
             }
         },
         {
             id: 4, triggerX: 4700, ejecutar: () => {
-                lanzarColectivo(escena, escena.cameras.main.scrollX + ANCHO_VISTA + 80, 'tesa', -60);
-                spawnEnemigo(escena, 'GRANDOTE', 0);
-                spawnEnemigo(escena, 'AGENTE', 500);
+                lanzarColectivo(escena, escena.cameras.main.scrollX + ANCHO_VISTA + 80, 'tesa', 0);
+                spawnEnemigo(escena, 'GRANDOTE', 0, 'izquierda');
+                spawnEnemigo(escena, 'AGENTE', 450, 'derecha');
+                spawnEnemigo(escena, 'HIPSTER', 850, 'derecha');
             }
         },
         {
             id: 5, triggerX: 5800, ejecutar: () => {
-                lanzarColectivo(escena, escena.cameras.main.scrollX + ANCHO_VISTA + 80, 'exprebus', -65);
-                spawnEnemigo(escena, 'GRANDOTE', 0);
-                spawnEnemigo(escena, 'AGENTE', 600);
-                spawnEnemigo(escena, 'HIPSTER', 1100);
+                lanzarColectivo(escena, escena.cameras.main.scrollX + ANCHO_VISTA + 80, 'exprebus', 0);
+                spawnEnemigo(escena, 'GRANDOTE', 0, 'derecha');
+                spawnEnemigo(escena, 'AGENTE', 450, 'izquierda');
+                spawnEnemigo(escena, 'HIPSTER', 900, 'derecha');
+                spawnEnemigo(escena, 'HIPSTER', 1300, 'izquierda');
             }
         },
         {
             id: 6, triggerX: 6800, ejecutar: () => {
-                lanzarColectivo(escena, escena.cameras.main.scrollX + ANCHO_VISTA + 80, 'tesa', -65);
-                spawnEnemigo(escena, 'GRANDOTE', 0);
-                spawnEnemigo(escena, 'GRANDOTE', 800);
+                lanzarColectivo(escena, escena.cameras.main.scrollX + ANCHO_VISTA + 80, 'tesa', 0);
+                spawnEnemigo(escena, 'GRANDOTE', 0, 'derecha');
+                spawnEnemigo(escena, 'GRANDOTE', 550, 'izquierda');
+                spawnEnemigo(escena, 'AGENTE', 1000, 'derecha');
             }
         }
     ];
@@ -996,10 +1136,16 @@ function verificarProgresionOleadas(escena) {
     });
 }
 
-function spawnEnemigo(escena, tipo, retrasoMs) {
+function spawnEnemigo(escena, tipo, retrasoMs, lado) {
     escena.time.delayedCall(retrasoMs, () => {
         if (juegoTerminado) return;
-        let posX = escena.cameras.main.scrollX + ANCHO_VISTA + 60;
+
+        // FIX #8: el enemigo puede entrar por la derecha (delante) o por la izquierda (detrás)
+        let ladoFinal = lado || (Math.random() > 0.5 ? 'derecha' : 'izquierda');
+        let posX = (ladoFinal === 'derecha')
+            ? escena.cameras.main.scrollX + ANCHO_VISTA + 60
+            : Math.max(40, escena.cameras.main.scrollX - 60);
+
         let carril = (Math.random() > 0.5) ? CARRIL_SUPERIOR_Y : CARRIL_INFERIOR_Y;
 
         if (tipo === 'HIPSTER') {
@@ -1037,6 +1183,8 @@ function spawnEnemigo(escena, tipo, retrasoMs) {
 
 // =============================================================================
 // COMPORTAMIENTOS E IA DE ENEMIGOS
+// (el flip horizontal ya funcionaba para ambas direcciones; ahora se aprovecha
+// mejor porque los enemigos pueden aparecer de los dos lados - FIX #8)
 // =============================================================================
 function actualizarIAHipsters(escena) {
     const scrollX = escena.cameras.main.scrollX;
@@ -1084,6 +1232,7 @@ function actualizarIAHipsters(escena) {
     });
 }
 
+// FIX #7: ráfaga de 2 disparos más lentos y esquivables, con más pausa entre ráfagas
 function actualizarIAAgentes(escena) {
     const scrollX = escena.cameras.main.scrollX;
     agentes.children.iterate((agente) => {
@@ -1100,21 +1249,29 @@ function actualizarIAAgentes(escena) {
         let dir = (jugador.x < agente.x) ? -1 : 1;
         agente.setFlipX(dir > 0);
 
-        if (dist < 700 && escena.time.now > agente.ultimoDisparo + 2000 && Math.abs(carrilActual - agente.y) < 40) {
+        if (dist < 700 && escena.time.now > agente.ultimoDisparo + 2600 && Math.abs(carrilActual - agente.y) < 40) {
             agente.estaDisparando = true;
             agente.setVelocityX(0);
             agente.anims.play('agente_disparar', true);
 
-            escena.time.delayedCall(250, () => {
+            const dispararBala = () => {
                 if (agente && agente.active) {
                     let bala = proyectilesEnemigos.create(agente.x + (dir * 20), agente.y - 6, 'bala');
                     bala.setScale(0.20);
                     bala.setDepth(agente.y + (agente.displayHeight * 0.5));
-                    bala.setVelocity(dir * 340, 0);
+                    bala.setVelocity(dir * 190, 0); // FIX #7: antes 340, ahora más lenta y esquivable
                 }
+            };
+
+            // Primer disparo de la ráfaga
+            escena.time.delayedCall(250, dispararBala);
+            // Segundo disparo, con pausa perceptible para poder esquivarlo
+            escena.time.delayedCall(560, () => {
+                if (agente && agente.active) agente.anims.play('agente_disparar', true);
+                dispararBala();
             });
 
-            escena.time.delayedCall(600, () => {
+            escena.time.delayedCall(950, () => {
                 if (agente && agente.active) {
                     agente.ultimoDisparo = escena.time.now;
                     agente.estaDisparando = false;
@@ -1243,7 +1400,7 @@ function intentarDisparo(escena) {
 }
 
 // =============================================================================
-// JEFE FINAL (PALERMITANO MALVADO)
+// JEFE FINAL (PALERMITANO MALVADO) - FIX #9: más resistente
 // =============================================================================
 function ejecutarRutinaJefe() {
     if (!jefe || !jefe.active || !jefeActivo || jefeAtacando || juegoTerminado) return;
@@ -1343,7 +1500,7 @@ function impactarJefe(proyectil, jefeRef) {
 }
 
 function actualizarBarraJefe() {
-    const bloques = Math.max(0, Math.ceil(vidaJefe / 2));
+    const bloques = Math.max(0, Math.ceil(vidaJefe / 4));
     textoVidaJefe.setText('PALERMITANO MALVADO: ' + '█'.repeat(bloques));
 }
 
@@ -1484,6 +1641,14 @@ function recolectarEmpanada(jugadorRef, empanada) {
     empanada.destroy();
     puntos += 25;
     AudioSFX.play('empanada');
+
+    // FIX #11: cada empanada suma progreso hacia el desbloqueo del cabezazo
+    empanadasRecolectadas++;
+    if (!cabezazoDesbloqueado && empanadasRecolectadas >= EMPANADAS_PARA_CABEZAZO) {
+        cabezazoDesbloqueado = true;
+        mostrarMensaje(jugadorRef.scene, '¡PODER DESBLOQUEADO!\nPresiona C para el CABEZAZO');
+    }
+
     actualizarHUD();
 }
 
@@ -1499,20 +1664,52 @@ function recolectarAchilata(jugadorRef, achilata) {
     mostrarMensaje(jugadorRef.scene, '¡QUÉ RICA ACHILATA!\nInsolación reducida');
 }
 
+// FIX #10: cartel de alerta antes de que arranque la insolación
+function mostrarCartelAlerta(escena) {
+    AudioSFX.play('alerta');
+
+    const cartel = escena.add.text(ANCHO_VISTA / 2, ALTO_VISTA / 2 - 40, '⚠ ZONA DE MUCHO SOL ⚠\nBuscá achilatas para refrescarte', {
+        fontSize: '20px', fontFamily: 'Arial Black', fill: '#ffcc00', stroke: '#000000', strokeThickness: 5, align: 'center'
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(150).setAlpha(0).setScale(0.7);
+
+    escena.tweens.add({
+        targets: cartel,
+        alpha: 1,
+        scale: 1,
+        duration: 250,
+        ease: 'Back.easeOut',
+        yoyo: false,
+        onComplete: () => {
+            escena.tweens.add({
+                targets: cartel,
+                alpha: 0,
+                delay: 1800,
+                duration: 500,
+                onComplete: () => cartel.destroy()
+            });
+        }
+    });
+}
+
 function actualizarSistemaInsolacion(escena, time) {
     if (jugador.x > 3200) {
         if (!insolacionActiva) {
             insolacionActiva = true;
-            solSprite.setAlpha(1);
+            mostrarCartelAlerta(escena); // FIX #10: aparece primero el cartel de alerta
+            escena.time.delayedCall(900, () => {
+                if (solSprite) solSprite.setAlpha(1);
+            });
             mostrarMensaje(escena, '¡EL SOL DE LA SIESTA APRIETA!\nBusca Achilatas para no insolarte');
         }
 
-        let progreso = Math.min(1, (jugador.x - 3200) / 4500);
-        solSprite.setScale(0.40 + (progreso * 0.70));
-        capaTinteCalor.setAlpha(progreso * 0.22);
-
-        nivelInsolacion = Math.min(100, nivelInsolacion + 0.08);
+        // FIX #10: subida de insolación más lenta que antes (0.08 -> 0.035)
+        nivelInsolacion = Math.min(100, nivelInsolacion + 0.035);
         dibujarBarraInsolacion();
+
+        // FIX #10: el sol crece directamente proporcional al nivel de insolación
+        let progresoSol = nivelInsolacion / 100;
+        solSprite.setScale(0.40 + (progresoSol * 0.70));
+        capaTinteCalor.setAlpha(progresoSol * 0.22);
 
         if (nivelInsolacion >= 100 && time > tiempoUltimoDanioSol + 2000) {
             tiempoUltimoDanioSol = time;
