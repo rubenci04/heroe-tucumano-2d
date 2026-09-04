@@ -1,16 +1,16 @@
 // =============================================================================
 // HÉROE TUCUMANO 2D ARCADE - ARCHIVO PRINCIPAL: main.js
-// Modo 2.5D Estricto (2 Carriles), Cinemática de Prólogo, Ruta 38 Extendida,
-// Exprebus, TESA, Insolación con Achilata y Jefe Palermitano.
+// Mejoras: Naranjo/Cascotes latentes, IA con detención de disparo,
+// Puñetazos del Grandote, Tráfico de Autos en Ruta, Buses Imponentes y Transiciones.
 // =============================================================================
 
 const ANCHO_VISTA = 800;
 const ALTO_VISTA = 450;
-const ANCHO_MUNDO = 7200; // Nota para mí: Mundo extendido para recorrer toda la Ruta 38
+const ANCHO_MUNDO = 14400;
 
-// Nota para mí: Defino con precisión los dos carriles físicos para evitar bugs de flotación
+// Carriles 2.5D
 const CARRIL_SUPERIOR_Y = 370;
-const CARRIL_INFERIOR_Y = 422;
+const CARRIL_INFERIOR_Y = 420;
 const Y_ESCENARIO = 345;
 
 const config = {
@@ -22,7 +22,7 @@ const config = {
     physics: {
         default: 'arcade',
         arcade: {
-            gravity: { y: 1250 }, // Nota para mí: Gravedad alta para que los saltos caigan con peso arcade
+            gravity: { y: 1300 },
             debug: false
         }
     },
@@ -35,36 +35,36 @@ const config = {
 
 const game = new Phaser.Game(config);
 
-// Variables de estado global
+// Variables de estado del jugador y del juego
 let jugador, cursores, teclaZ, teclaX;
 let fondoCerros, fondoArboleda, sueloRuta, sueloRuta2;
-let proyectilesJugador, proyectilesEnemigos, hipsters, agentes, grandotes, colectivos, empanadas, potenciadores, achilatas, metaFinal;
+let proyectilesJugador, proyectilesEnemigos, hipsters, agentes, grandotes, colectivos, autosRuta, empanadas, potenciadores, achilatas, metaFinal;
 let vidas = 3, salud = 3;
 const MAX_SALUD = 3;
 let puntos = 0, armaActual = 'NINGUNA', municion = 0, modoSanguchazo = false;
 let textoVidas, barraVidaGrafico, textoPuntos, textoArma, textoEspecial, textoVidaJefe, bannerNotificacion;
 let esInvulnerable = false, disparoPresionado = false, disparando = false, juegoTerminado = false;
 
-// Variables del sistema 2.5D
+// Variables de salto y carril 2.5D
 let estaSaltando = false;
-let carrilActual = CARRIL_SUPERIOR_Y; // Nota para mí: Guarda el carril de apoyo real (370 o 422)
-let cambiandoCarril = false;
+let carrilActual = CARRIL_SUPERIOR_Y;
 
-// Variables del Jefe Final y Oleadas
+// Variables del Jefe Final y Progresión
 let jefe, jefeActivo = false, vidaJefe = 45, jefeInvulnerable = false, jefeAtacando = false;
 let oleadasActivadas = [];
 let arbolSaqueado = false;
 let cascotesLevantados = false;
+let arbolNaranjasIntro, monticuloCascotesVisual;
 
-// Variables de la Cinemática Inicial y Sistema de Insolación
+// Variables de Cinemática e Insolación
 let enCinematica = true;
-let solSprite, barraCalorGrafico, textoCalor;
-let nivelInsolacion = 0; // De 0 a 100
+let solSprite, barraCalorGrafico, textoCalor, capaTinteCalor;
+let nivelInsolacion = 0;
 let insolacionActiva = false;
 let tiempoUltimoDanioSol = 0;
 
 function preload() {
-    // Fondos de localidades y vegetación para el Parallax
+    // Fondos de localidades para el Parallax
     this.load.image('fondo_cerros', 'assets/fondo_cerros.png');
     this.load.image('fondo_arboleda', 'assets/fondo_arboleda.png');
     this.load.image('cañas', 'assets/cañas.png');
@@ -97,14 +97,13 @@ function preload() {
     this.load.image('auto2', 'assets/auto2.png');
     this.load.image('auto3', 'assets/auto3.png');
     this.load.image('camion_limones', 'assets/camion_limones.png');
-    this.load.image('rastra_cañera', 'assets/rastra cañera.png');
 
     // Sprites de Cinemática
     this.load.image('ciruja_comiendo', 'assets/ciruja comiendo.png');
     this.load.image('campeona_empanadas', 'assets/campeona empanadas.png');
     this.load.image('secuestro_campeona', 'assets/secuestro_campeona.png');
 
-    // Sprites del Jugador
+    // Sprites del Ciruja
     this.load.image('ciruja_idle', 'assets/ciruja_idle.png');
     this.load.image('ciruja_run1', 'assets/ciruja_run1.png');
     this.load.image('ciruja_run2', 'assets/ciruja_run2.png');
@@ -126,7 +125,7 @@ function preload() {
     this.load.image('bala', 'assets/bala.png');
     this.load.image('cofee', 'assets/cofee.png');
 
-    // Enemigos y Palermitano Malvado
+    // Enemigos y Palermitano
     this.load.image('hipster_agua1', 'assets/hipster_agua1.png');
     this.load.image('hipster_agua2', 'assets/hipster_agua2.png');
     this.load.image('hipster_run1', 'assets/hipster_run1.png');
@@ -174,7 +173,6 @@ function create() {
     esInvulnerable = false;
     estaSaltando = false;
     carrilActual = CARRIL_SUPERIOR_Y;
-    cambiandoCarril = false;
 
     jefeActivo = false;
     vidaJefe = 45;
@@ -188,47 +186,77 @@ function create() {
 
     this.physics.world.setBounds(0, 0, ANCHO_MUNDO + 400, ALTO_VISTA);
 
-    // =========================================================================
-    // CAPAS PARALLAX Y FONDOS POR LOCALIDADES
-    // =========================================================================
-    fondoCerros = this.add.tileSprite(0, 0, ANCHO_VISTA, ALTO_VISTA, 'fondo_cerros').setOrigin(0, 0).setScrollFactor(0).setDepth(0);
-    fondoArboleda = this.add.tileSprite(0, 0, ANCHO_VISTA, ALTO_VISTA, 'fondo_arboleda').setOrigin(0, 0).setScrollFactor(0).setDepth(1);
+    // Fondos Parallax
+    fondoCerros = this.add.tileSprite(0, 0, ANCHO_VISTA, ALTO_VISTA, 'fondo_cerros')
+        .setOrigin(0, 0).setScrollFactor(0).setDepth(0);
 
-    // Fondos específicos de cada localidad a lo largo de los 7200 px
-    this.add.image(1200, Y_ESCENARIO - 50, 'cañas').setOrigin(0.5, 1).setScale(1.1).setDepth(1.2);
-    this.add.image(2100, Y_ESCENARIO - 50, 'acheral').setOrigin(0.5, 1).setScale(1.1).setDepth(1.2);
-    this.add.image(2900, Y_ESCENARIO - 50, 'cañas').setOrigin(0.5, 1).setScale(1.1).setDepth(1.2);
-    this.add.image(3600, Y_ESCENARIO - 50, 'puente').setOrigin(0.5, 1).setScale(1.2).setDepth(1.2);
-    this.add.image(4300, Y_ESCENARIO - 50, 'monteros').setOrigin(0.5, 1).setScale(1.1).setDepth(1.2);
-    this.add.image(5100, Y_ESCENARIO - 50, 'leon_rouges').setOrigin(0.5, 1).setScale(1.1).setDepth(1.2);
-    this.add.image(5800, Y_ESCENARIO - 50, 'villa_quinteros').setOrigin(0.5, 1).setScale(1.1).setDepth(1.2);
-    this.add.image(6400, Y_ESCENARIO - 50, 'rio_seco').setOrigin(0.5, 1).setScale(1.1).setDepth(1.2);
-    this.add.image(7050, Y_ESCENARIO - 30, 'ingenio').setOrigin(0.5, 1).setScale(1.3).setDepth(1.2);
+    fondoArboleda = this.add.tileSprite(0, 0, ANCHO_VISTA, ALTO_VISTA, 'fondo_arboleda')
+        .setOrigin(0, 0).setScrollFactor(0).setDepth(1);
 
-    // Los dos carriles de asfalto
+    // =========================================================================
+    // FONDOS EXTENDIDOS CON TRANSICIÓN SUAVE (DIFUMINADO)
+    // =========================================================================
+    crearFondoConTransicion(this, 1900, 'cañas', 900);
+    crearFondoConTransicion(this, 2750, 'cañas', 900);
+
+    crearFondoConTransicion(this, 3600, 'acheral', 900);
+    crearFondoConTransicion(this, 4450, 'acheral', 900);
+
+    crearFondoConTransicion(this, 5300, 'cañas', 850);
+    crearFondoConTransicion(this, 6100, 'cañas', 850);
+
+    crearFondoConTransicion(this, 6900, 'puente', 850);
+    crearFondoConTransicion(this, 7700, 'monteros', 900);
+    crearFondoConTransicion(this, 8550, 'monteros', 900);
+
+    crearFondoConTransicion(this, 9400, 'leon_rouges', 900);
+    crearFondoConTransicion(this, 10250, 'leon_rouges', 900);
+
+    // Villa Quinteros: encuadre limpio sin cortes
+    crearFondoConTransicion(this, 11100, 'villa_quinteros', 950);
+    crearFondoConTransicion(this, 12000, 'villa_quinteros', 950);
+
+    crearFondoConTransicion(this, 12900, 'rio_seco', 850);
+    crearFondoConTransicion(this, 13700, 'ingenio', 900);
+
+    // Carretera con sus dos carriles
     sueloRuta = this.add.tileSprite(0, Y_ESCENARIO - 20, ANCHO_VISTA, 160, 'suelo_ruta').setOrigin(0, 0).setScrollFactor(0).setDepth(1.5);
     sueloRuta2 = this.add.tileSprite(0, Y_ESCENARIO + 85, ANCHO_VISTA, 160, 'suelo_ruta2').setOrigin(0, 0).setScrollFactor(0).setDepth(1.6);
 
     // =========================================================================
-    // ESCENOGRAFÍA Y VEHÍCULOS ESTÁTICOS DECORATIVOS
+    // ESCENOGRAFÍA Y PROPS (SIN PALMERAS FUERA DE FAMAILLÁ)
     // =========================================================================
     this.add.image(130, Y_ESCENARIO, 'cartel_famailla').setOrigin(0.5, 1).setScale(1.10).setDepth(2);
     this.add.image(350, Y_ESCENARIO, 'gruta_virgen').setOrigin(0.5, 1).setScale(0.72).setDepth(2);
-    this.add.image(520, Y_ESCENARIO, 'arbol_naranjas').setOrigin(0.5, 1).setScale(0.85).setDepth(2);
+
+    // Nota para mí: Naranjo inicial con brillo y latido visual continuo
+    arbolNaranjasIntro = this.add.image(520, Y_ESCENARIO, 'arbol_naranjas').setOrigin(0.5, 1).setScale(0.85).setDepth(2);
+    this.tweens.add({
+        targets: arbolNaranjasIntro,
+        scaleX: 0.90,
+        scaleY: 0.90,
+        duration: 550,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+    });
+
+    // Palmeras exclusivas de Famaillá
     this.add.image(680, Y_ESCENARIO, 'palmera').setOrigin(0.5, 1).setScale(0.90).setDepth(2);
     this.add.image(880, Y_ESCENARIO, 'kiosco_coca').setOrigin(0.5, 1).setScale(1.05).setDepth(2);
+    this.add.image(1250, Y_ESCENARIO, 'palmera').setOrigin(0.5, 1).setScale(0.90).setDepth(2);
+    this.add.image(1650, Y_ESCENARIO, 'palmera').setOrigin(0.5, 1).setScale(0.90).setDepth(2);
 
-    // Autos estacionados en la banquina
-    this.add.image(1600, CARRIL_SUPERIOR_Y - 20, 'auto1').setOrigin(0.5, 1).setScale(1.1).setDepth(CARRIL_SUPERIOR_Y - 5);
-    this.add.image(3200, CARRIL_SUPERIOR_Y - 20, 'auto2').setOrigin(0.5, 1).setScale(1.1).setDepth(CARRIL_SUPERIOR_Y - 5);
-    this.add.image(4700, CARRIL_SUPERIOR_Y - 20, 'auto3').setOrigin(0.5, 1).setScale(1.1).setDepth(CARRIL_SUPERIOR_Y - 5);
-    this.add.image(2700, CARRIL_SUPERIOR_Y - 25, 'camion_limones').setOrigin(0.5, 1).setScale(1.2).setDepth(CARRIL_SUPERIOR_Y - 5);
-    this.add.image(5400, CARRIL_SUPERIOR_Y - 25, 'rastra_cañera').setOrigin(0.5, 1).setScale(1.25).setDepth(CARRIL_SUPERIOR_Y - 5);
+    // Paradas de colectivo y naranjos en la ruta
+    [2400, 4100, 5800, 7300, 9050, 10800, 12500].forEach(px => {
+        this.add.image(px, Y_ESCENARIO, 'parada_colectivo').setOrigin(0.5, 1).setScale(0.85).setDepth(2);
+        this.add.image(px + 450, Y_ESCENARIO, 'arbol_naranjas').setOrigin(0.5, 1).setScale(0.85).setDepth(2);
+    });
 
-    // Postes de luz y vegetación distribuida
-    [1000, 1800, 2600, 3400, 4200, 5000, 5800, 6600].forEach(px => {
+    // Postes de luz reubicados en los laterales de los objetos (sin superponerse)
+    const posicionesPostes = [1050, 1450, 2150, 2650, 3850, 4350, 5550, 6050, 7050, 7550, 8750, 9300, 10500, 11050, 12250, 12750];
+    posicionesPostes.forEach(px => {
         this.add.image(px, Y_ESCENARIO, 'poste_luz').setOrigin(0.5, 1).setScale(0.85).setDepth(2);
-        this.add.image(px + 300, Y_ESCENARIO, 'palmera').setOrigin(0.5, 1).setScale(0.90).setDepth(2);
     });
 
     // =========================================================================
@@ -250,7 +278,7 @@ function create() {
 
     this.anims.create({ key: 'grandote_run', frames: [{ key: 'grandote_run1' }, { key: 'grandote_run2' }], frameRate: 6, repeat: -1 });
     this.anims.create({ key: 'grandote_salto', frames: [{ key: 'grandote_salto' }], frameRate: 1 });
-    this.anims.create({ key: 'grandote_punch', frames: [{ key: 'grandote_punch1' }, { key: 'grandote_punch2' }, { key: 'grandote_punch3' }], frameRate: 8, repeat: 0 });
+    this.anims.create({ key: 'grandote_punch', frames: [{ key: 'grandote_punch1' }, { key: 'grandote_punch2' }, { key: 'grandote_punch3' }], frameRate: 9, repeat: 0 });
 
     this.anims.create({ key: 'boss_run', frames: [{ key: 'final_boss_run1' }, { key: 'final_boss_run2' }, { key: 'final_boss_run3' }], frameRate: 10, repeat: -1 });
     this.anims.create({ key: 'boss_salto', frames: [{ key: 'final_boss_salto1' }, { key: 'final_boss_salto2' }], frameRate: 6, repeat: 0 });
@@ -259,14 +287,14 @@ function create() {
     this.anims.create({ key: 'boss_cofee', frames: [{ key: 'final_boss_cofee1' }, { key: 'final_boss_cofee2' }], frameRate: 9, repeat: 0 });
 
     // =========================================================================
-    // INSTANCIACIÓN DE ENTIDADES
+    // JUGADOR Y GRUPOS FÍSICOS
     // =========================================================================
     jugador = this.physics.add.sprite(70, carrilActual, 'ciruja_idle');
     jugador.setScale(0.42);
     jugador.setCollideWorldBounds(true);
     jugador.setBounce(0);
-    jugador.setDragX(1600);
-    jugador.body.allowGravity = false; // Nota para mí: Controlamos la altura base manualmente en 2.5D
+    jugador.setDragX(1800);
+    jugador.body.allowGravity = false;
 
     this.cameras.main.setBounds(0, 0, ANCHO_MUNDO, ALTO_VISTA);
     this.cameras.main.startFollow(jugador, true, 0.08, 0.08);
@@ -274,24 +302,34 @@ function create() {
     proyectilesJugador = this.physics.add.group({ allowGravity: false });
     proyectilesEnemigos = this.physics.add.group({ allowGravity: false });
     colectivos = this.physics.add.group();
+    autosRuta = this.physics.add.group();
     hipsters = this.physics.add.group();
     agentes = this.physics.add.group();
     grandotes = this.physics.add.group();
     achilatas = this.physics.add.group();
 
-    this.physics.add.overlap(jugador, colectivos, manejarColisionColectivo, null, this);
-    this.physics.add.overlap(proyectilesJugador, colectivos, impactarColectivo, null, this);
+    // Colisiones con vehículos
+    this.physics.add.overlap(jugador, colectivos, manejarColisionVehiculo, null, this);
+    this.physics.add.overlap(proyectilesJugador, colectivos, impactarVehiculo, null, this);
+    this.physics.add.overlap(jugador, autosRuta, manejarColisionVehiculo, null, this);
+    this.physics.add.overlap(proyectilesJugador, autosRuta, impactarVehiculo, null, this);
 
-    // Nota para mí: El Palermitano Malvado ahora es mucho más grande (escala 0.78)
-    jefe = this.physics.add.sprite(7050, CARRIL_INFERIOR_Y, 'final_boss_joke1');
+    // Autos integrados en la calzada (quietos y en movimiento)
+    crearAutoEnRuta(this, 3100, CARRIL_SUPERIOR_Y, 'auto1', 0); // Estacionado
+    crearAutoEnRuta(this, 5400, CARRIL_INFERIOR_Y, 'camion_limones', -35); // En marcha lenta
+    crearAutoEnRuta(this, 8100, CARRIL_SUPERIOR_Y, 'auto2', 0); // Estacionado
+    crearAutoEnRuta(this, 10400, CARRIL_INFERIOR_Y, 'auto3', -45); // En marcha
+
+    // Jefe Palermitano Malvado esperando en el Ingenio
+    jefe = this.physics.add.sprite(14050, CARRIL_INFERIOR_Y, 'final_boss_joke1');
     jefe.setScale(0.78);
     jefe.setCollideWorldBounds(true);
     jefe.body.allowGravity = false;
     jefe.anims.play('boss_joke', true);
 
-    // Empanadas a lo largo de toda la travesía
+    // Empanadas
     empanadas = this.physics.add.group();
-    [240, 600, 1000, 1500, 2050, 2550, 3100, 3800, 4400, 5000, 5600, 6200, 6800].forEach(posX => {
+    [240, 750, 1400, 2200, 3100, 3900, 4800, 5600, 6500, 7400, 8300, 9200, 10100, 11000, 11900, 12800, 13700].forEach(posX => {
         let carril = (Math.random() > 0.5) ? CARRIL_SUPERIOR_Y : CARRIL_INFERIOR_Y;
         let emp = empanadas.create(posX, carril, 'empanada');
         emp.setScale(0.14);
@@ -299,32 +337,40 @@ function create() {
         emp.postFX.addGlow(0xffd700, 2, 0, false);
     });
 
-    // Achilatas para bajar la insolación en los tramos más calurosos (desde Monteros hacia el final)
-    [3900, 4600, 5200, 5900, 6500].forEach(posX => {
+    // Achilatas más proporcionadas (escala 0.22)
+    [5800, 6900, 8200, 9500, 10900, 12100, 13200].forEach(posX => {
         let carril = (Math.random() > 0.5) ? CARRIL_SUPERIOR_Y : CARRIL_INFERIOR_Y;
         let ach = achilatas.create(posX, carril, 'achilata');
-        ach.setScale(0.35);
+        ach.setScale(0.22);
         ach.body.allowGravity = false;
         ach.postFX.addGlow(0xff00ff, 2, 0, false);
     });
 
-    // Montaña de cascotes para abastecerse
+    // Montañas de cascotes con latido pulsante
     potenciadores = this.physics.add.group();
-    let montañaCascote = potenciadores.create(1350, CARRIL_SUPERIOR_Y, 'montaña_cascote');
-    montañaCascote.setScale(0.65);
-    montañaCascote.body.allowGravity = false;
-    montañaCascote.tipo = 'CASCOTES';
+    let montaña1 = potenciadores.create(1550, CARRIL_SUPERIOR_Y, 'montaña_cascote');
+    montaña1.setScale(0.65);
+    montaña1.body.allowGravity = false;
+    montaña1.tipo = 'CASCOTES';
+    this.tweens.add({ targets: montaña1, scaleX: 0.70, scaleY: 0.70, duration: 500, yoyo: true, repeat: -1 });
 
-    let sangucheItem = potenciadores.create(4800, CARRIL_INFERIOR_Y, 'sanguche');
-    sangucheItem.setScale(0.14);
+    let montaña2 = potenciadores.create(7200, CARRIL_SUPERIOR_Y, 'montaña_cascote');
+    montaña2.setScale(0.65);
+    montaña2.body.allowGravity = false;
+    montaña2.tipo = 'CASCOTES';
+    this.tweens.add({ targets: montaña2, scaleX: 0.70, scaleY: 0.70, duration: 500, yoyo: true, repeat: -1 });
+
+    // Sánguche de milanesa más grande (escala 0.25)
+    let sangucheItem = potenciadores.create(9600, CARRIL_INFERIOR_Y, 'sanguche');
+    sangucheItem.setScale(0.25);
     sangucheItem.body.allowGravity = false;
     sangucheItem.tipo = 'SANGUCHE';
-    this.tweens.add({ targets: sangucheItem, scaleX: 0.16, scaleY: 0.16, duration: 400, yoyo: true, repeat: -1 });
+    this.tweens.add({ targets: sangucheItem, scaleX: 0.28, scaleY: 0.28, duration: 400, yoyo: true, repeat: -1 });
 
-    metaFinal = this.add.rectangle(7150, 400, 60, 140, 0x00ff00, 0);
+    metaFinal = this.add.rectangle(14300, 400, 60, 140, 0x00ff00, 0);
     this.physics.add.existing(metaFinal, true);
 
-    // Overlaps de combate y colisión
+    // Overlaps
     this.physics.add.overlap(proyectilesJugador, hipsters, impactarEnemigo, null, this);
     this.physics.add.overlap(proyectilesJugador, agentes, impactarEnemigo, null, this);
     this.physics.add.overlap(proyectilesJugador, grandotes, impactarEnemigo, null, this);
@@ -341,9 +387,7 @@ function create() {
     this.physics.add.overlap(jugador, potenciadores, recolectarPotenciador, null, this);
     this.physics.add.overlap(jugador, metaFinal, llegarALaMeta, null, this);
 
-    // =========================================================================
-    // HUD Y ELEMENTOS VISUALES EN PANTALLA
-    // =========================================================================
+    // HUD
     textoVidas = this.add.text(20, 15, 'VIDAS: ' + vidas, { fontSize: '18px', fontFamily: 'Arial Black', fill: '#ffffff', stroke: '#000000', strokeThickness: 4 }).setScrollFactor(0).setDepth(100);
     barraVidaGrafico = this.add.graphics().setScrollFactor(0).setDepth(100);
     dibujarBarraSalud();
@@ -357,10 +401,14 @@ function create() {
         fontSize: '18px', fontFamily: 'Arial Black', fill: '#ffff00', stroke: '#000000', strokeThickness: 5, align: 'center'
     }).setOrigin(0.5).setScrollFactor(0).setAlpha(0).setDepth(100);
 
-    // Sistema de Insolación en pantalla
-    solSprite = this.add.image(ANCHO_VISTA - 60, 60, 'sol').setScrollFactor(0).setScale(0.15).setAlpha(0).setDepth(99);
-    barraCalorGrafico = this.add.graphics().setScrollFactor(0).setDepth(100);
-    textoCalor = this.add.text(ANCHO_VISTA - 140, 95, '', { fontSize: '12px', fontFamily: 'Arial Black', fill: '#ffaa00', stroke: '#000000', strokeThickness: 3 }).setScrollFactor(0).setDepth(100);
+    capaTinteCalor = this.add.rectangle(ANCHO_VISTA / 2, ALTO_VISTA / 2, ANCHO_VISTA, ALTO_VISTA, 0xff5500, 0)
+        .setScrollFactor(0).setDepth(90);
+
+    solSprite = this.add.image(ANCHO_VISTA - 70, 70, 'sol')
+        .setScrollFactor(0).setScale(0.40).setAlpha(0).setDepth(110);
+
+    barraCalorGrafico = this.add.graphics().setScrollFactor(0).setDepth(110);
+    textoCalor = this.add.text(ANCHO_VISTA - 160, 115, '', { fontSize: '13px', fontFamily: 'Arial Black', fill: '#ffaa00', stroke: '#000000', strokeThickness: 3 }).setScrollFactor(0).setDepth(110);
 
     cursores = this.input.keyboard.createCursorKeys();
     teclaZ = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
@@ -368,20 +416,17 @@ function create() {
 
     this.time.addEvent({ delay: 2200, callback: ejecutarRutinaJefe, callbackScope: this, loop: true });
 
-    // Iniciar la cinemática arcade
     ejecutarCinematicaPrologo(this);
 }
 
 function update(time, delta) {
     if (!jugador.active || juegoTerminado) return;
 
-    // Scroll Parallax sincronizado con la cámara
     fondoCerros.tilePositionX = this.cameras.main.scrollX * 0.05;
     fondoArboleda.tilePositionX = this.cameras.main.scrollX * 0.25;
     sueloRuta.tilePositionX = this.cameras.main.scrollX * 1.0;
     sueloRuta2.tilePositionX = this.cameras.main.scrollX * 1.0;
 
-    // Si estamos en la cinemática inicial, no se permite el control del usuario
     if (enCinematica) return;
 
     verificarProgresionOleadas(this);
@@ -389,9 +434,7 @@ function update(time, delta) {
 
     const velocidadBase = modoSanguchazo ? 330 : 230;
 
-    // =========================================================================
-    // MOVIMIENTO EN EJE X
-    // =========================================================================
+    // Movimiento horizontal en X
     if (cursores.left.isDown) {
         jugador.setVelocityX(-velocidadBase);
         jugador.setFlipX(true);
@@ -405,44 +448,26 @@ function update(time, delta) {
         if (!estaSaltando && !disparando) jugador.anims.play('idle', true);
     }
 
-    // =========================================================================
-    // SISTEMA 2.5D: 2 CARRILES ESTRICTOS Y SALTO SIN FLOTACIÓN
-    // =========================================================================
+    // Control de carril 2.5D
     if (!estaSaltando) {
-        // Nota para mí: Cambio de carril limpio entre 370 y 422 para que nunca flote en coordenadas intermedias
-        if (cursores.up.isDown && carrilActual === CARRIL_INFERIOR_Y && !cambiandoCarril) {
-            cambiandoCarril = true;
-            this.tweens.add({
-                targets: jugador,
-                y: CARRIL_SUPERIOR_Y,
-                duration: 120,
-                onComplete: () => {
-                    carrilActual = CARRIL_SUPERIOR_Y;
-                    cambiandoCarril = false;
-                }
-            });
-        } else if (cursores.down.isDown && carrilActual === CARRIL_SUPERIOR_Y && !cambiandoCarril) {
-            cambiandoCarril = true;
-            this.tweens.add({
-                targets: jugador,
-                y: CARRIL_INFERIOR_Y,
-                duration: 120,
-                onComplete: () => {
-                    carrilActual = CARRIL_INFERIOR_Y;
-                    cambiandoCarril = false;
-                }
-            });
+        jugador.body.allowGravity = false;
+        jugador.setVelocityY(0);
+
+        if (Phaser.Input.Keyboard.JustDown(cursores.up) && carrilActual === CARRIL_INFERIOR_Y) {
+            carrilActual = CARRIL_SUPERIOR_Y;
+            jugador.y = CARRIL_SUPERIOR_Y;
+        } else if (Phaser.Input.Keyboard.JustDown(cursores.down) && carrilActual === CARRIL_SUPERIOR_Y) {
+            carrilActual = CARRIL_INFERIOR_Y;
+            jugador.y = CARRIL_INFERIOR_Y;
         }
 
-        // Salto arcade
         if (Phaser.Input.Keyboard.JustDown(cursores.space)) {
             estaSaltando = true;
-            jugador.body.allowGravity = true; // Activa gravedad para la parábola
-            jugador.setVelocityY(-560);
+            jugador.body.allowGravity = true;
+            jugador.setVelocityY(-580);
             if (!disparando) jugador.anims.play('salto', true);
         }
     } else {
-        // Nota para mí: Si empezó a caer y alcanzó o superó el carril activo, aterriza de inmediato
         if (jugador.body.velocity.y > 0 && jugador.y >= carrilActual) {
             jugador.y = carrilActual;
             jugador.body.allowGravity = false;
@@ -451,9 +476,8 @@ function update(time, delta) {
             jugador.anims.play('idle', true);
         }
 
-        // Control de altura variable al soltar espacio
         if (cursores.space.isUp && jugador.body.velocity.y < -120) {
-            jugador.setVelocityY(jugador.body.velocity.y * 0.55);
+            jugador.setVelocityY(jugador.body.velocity.y * 0.50);
         }
     }
 
@@ -468,15 +492,17 @@ function update(time, delta) {
     }
 
     actualizarColectivos();
+    actualizarAutosRuta();
     actualizarIAHipsters(this);
     actualizarIAAgentes(this);
     actualizarIAGrandotes(this);
 
-    // Profundidad dinámica basada en el carril
+    // Profundidad dinámica
     jugador.setDepth(carrilActual + (jugador.displayHeight * 0.5));
     hipsters.children.iterate(e => { if (e) e.setDepth(e.y + (e.displayHeight * 0.5)); });
     agentes.children.iterate(e => { if (e) e.setDepth(e.y + (e.displayHeight * 0.5)); });
     grandotes.children.iterate(e => { if (e) e.setDepth(e.y + (e.displayHeight * 0.5)); });
+    autosRuta.children.iterate(a => { if (a) a.setDepth(a.y); });
     empanadas.children.iterate(e => { if (e) e.setDepth(e.y); });
     achilatas.children.iterate(e => { if (e) e.setDepth(e.y); });
     potenciadores.children.iterate(e => { if (e) e.setDepth(e.y); });
@@ -502,87 +528,118 @@ function update(time, delta) {
         }
     });
 
-    // Activar combate del Palermitano Malvado cerca del Ingenio
-    if (jefe && jefe.active && !jefeActivo && jugador.x > 6750) {
+    if (jefe && jefe.active && !jefeActivo && jugador.x > 13800) {
         jefeActivo = true;
         actualizarBarraJefe();
     }
 }
 
 // =============================================================================
-// CINEMÁTICA DE PRÓLOGO ESTILO ARCADE (METAL SLUG)
+// HELPER PARA TRANSICIÓN DE FONDOS CON DIFUMINADO
+// =============================================================================
+function crearFondoConTransicion(escena, posX, spriteKey, anchoCustom) {
+    let ancho = anchoCustom || 850;
+    let img = escena.add.image(posX, 0, spriteKey)
+        .setOrigin(0, 0)
+        .setDisplaySize(ancho, ALTO_VISTA)
+        .setDepth(1.2);
+
+    // Nota para mí: Creo un suave fundido al inicio de la imagen para que no corte tajante con el fondo previo
+    let sombraTransicion = escena.add.rectangle(posX + 40, ALTO_VISTA / 2, 80, ALTO_VISTA, 0x000000, 0.12)
+        .setOrigin(0.5, 0.5)
+        .setDepth(1.25);
+
+    return img;
+}
+
+// =============================================================================
+// CINEMÁTICA OFICIAL: EL PALERMITANO AL MANDO
 // =============================================================================
 function ejecutarCinematicaPrologo(escena) {
     jugador.setVisible(false);
 
-    // Props y personajes temporales para el prólogo en Famaillá
     let mesa = escena.add.image(190, CARRIL_SUPERIOR_Y, 'ciruja_comiendo').setScale(0.85).setDepth(50);
-    let campeona = escena.add.image(280, CARRIL_SUPERIOR_Y - 5, 'campeona_empanadas').setScale(0.80).setDepth(50);
+    let campeona = escena.add.image(290, CARRIL_SUPERIOR_Y - 5, 'campeona_empanadas').setScale(0.80).setDepth(50);
 
     let cajaTexto = escena.add.rectangle(ANCHO_VISTA / 2, ALTO_VISTA - 60, ANCHO_VISTA - 80, 70, 0x000000, 0.85).setScrollFactor(0).setDepth(200);
     let textoNarrado = escena.add.text(ANCHO_VISTA / 2, ALTO_VISTA - 60, 'FAMAILLÁ, CAPITAL DE LA EMPANADA.\nEL CIRUJA DISFRUTA DE UN MEDIODÍA DE PAZ...', {
         fontSize: '15px', fontFamily: 'Arial Black', fill: '#00ffcc', align: 'center'
     }).setOrigin(0.5).setScrollFactor(0).setDepth(201);
 
-    // Paso 1: Paneo de cámara hacia adelante mostrando la tranquilidad
     escena.cameras.main.pan(500, ALTO_VISTA / 2, 2800, 'Sine.easeInOut');
 
     escena.time.delayedCall(3000, () => {
-        escena.cameras.main.pan(250, ALTO_VISTA / 2, 1200, 'Sine.easeInOut');
-        textoNarrado.setText('¡PERO LA PAZ SE TERMINA!\nEL PALERMITANO MALVADO APARECE CON SUS SECUACES...');
+        escena.cameras.main.pan(320, ALTO_VISTA / 2, 1000, 'Sine.easeInOut');
+        textoNarrado.setText('¡ATAQUE SORPRESA!\nLOS AGENTES PALERMITANOS ATRAPAN A LA CAMPEONA...');
         textoNarrado.setFill('#ff3333');
 
-        // Secuestro
-        let raptores = escena.add.image(280, CARRIL_SUPERIOR_Y - 5, 'secuestro_campeona').setScale(0.85).setDepth(55);
-        campeona.setVisible(false);
+        campeona.destroy();
 
-        escena.tweens.add({
-            targets: raptores,
-            x: 850,
-            duration: 2500,
-            ease: 'Linear'
+        let raptores = escena.add.image(290, CARRIL_SUPERIOR_Y - 5, 'secuestro_campeona').setScale(0.85).setDepth(55);
+        let palermitanoJefeIntro = escena.add.sprite(200, CARRIL_SUPERIOR_Y - 10, 'final_boss_joke1').setScale(0.75).setDepth(56);
+        palermitanoJefeIntro.anims.play('boss_joke', true);
+
+        escena.time.delayedCall(2200, () => {
+            textoNarrado.setText('PALERMITANO MALVADO: "¡LLEVENLA A PALERMO!\n¡VAMOS A SERVIR LA EMPANADA DECONSTRUIDA EN FRASCO!"');
+            textoNarrado.setFill('#ffff00');
+
+            escena.tweens.add({
+                targets: raptores,
+                x: 1100,
+                duration: 2600,
+                ease: 'Linear'
+            });
+
+            escena.time.delayedCall(500, () => {
+                palermitanoJefeIntro.anims.play('boss_run', true);
+                escena.tweens.add({
+                    targets: palermitanoJefeIntro,
+                    x: 1150,
+                    duration: 2400,
+                    ease: 'Linear',
+                    onComplete: () => {
+                        raptores.destroy();
+                        palermitanoJefeIntro.destroy();
+                    }
+                });
+            });
         });
     });
 
-    escena.time.delayedCall(6000, () => {
-        textoNarrado.setText('¡SECUESTRARON A LA CAMPEONA!\nQUIEREN SERVIR LA EMPANADA EN FRASCO EN PALERMO...');
-        textoNarrado.setFill('#ffff00');
-    });
-
-    escena.time.delayedCall(9000, () => {
+    escena.time.delayedCall(9500, () => {
         cajaTexto.destroy();
         textoNarrado.destroy();
         mesa.destroy();
 
-        // Restaurar control al jugador
         jugador.setPosition(80, CARRIL_SUPERIOR_Y);
+        carrilActual = CARRIL_SUPERIOR_Y;
+        estaSaltando = false;
         jugador.setVisible(true);
         enCinematica = false;
-        mostrarMensaje(escena, '¡SALVA LA RECETA TRADICIONAL!\nAVANZA POR LA RUTA 38');
+        mostrarMensaje(escena, '¡SALVA LA RECETA TRADICIONAL!\nPERSEVERA POR LA RUTA 38');
     });
 }
 
 // =============================================================================
-// SISTEMA DE INSOLACIÓN DINÁMICA (CALOR DE LA TARDE)
+// SISTEMA DE INSOLACIÓN ACELERADA
 // =============================================================================
 function actualizarSistemaInsolacion(escena, time) {
-    // Se activa a partir de los 3500 px (Monteros en adelante)
-    if (jugador.x > 3500) {
+    if (jugador.x > 5000) {
         if (!insolacionActiva) {
             insolacionActiva = true;
             solSprite.setAlpha(1);
             mostrarMensaje(escena, '¡EL SOL DE LA SIESTA APRIETA!\nBusca Achilatas para no insolarte');
         }
 
-        // El sol crece y la insolación sube con el tiempo
-        let factorCalor = Math.min(1, (jugador.x - 3500) / 3000);
-        solSprite.setScale(0.15 + (factorCalor * 0.35));
+        let progreso = Math.min(1, (jugador.x - 5000) / 7500);
+        solSprite.setScale(0.40 + (progreso * 0.70));
+        capaTinteCalor.setAlpha(progreso * 0.22);
 
-        nivelInsolacion = Math.min(100, nivelInsolacion + 0.035);
+        // Nota para mí: Subo el incremento a 0.075 para que la insolación sea una amenaza palpable
+        nivelInsolacion = Math.min(100, nivelInsolacion + 0.075);
         dibujarBarraInsolacion();
 
-        // Daño periódico si la insolación llega al 100%
-        if (nivelInsolacion >= 100 && time > tiempoUltimoDanioSol + 2500) {
+        if (nivelInsolacion >= 100 && time > tiempoUltimoDanioSol + 2000) {
             tiempoUltimoDanioSol = time;
             mostrarMensaje(escena, '¡ESTÁS INSOLADO! PIERDES ENERGÍA');
             recibirDanioJugador(escena);
@@ -594,10 +651,10 @@ function dibujarBarraInsolacion() {
     barraCalorGrafico.clear();
     if (!insolacionActiva) return;
 
-    const x = ANCHO_VISTA - 130;
-    const y = 80;
-    const ancho = 100;
-    const alto = 10;
+    const x = ANCHO_VISTA - 160;
+    const y = 95;
+    const ancho = 120;
+    const alto = 12;
 
     barraCalorGrafico.lineStyle(2, 0x000000, 1);
     barraCalorGrafico.strokeRect(x, y, ancho, alto);
@@ -612,7 +669,7 @@ function dibujarBarraInsolacion() {
 function recolectarAchilata(jugadorRef, achilata) {
     if (Math.abs(carrilActual - achilata.y) > 25) return;
     achilata.destroy();
-    nivelInsolacion = Math.max(0, nivelInsolacion - 40);
+    nivelInsolacion = Math.max(0, nivelInsolacion - 50);
     puntos += 100;
     dibujarBarraInsolacion();
     actualizarHUD();
@@ -620,7 +677,102 @@ function recolectarAchilata(jugadorRef, achilata) {
 }
 
 // =============================================================================
-// OLEADAS Y SPAWN DE COLECTIVOS (EXPREBUS Y TESA)
+// VEHÍCULOS (BUSES GRANDES Y AUTOS EN RUTA)
+// =============================================================================
+function lanzarColectivo(escena, x, spriteKey, velocidad) {
+    let carrilY = (Math.random() > 0.5) ? CARRIL_SUPERIOR_Y + 15 : CARRIL_INFERIOR_Y + 10;
+    let bus = colectivos.create(x, carrilY, spriteKey);
+    bus.setOrigin(0.5, 1);
+    // Nota para mí: Escala subida a 2.15 para tamaño real imponente
+    bus.setScale(2.15);
+    bus.setDepth(carrilY);
+    bus.vida = 10;
+    bus.velocidadX = velocidad;
+    bus.averiado = false;
+    bus.setImmovable(true);
+    bus.body.allowGravity = false;
+
+    let anchoReal = bus.displayWidth * 0.85;
+    let altoReal = bus.displayHeight * 0.88;
+    bus.body.setSize(anchoReal, altoReal);
+    bus.body.setOffset((bus.displayWidth - anchoReal) / 2, bus.displayHeight - altoReal);
+
+    escena.tweens.add({
+        targets: bus, y: carrilY - 2, duration: 180, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
+    });
+}
+
+function crearAutoEnRuta(escena, x, carrilY, spriteKey, velX) {
+    let auto = autosRuta.create(x, carrilY + 8, spriteKey);
+    auto.setOrigin(0.5, 1);
+    auto.setScale(1.15);
+    auto.setDepth(carrilY);
+    auto.vida = 4;
+    auto.velocidadX = velX;
+    auto.averiado = false;
+    auto.setImmovable(true);
+    auto.body.allowGravity = false;
+
+    let ancho = auto.displayWidth * 0.80;
+    let alto = auto.displayHeight * 0.80;
+    auto.body.setSize(ancho, alto);
+    auto.body.setOffset((auto.displayWidth - ancho) / 2, auto.displayHeight - alto);
+}
+
+function actualizarColectivos() {
+    colectivos.children.iterate((bus) => {
+        if (!bus || !bus.active) return;
+        bus.setVelocityX(!bus.averiado ? bus.velocidadX : 0);
+    });
+}
+
+function actualizarAutosRuta() {
+    autosRuta.children.iterate((auto) => {
+        if (!auto || !auto.active) return;
+        auto.setVelocityX(!auto.averiado ? auto.velocidadX : 0);
+    });
+}
+
+function manejarColisionVehiculo(jugadorRef, vehiculo) {
+    if (jugadorRef.y < vehiculo.body.top) return;
+    if (Math.abs(carrilActual - vehiculo.y) > 35) return;
+
+    if (!vehiculo.averiado) {
+        recibirDanioJugador(jugadorRef.scene);
+    }
+}
+
+function impactarVehiculo(proyectil, vehiculo) {
+    if (!vehiculo || !vehiculo.active || vehiculo.averiado) return;
+    if (Math.abs(proyectil.y - (vehiculo.y - vehiculo.displayHeight / 2)) > 70) return;
+
+    let danio = (armaActual === 'CASCOTE') ? 3 : 1;
+    vehiculo.vida -= danio;
+    proyectil.destroy();
+    vehiculo.setTint(0xff2222);
+
+    vehiculo.scene.time.delayedCall(120, () => {
+        if (vehiculo && vehiculo.active && !vehiculo.averiado) vehiculo.clearTint();
+    });
+
+    if (vehiculo.vida <= 0) {
+        vehiculo.averiado = true;
+        vehiculo.setTint(0x666666);
+        puntos += 250;
+        actualizarHUD();
+
+        let txtAveriado = vehiculo.scene.add.text(vehiculo.x, vehiculo.y - 130, '¡AVERÍA TOTAL!', {
+            fontSize: '14px', fontFamily: 'Arial Black', fill: '#ffaa00', stroke: '#000000', strokeThickness: 3
+        }).setOrigin(0.5).setDepth(100);
+
+        vehiculo.scene.tweens.add({
+            targets: txtAveriado, y: txtAveriado.y - 30, alpha: 0, duration: 800, onComplete: () => txtAveriado.destroy()
+        });
+    }
+}
+
+// =============================================================================
+// OLEADAS Y SPAWN DE ENEMIGOS
 // =============================================================================
 function verificarProgresionOleadas(escena) {
     if (!arbolSaqueado && jugador.x >= 480 && jugador.x <= 560) {
@@ -633,43 +785,43 @@ function verificarProgresionOleadas(escena) {
 
     const oleadas = [
         {
-            id: 1, triggerX: 620, ejecutar: () => {
+            id: 1, triggerX: 900, ejecutar: () => {
                 lanzarColectivo(escena, escena.cameras.main.scrollX + ANCHO_VISTA + 80, 'exprebus', -65);
                 spawnEnemigo(escena, 'HIPSTER', 0);
                 spawnEnemigo(escena, 'HIPSTER', 500);
             }
         },
         {
-            id: 2, triggerX: 1600, ejecutar: () => {
+            id: 2, triggerX: 2500, ejecutar: () => {
                 lanzarColectivo(escena, escena.cameras.main.scrollX + ANCHO_VISTA + 80, 'tesa', -60);
                 spawnEnemigo(escena, 'AGENTE', 0);
                 spawnEnemigo(escena, 'HIPSTER', 600);
             }
         },
         {
-            id: 3, triggerX: 2500, ejecutar: () => {
+            id: 3, triggerX: 4500, ejecutar: () => {
                 lanzarColectivo(escena, escena.cameras.main.scrollX + ANCHO_VISTA + 80, 'exprebus', -65);
                 spawnEnemigo(escena, 'AGENTE', 0);
                 spawnEnemigo(escena, 'GRANDOTE', 600);
             }
         },
         {
-            id: 4, triggerX: 3700, ejecutar: () => {
+            id: 4, triggerX: 7000, ejecutar: () => {
                 lanzarColectivo(escena, escena.cameras.main.scrollX + ANCHO_VISTA + 80, 'tesa', -60);
                 spawnEnemigo(escena, 'GRANDOTE', 0);
                 spawnEnemigo(escena, 'AGENTE', 500);
             }
         },
         {
-            id: 5, triggerX: 5100, ejecutar: () => {
+            id: 5, triggerX: 9500, ejecutar: () => {
                 lanzarColectivo(escena, escena.cameras.main.scrollX + ANCHO_VISTA + 80, 'exprebus', -65);
                 spawnEnemigo(escena, 'GRANDOTE', 0);
-                spawnEnemigo(escena, 'AGENTE', 700);
-                spawnEnemigo(escena, 'HIPSTER', 1200);
+                spawnEnemigo(escena, 'AGENTE', 600);
+                spawnEnemigo(escena, 'HIPSTER', 1100);
             }
         },
         {
-            id: 6, triggerX: 6300, ejecutar: () => {
+            id: 6, triggerX: 12000, ejecutar: () => {
                 lanzarColectivo(escena, escena.cameras.main.scrollX + ANCHO_VISTA + 80, 'tesa', -65);
                 spawnEnemigo(escena, 'GRANDOTE', 0);
                 spawnEnemigo(escena, 'GRANDOTE', 800);
@@ -697,6 +849,7 @@ function spawnEnemigo(escena, tipo, retrasoMs) {
             h.vida = 3;
             h.puntosValor = 75;
             h.invulnerable = false;
+            h.estaDisparando = false;
             h.ultimoAtaque = escena.time.now + Phaser.Math.Between(800, 1600);
             h.body.allowGravity = false;
         } else if (tipo === 'AGENTE') {
@@ -706,11 +859,11 @@ function spawnEnemigo(escena, tipo, retrasoMs) {
             a.vida = 5;
             a.puntosValor = 150;
             a.invulnerable = false;
+            a.estaDisparando = false;
             a.ultimoDisparo = escena.time.now + Phaser.Math.Between(600, 1400);
             a.body.allowGravity = false;
         } else if (tipo === 'GRANDOTE') {
             let g = grandotes.create(posX, carril, 'grandote_run1');
-            // Nota para mí: Grandote con escala aumentada a 0.72
             g.setScale(0.72);
             g.tipo = 'GRANDOTE';
             g.vida = 10;
@@ -722,79 +875,144 @@ function spawnEnemigo(escena, tipo, retrasoMs) {
     });
 }
 
-function lanzarColectivo(escena, x, spriteKey, velocidad) {
-    let carrilY = (Math.random() > 0.5) ? CARRIL_SUPERIOR_Y + 15 : CARRIL_INFERIOR_Y + 10;
-    let bus = colectivos.create(x, carrilY, spriteKey);
-    bus.setOrigin(0.5, 1);
-    bus.setScale(1.70);
-    bus.setDepth(carrilY);
-    bus.vida = 8;
-    bus.velocidadX = velocidad;
-    bus.averiado = false;
-    bus.setImmovable(true);
-    bus.body.allowGravity = false;
+// =============================================================================
+// COMPORTAMIENTOS E IA: DETENCIÓN PARA DISPARAR Y PUÑETAZOS
+// =============================================================================
+function actualizarIAHipsters(escena) {
+    hipsters.children.iterate((hipster) => {
+        if (!hipster || !hipster.active) return;
+        if (hipster.estaDisparando) return;
 
-    let anchoReal = bus.displayWidth * 0.82;
-    let altoReal = bus.displayHeight * 0.88;
-    bus.body.setSize(anchoReal, altoReal);
-    bus.body.setOffset((bus.displayWidth - anchoReal) / 2, bus.displayHeight - altoReal);
+        let dist = Math.abs(hipster.x - jugador.x);
 
-    escena.tweens.add({
-        targets: bus, y: carrilY - 2, duration: 180, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
+        // Nota para mí: Si entra en rango de disparo, se frena completamente para arrojar la botella
+        if (dist < 650 && escena.time.now > hipster.ultimoAtaque + 2400 && Math.abs(carrilActual - hipster.y) < 40) {
+            hipster.estaDisparando = true;
+            hipster.setVelocityX(0);
+            hipster.anims.play('hipster_lanzar', true);
+
+            escena.time.delayedCall(300, () => {
+                if (hipster && hipster.active) {
+                    let botella = proyectilesEnemigos.create(hipster.x - 16, hipster.y - 6, 'botella_agua');
+                    botella.setScale(0.14);
+                    botella.setDepth(hipster.y + (hipster.displayHeight * 0.5));
+                    botella.setVelocity(-270, 0);
+                    botella.velocidadGiro = -16;
+                }
+            });
+
+            escena.time.delayedCall(700, () => {
+                if (hipster && hipster.active) {
+                    hipster.ultimoAtaque = escena.time.now;
+                    hipster.estaDisparando = false;
+                }
+            });
+            return;
+        }
+
+        hipster.setVelocityX(-65);
+        hipster.anims.play('hipster_run', true);
     });
 }
 
-function actualizarColectivos() {
-    colectivos.children.iterate((bus) => {
-        if (!bus || !bus.active) return;
-        if (!bus.averiado) {
-            bus.setVelocityX(bus.velocidadX);
+function actualizarIAAgentes(escena) {
+    agentes.children.iterate((agente) => {
+        if (!agente || !agente.active) return;
+        if (agente.estaDisparando) return;
+
+        let dist = Math.abs(agente.x - jugador.x);
+
+        // Nota para mí: El agente frena en seco para apuntar y disparar con retroceso
+        if (dist < 700 && escena.time.now > agente.ultimoDisparo + 2000 && Math.abs(carrilActual - agente.y) < 40) {
+            agente.estaDisparando = true;
+            agente.setVelocityX(0);
+            agente.anims.play('agente_disparar', true);
+
+            escena.time.delayedCall(250, () => {
+                if (agente && agente.active) {
+                    let bala = proyectilesEnemigos.create(agente.x - 20, agente.y - 6, 'bala');
+                    bala.setScale(0.20);
+                    bala.setDepth(agente.y + (agente.displayHeight * 0.5));
+                    bala.setVelocity(-340, 0);
+                }
+            });
+
+            escena.time.delayedCall(600, () => {
+                if (agente && agente.active) {
+                    agente.ultimoDisparo = escena.time.now;
+                    agente.estaDisparando = false;
+                }
+            });
+            return;
+        }
+
+        if (dist > 180) {
+            agente.setVelocityX(-75);
+            agente.anims.play('agente_run', true);
         } else {
-            bus.setVelocityX(0);
+            agente.setVelocityX(0);
         }
     });
 }
 
-function manejarColisionColectivo(jugadorRef, bus) {
-    if (jugadorRef.y < bus.body.top) return; // Si salta por encima no choca
-    if (Math.abs(carrilActual - bus.y) > 35) return; // Si está en el otro carril pasa libre
+function actualizarIAGrandotes(escena) {
+    grandotes.children.iterate((grandote) => {
+        if (!grandote || !grandote.active) return;
+        if (grandote.atacandoCuerpoACuerpo) return;
 
-    if (!bus.averiado) {
-        recibirDanioJugador(jugadorRef.scene);
-    }
+        let dist = Math.abs(grandote.x - jugador.x);
+
+        // Nota para mí: Activación estricta de la animación de puñetazo al acercarse al Ciruja
+        if (dist < 95 && Math.abs(carrilActual - grandote.y) < 35) {
+            grandote.atacandoCuerpoACuerpo = true;
+            grandote.setVelocityX(0);
+            grandote.anims.play('grandote_punch', true);
+
+            escena.time.delayedCall(300, () => {
+                if (grandote && grandote.active && Math.abs(grandote.x - jugador.x) < 105 && Math.abs(carrilActual - grandote.y) < 35) {
+                    recibirDanioJugador(escena);
+                }
+            });
+
+            escena.time.delayedCall(650, () => {
+                if (grandote && grandote.active) {
+                    grandote.atacandoCuerpoACuerpo = false;
+                }
+            });
+            return;
+        }
+
+        grandote.setVelocityX(-100);
+        grandote.anims.play('grandote_run', true);
+    });
 }
 
-function impactarColectivo(proyectil, bus) {
-    if (!bus || !bus.active || bus.averiado) return;
-    if (Math.abs(proyectil.y - (bus.y - bus.displayHeight / 2)) > 65) return;
+function impactarEnemigo(proyectil, enemigo) {
+    if (Math.abs(proyectil.y - enemigo.y) > 40) return;
+    proyectil.destroy();
+    if (enemigo.invulnerable) return;
 
     let danio = (armaActual === 'CASCOTE') ? 3 : 1;
-    bus.vida -= danio;
-    proyectil.destroy();
-    bus.setTint(0xff2222);
+    enemigo.vida -= danio;
+    enemigo.invulnerable = true;
+    enemigo.setTint(0xff3333);
 
-    bus.scene.time.delayedCall(120, () => {
-        if (bus && bus.active && !bus.averiado) bus.clearTint();
+    enemigo.scene.time.delayedCall(160, () => {
+        if (enemigo && enemigo.active) {
+            enemigo.clearTint();
+            enemigo.invulnerable = false;
+        }
     });
 
-    if (bus.vida <= 0) {
-        bus.averiado = true;
-        bus.setTint(0x666666);
-        puntos += 250;
+    if (enemigo.vida <= 0) {
+        puntos += enemigo.puntosValor || 50;
+        enemigo.destroy();
         actualizarHUD();
-
-        let txtAveriado = bus.scene.add.text(bus.x, bus.y - 130, '¡MOTOR REVENTADO!', {
-            fontSize: '14px', fontFamily: 'Arial Black', fill: '#ffaa00', stroke: '#000000', strokeThickness: 3
-        }).setOrigin(0.5).setDepth(100);
-
-        bus.scene.tweens.add({
-            targets: txtAveriado, y: txtAveriado.y - 30, alpha: 0, duration: 800, onComplete: () => txtAveriado.destroy()
-        });
     }
 }
 
 // =============================================================================
-// SISTEMA DE DISPARO DEL JUGADOR
+// DISPARO DEL CIRUJA
 // =============================================================================
 function intentarDisparo(escena) {
     if (armaActual === 'NINGUNA') return;
@@ -830,114 +1048,6 @@ function intentarDisparo(escena) {
 
     actualizarHUD();
     escena.time.delayedCall(150, () => { disparando = false; });
-}
-
-// =============================================================================
-// COMPORTAMIENTOS E IA DE ENEMIGOS
-// =============================================================================
-function actualizarIAHipsters(escena) {
-    hipsters.children.iterate((hipster) => {
-        if (!hipster || !hipster.active) return;
-        let dist = Math.abs(hipster.x - jugador.x);
-        hipster.setVelocityX(-65);
-        hipster.anims.play('hipster_run', true);
-
-        if (dist < 750 && escena.time.now > hipster.ultimoAtaque + 2500) {
-            if (Math.abs(carrilActual - hipster.y) < 40) {
-                hipster.ultimoAtaque = escena.time.now;
-                hipster.anims.play('hipster_lanzar', true);
-
-                let botella = proyectilesEnemigos.create(hipster.x - 16, hipster.y - 6, 'botella_agua');
-                botella.setScale(0.14);
-                botella.setDepth(hipster.y + (hipster.displayHeight * 0.5));
-                botella.setVelocity(-250, 0);
-                botella.velocidadGiro = -16;
-            }
-        }
-    });
-}
-
-function actualizarIAAgentes(escena) {
-    agentes.children.iterate((agente) => {
-        if (!agente || !agente.active) return;
-        let dist = Math.abs(agente.x - jugador.x);
-        if (dist > 160) {
-            agente.setVelocityX(-75);
-            agente.anims.play('agente_run', true);
-        } else {
-            agente.setVelocityX(0);
-        }
-
-        if (dist < 800 && escena.time.now > agente.ultimoDisparo + 2200) {
-            if (Math.abs(carrilActual - agente.y) < 40) {
-                agente.ultimoDisparo = escena.time.now;
-                agente.anims.play('agente_disparar', true);
-
-                let bala = proyectilesEnemigos.create(agente.x - 20, agente.y - 6, 'bala');
-                bala.setScale(0.20);
-                bala.setDepth(agente.y + (agente.displayHeight * 0.5));
-                bala.setVelocity(-300, 0);
-            }
-        }
-    });
-}
-
-function actualizarIAGrandotes(escena) {
-    grandotes.children.iterate((grandote) => {
-        if (!grandote || !grandote.active) return;
-        if (grandote.atacandoCuerpoACuerpo) return;
-
-        let dist = Math.abs(grandote.x - jugador.x);
-        if (dist < 600) {
-            if (dist < 75 && Math.abs(carrilActual - grandote.y) < 30) {
-                grandote.atacandoCuerpoACuerpo = true;
-                grandote.setVelocityX(0);
-                grandote.anims.play('grandote_punch', true);
-
-                escena.time.delayedCall(350, () => {
-                    if (grandote && grandote.active && Math.abs(grandote.x - jugador.x) < 85 && Math.abs(carrilActual - grandote.y) < 30) {
-                        recibirDanioJugador(escena);
-                    }
-                });
-
-                escena.time.delayedCall(700, () => {
-                    if (grandote && grandote.active) {
-                        grandote.atacandoCuerpoACuerpo = false;
-                    }
-                });
-                return;
-            }
-            grandote.setVelocityX(-100);
-            grandote.anims.play('grandote_run', true);
-        } else {
-            grandote.setVelocityX(-100);
-            grandote.anims.play('grandote_run', true);
-        }
-    });
-}
-
-function impactarEnemigo(proyectil, enemigo) {
-    if (Math.abs(proyectil.y - enemigo.y) > 40) return;
-    proyectil.destroy();
-    if (enemigo.invulnerable) return;
-
-    let danio = (armaActual === 'CASCOTE') ? 3 : 1;
-    enemigo.vida -= danio;
-    enemigo.invulnerable = true;
-    enemigo.setTint(0xff3333);
-
-    enemigo.scene.time.delayedCall(160, () => {
-        if (enemigo && enemigo.active) {
-            enemigo.clearTint();
-            enemigo.invulnerable = false;
-        }
-    });
-
-    if (enemigo.vida <= 0) {
-        puntos += enemigo.puntosValor || 50;
-        enemigo.destroy();
-        actualizarHUD();
-    }
 }
 
 // =============================================================================
@@ -1057,7 +1167,7 @@ function impactarJugadorConProyectilEnemigo(jugadorRef, proyectil) {
 }
 
 // =============================================================================
-// SALUD (3 IMPACTOS POR VIDA)
+// SALUD (SIN IMPULSOS VERTICALES)
 // =============================================================================
 function recibirDanioJugador(escena) {
     if (esInvulnerable || juegoTerminado) return;
@@ -1076,8 +1186,7 @@ function recibirDanioJugador(escena) {
         location.reload();
     } else {
         esInvulnerable = true;
-        jugador.setVelocityY(-220);
-        jugador.setVelocityX(jugador.flipX ? 150 : -150);
+        jugador.setVelocityX(jugador.flipX ? 160 : -160);
 
         let parpadeos = 0;
         escena.time.addEvent({
