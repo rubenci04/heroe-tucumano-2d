@@ -410,7 +410,7 @@ function create() {
     fondoCerros = this.add.tileSprite(0, 0, ANCHO_VISTA, ALTO_VISTA, 'fondo_cerros')
         .setOrigin(0, 0).setScrollFactor(0).setDepth(0);
 
-    fondoUnificado = this.add.image(0, -120, 'fusion_fondo')
+    fondoUnificado = this.add.image(0, -230, 'fusion_fondo')
         .setOrigin(0, 0)
         .setDisplaySize(ANCHO_MUNDO, ALTO_VISTA + 150)
         .setDepth(1.2);
