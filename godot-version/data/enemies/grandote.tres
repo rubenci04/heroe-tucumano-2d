@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="EnemyDefinition" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_definition.gd" id="1"]
+[ext_resource type="SpriteFrames" path="res://assets/animations/grandote.tres" id="2"]
+[ext_resource type="Resource" path="res://data/attacks/grandote_punch.tres" id="3"]
+
+[resource]
+script = ExtResource("1")
+enemy_id = &"grandote"
+display_name = "Grandote legacy"
+attack_mode = 0
+max_health = 10
+move_speed = 100.0
+reward_points = 300
+detection_range = 8000.0
+preferred_distance = 70.0
+attack_range = 100.0
+telegraph_duration = 0.3
+recovery_duration = 0.12
+attack_cooldown = 0.9
+contact_damage = 1
+fury_contact_damage = 20
+melee_attack = ExtResource("3")
+sprite_frames = ExtResource("2")
+run_animation = &"grandote_run"
+attack_animation = &"grandote_punch"
+visual_scale = 0.72
+visual_offset = Vector2(0, -72)
+collision_width_ratio = 0.65

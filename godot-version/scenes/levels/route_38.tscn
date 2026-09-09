@@ -1,0 +1,27 @@
+[gd_scene load_steps=8 format=3]
+[ext_resource type="Script" path="res://scripts/core/route_38.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/actors/player.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/levels/route_38_environment.tscn" id="3"]
+[ext_resource type="Script" path="res://scripts/level/encounter_director.gd" id="4"]
+[ext_resource type="PackedScene" path="res://scenes/level/checkpoint.tscn" id="5"]
+[ext_resource type="Script" path="res://scripts/level/traffic_director.gd" id="6"]
+[ext_resource type="Script" path="res://scripts/level/lane_readability.gd" id="7"]
+[node name="Route38" type="Node2D"]
+process_mode = 1
+script = ExtResource("1")
+[node name="Environment" parent="." instance=ExtResource("3")]
+[node name="LaneReadability" type="Node2D" parent="."]
+script = ExtResource("7")
+[node name="Terrain" type="Node2D" parent="."]
+[node name="Objects" type="Node2D" parent="."]
+[node name="Vehicles" type="Node2D" parent="."]
+[node name="Enemies" type="Node2D" parent="."]
+[node name="Projectiles" type="Node2D" parent="."]
+[node name="EncounterDirector" type="Node" parent="."]
+script = ExtResource("4")
+[node name="TrafficDirector" type="Node" parent="."]
+script = ExtResource("6")
+[node name="Checkpoint" parent="." instance=ExtResource("5")]
+position = Vector2(3600, 392.5)
+[node name="Player" parent="." instance=ExtResource("2")]
+position = Vector2(80,370)

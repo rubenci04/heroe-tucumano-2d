@@ -1,0 +1,82 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+OpenGL API 3.3.0 - Build 32.0.101.8992 - Compatibility - Using Device: Intel - Intel(R) Arc(TM) B580 Graphics
+
+WARNING: Loaded resource as image file, this will not work on export: 'res://art_v2/characters/ciruja/workbench/parts/ciruja_head.png'. Instead, import the image file as an Image resource and load it normally as a resource.
+   at: load (core/io/image.cpp:2770)
+   GDScript backtrace (most recent call first):
+       [0] _load_cutout_textures (res://art_v2/characters/ciruja/workbench/rig_test/ciruja_pose_test.gd:116)
+       [1] _ready (res://art_v2/characters/ciruja/workbench/rig_test/ciruja_pose_test.gd:57)
+WARNING: Loaded resource as image file, this will not work on export: 'res://art_v2/characters/ciruja/workbench/parts/ciruja_torso.png'. Instead, import the image file as an Image resource and load it normally as a resource.
+   at: load (core/io/image.cpp:2770)
+   GDScript backtrace (most recent call first):
+       [0] _load_cutout_textures (res://art_v2/characters/ciruja/workbench/rig_test/ciruja_pose_test.gd:116)
+       [1] _ready (res://art_v2/characters/ciruja/workbench/rig_test/ciruja_pose_test.gd:57)
+WARNING: Loaded resource as image file, this will not work on export: 'res://art_v2/characters/ciruja/workbench/parts/ciruja_arm_front_upper.png'. Instead, import the image file as an Image resource and load it normally as a resource.
+   at: load (core/io/image.cpp:2770)
+   GDScript backtrace (most recent call first):
+       [0] _load_cutout_textures (res://art_v2/characters/ciruja/workbench/rig_test/ciruja_pose_test.gd:116)
+       [1] _ready (res://art_v2/characters/ciruja/workbench/rig_test/ciruja_pose_test.gd:57)
+WARNING: Loaded resource as image file, this will not work on export: 'res://art_v2/characters/ciruja/workbench/parts/ciruja_arm_front_lower.png'. Instead, import the image file as an Image resource and load it normally as a resource.
+   at: load (core/io/image.cpp:2770)
+   GDScript backtrace (most recent call first):
+       [0] _load_cutout_textures (res://art_v2/characters/ciruja/workbench/rig_test/ciruja_pose_test.gd:116)
+       [1] _ready (res://art_v2/characters/ciruja/workbench/rig_test/ciruja_pose_test.gd:57)
+WARNING: Loaded resource as image file, this will not work on export: 'res://art_v2/characters/ciruja/workbench/parts/ciruja_hand_front.png'. Instead, import the image file as an Image resource and load it normally as a resource.
+   at: load (core/io/image.cpp:2770)
+   GDScript backtrace (most recent call first):
+       [0] _load_cutout_textures (res://art_v2/characters/ciruja/workbench/rig_test/ciruja_pose_test.gd:116)
+       [1] _ready (res://art_v2/characters/ciruja/workbench/rig_test/ciruja_pose_test.gd:57)
+WARNING: Loaded resource as image file, this will not work on export: 'res://art_v2/characters/ciruja/workbench/parts/ciruja_arm_back_upper.png'. Instead, import the image file as an Image resource and load it normally as a resource.
+   at: load (core/io/image.cpp:2770)
+   GDScript backtrace (most recent call first):
+       [0] _load_cutout_textures (res://art_v2/characters/ciruja/workbench/rig_test/ciruja_pose_test.gd:116)
+       [1] _ready (res://art_v2/characters/ciruja/workbench/rig_test/ciruja_pose_test.gd:57)
+WARNING: Loaded resource as image file, this will not work on export: 'res://art_v2/characters/ciruja/workbench/parts/ciruja_arm_back_lower.png'. Instead, import the image file as an Image resource and load it normally as a resource.
+   at: load (core/io/image.cpp:2770)
+   GDScript backtrace (most recent call first):
+       [0] _load_cutout_textures (res://art_v2/characters/ciruja/workbench/rig_test/ciruja_pose_test.gd:116)
+       [1] _ready (res://art_v2/characters/ciruja/workbench/rig_test/ciruja_pose_test.gd:57)
+WARNING: Loaded resource as image file, this will not work on export: 'res://art_v2/characters/ciruja/workbench/parts/ciruja_hand_back.png'. Instead, import the image file as an Image resource and load it normally as a resource.
+   at: load (core/io/image.cpp:2770)
+   GDScript backtrace (most recent call first):
+       [0] _load_cutout_textures (res://art_v2/characters/ciruja/workbench/rig_test/ciruja_pose_test.gd:116)
+       [1] _ready (res://art_v2/characters/ciruja/workbench/rig_test/ciruja_pose_test.gd:57)
+WARNING: Loaded resource as image file, this will not work on export: 'res://art_v2/characters/ciruja/workbench/parts/ciruja_leg_front_upper.png'. Instead, import the image file as an Image resource and load it normally as a resource.
+   at: load (core/io/image.cpp:2770)
+   GDScript backtrace (most recent call first):
+       [0] _load_cutout_textures (res://art_v2/characters/ciruja/workbench/rig_test/ciruja_pose_test.gd:116)
+       [1] _ready (res://art_v2/characters/ciruja/workbench/rig_test/ciruja_pose_test.gd:57)
+WARNING: Loaded resource as image file, this will not work on export: 'res://art_v2/characters/ciruja/workbench/parts/ciruja_leg_front_lower.png'. Instead, import the image file as an Image resource and load it normally as a resource.
+   at: load (core/io/image.cpp:2770)
+   GDScript backtrace (most recent call first):
+       [0] _load_cutout_textures (res://art_v2/characters/ciruja/workbench/rig_test/ciruja_pose_test.gd:116)
+       [1] _ready (res://art_v2/characters/ciruja/workbench/rig_test/ciruja_pose_test.gd:57)
+WARNING: Loaded resource as image file, this will not work on export: 'res://art_v2/characters/ciruja/workbench/parts/ciruja_foot_front.png'. Instead, import the image file as an Image resource and load it normally as a resource.
+   at: load (core/io/image.cpp:2770)
+   GDScript backtrace (most recent call first):
+       [0] _load_cutout_textures (res://art_v2/characters/ciruja/workbench/rig_test/ciruja_pose_test.gd:116)
+       [1] _ready (res://art_v2/characters/ciruja/workbench/rig_test/ciruja_pose_test.gd:57)
+WARNING: Loaded resource as image file, this will not work on export: 'res://art_v2/characters/ciruja/workbench/parts/ciruja_leg_back_upper.png'. Instead, import the image file as an Image resource and load it normally as a resource.
+   at: load (core/io/image.cpp:2770)
+   GDScript backtrace (most recent call first):
+       [0] _load_cutout_textures (res://art_v2/characters/ciruja/workbench/rig_test/ciruja_pose_test.gd:116)
+       [1] _ready (res://art_v2/characters/ciruja/workbench/rig_test/ciruja_pose_test.gd:57)
+WARNING: Loaded resource as image file, this will not work on export: 'res://art_v2/characters/ciruja/workbench/parts/ciruja_leg_back_lower.png'. Instead, import the image file as an Image resource and load it normally as a resource.
+   at: load (core/io/image.cpp:2770)
+   GDScript backtrace (most recent call first):
+       [0] _load_cutout_textures (res://art_v2/characters/ciruja/workbench/rig_test/ciruja_pose_test.gd:116)
+       [1] _ready (res://art_v2/characters/ciruja/workbench/rig_test/ciruja_pose_test.gd:57)
+WARNING: Loaded resource as image file, this will not work on export: 'res://art_v2/characters/ciruja/workbench/parts/ciruja_foot_back.png'. Instead, import the image file as an Image resource and load it normally as a resource.
+   at: load (core/io/image.cpp:2770)
+   GDScript backtrace (most recent call first):
+       [0] _load_cutout_textures (res://art_v2/characters/ciruja/workbench/rig_test/ciruja_pose_test.gd:116)
+       [1] _ready (res://art_v2/characters/ciruja/workbench/rig_test/ciruja_pose_test.gd:57)
+RUN_POC_FRAME 00 time=0.0000
+RUN_POC_FRAME 01 time=0.0833
+RUN_POC_FRAME 02 time=0.1667
+RUN_POC_FRAME 03 time=0.2500
+RUN_POC_FRAME 04 time=0.3333
+RUN_POC_FRAME 05 time=0.4167
+RUN_POC_FRAME 06 time=0.5000
+RUN_POC_FRAME 07 time=0.5833
+RUN_POC_RESULT: PASSED length=0.6667 frames=8 fps=12 tracks=12 discrete=true loop=true

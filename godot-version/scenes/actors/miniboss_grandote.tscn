@@ -1,0 +1,37 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/miniboss_grandote.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/components/health_component.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/components/hurtbox.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/components/hitbox.tscn" id="4"]
+[ext_resource type="SpriteFrames" path="res://assets/animations/grandote.tres" id="5"]
+[ext_resource type="Resource" path="res://data/attacks/miniboss_charge.tres" id="6"]
+[ext_resource type="Resource" path="res://data/attacks/miniboss_punch.tres" id="7"]
+[ext_resource type="Resource" path="res://data/attacks/miniboss_ground_slam.tres" id="8"]
+
+[sub_resource type="RectangleShape2D" id="BodyShape"]
+size = Vector2(72, 126)
+
+[node name="MinibossGrandote" type="CharacterBody2D"]
+script = ExtResource("1")
+charge_definition = ExtResource("6")
+punch_definition = ExtResource("7")
+ground_slam_definition = ExtResource("8")
+
+[node name="HealthComponent" parent="." instance=ExtResource("2")]
+
+[node name="Hurtbox" parent="." instance=ExtResource("3")]
+
+[node name="AttackHitbox" parent="." instance=ExtResource("4")]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -63)
+shape = SubResource("BodyShape")
+
+[node name="Visual" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, -90)
+scale = Vector2(0.9, 0.9)
+texture_filter = 1
+sprite_frames = ExtResource("5")
+animation = &"grandote_run"
+

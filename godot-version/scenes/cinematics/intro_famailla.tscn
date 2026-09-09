@@ -1,0 +1,124 @@
+[gd_scene load_steps=12 format=3]
+
+[ext_resource type="Script" path="res://scripts/cinematics/intro_famailla.gd" id="1"]
+[ext_resource type="SpriteFrames" path="res://assets/animations/player.tres" id="2"]
+[ext_resource type="Texture2D" path="res://assets/campeona empanadas.png" id="3"]
+[ext_resource type="SpriteFrames" path="res://assets/animations/hipster.tres" id="4"]
+[ext_resource type="Texture2D" path="res://assets/secuestro_campeona.png" id="5"]
+[ext_resource type="Resource" path="res://data/dialogues/intro_famailla_san_martin.tres" id="6"]
+
+[sub_resource type="Animation" id="Animation_reset"]
+resource_name = "RESET"
+length = 0.0
+tracks/0/type = "value"
+tracks/0/path = NodePath("CameraAnchor:position")
+tracks/0/keys = {"times": PackedFloat32Array(0), "transitions": PackedFloat32Array(1), "update": 0, "values": [Vector2(400, 225)]}
+tracks/1/type = "value"
+tracks/1/path = NodePath("Actors/Champion:visible")
+tracks/1/keys = {"times": PackedFloat32Array(0), "transitions": PackedFloat32Array(1), "update": 1, "values": [true]}
+tracks/2/type = "value"
+tracks/2/path = NodePath("Actors/Palermitano:visible")
+tracks/2/keys = {"times": PackedFloat32Array(0), "transitions": PackedFloat32Array(1), "update": 1, "values": [true]}
+tracks/3/type = "value"
+tracks/3/path = NodePath("Actors/Kidnapping:visible")
+tracks/3/keys = {"times": PackedFloat32Array(0), "transitions": PackedFloat32Array(1), "update": 1, "values": [false]}
+tracks/4/type = "value"
+tracks/4/path = NodePath("Actors/Kidnapping:position")
+tracks/4/keys = {"times": PackedFloat32Array(0), "transitions": PackedFloat32Array(1), "update": 0, "values": [Vector2(520, 330)]}
+tracks/5/type = "value"
+tracks/5/path = NodePath("FadeLayer/Fade:color")
+tracks/5/keys = {"times": PackedFloat32Array(0), "transitions": PackedFloat32Array(1), "update": 0, "values": [Color(0, 0, 0, 1)]}
+
+[sub_resource type="Animation" id="Animation_establish"]
+resource_name = "establish"
+length = 1.2
+tracks/0/type = "value"
+tracks/0/path = NodePath("CameraAnchor:position")
+tracks/0/keys = {"times": PackedFloat32Array(0, 1.2), "transitions": PackedFloat32Array(1, 1), "update": 0, "values": [Vector2(400, 225), Vector2(220, 225)]}
+tracks/1/type = "value"
+tracks/1/path = NodePath("FadeLayer/Fade:color")
+tracks/1/keys = {"times": PackedFloat32Array(0, 1), "transitions": PackedFloat32Array(1, 1), "update": 0, "values": [Color(0, 0, 0, 1), Color(0, 0, 0, 0)]}
+
+[sub_resource type="Animation" id="Animation_focus_group"]
+resource_name = "focus_group"
+length = 1.2
+tracks/0/type = "value"
+tracks/0/path = NodePath("CameraAnchor:position")
+tracks/0/keys = {"times": PackedFloat32Array(0, 1.2), "transitions": PackedFloat32Array(1, 1), "update": 0, "values": [Vector2(220, 225), Vector2(520, 225)]}
+
+[sub_resource type="Animation" id="Animation_kidnapping"]
+resource_name = "kidnapping"
+length = 2.4
+tracks/0/type = "value"
+tracks/0/path = NodePath("Actors/Champion:visible")
+tracks/0/keys = {"times": PackedFloat32Array(0), "transitions": PackedFloat32Array(1), "update": 1, "values": [false]}
+tracks/1/type = "value"
+tracks/1/path = NodePath("Actors/Palermitano:visible")
+tracks/1/keys = {"times": PackedFloat32Array(0), "transitions": PackedFloat32Array(1), "update": 1, "values": [false]}
+tracks/2/type = "value"
+tracks/2/path = NodePath("Actors/Kidnapping:visible")
+tracks/2/keys = {"times": PackedFloat32Array(0), "transitions": PackedFloat32Array(1), "update": 1, "values": [true]}
+tracks/3/type = "value"
+tracks/3/path = NodePath("Actors/Kidnapping:position")
+tracks/3/keys = {"times": PackedFloat32Array(0, 2.4), "transitions": PackedFloat32Array(1, 1), "update": 0, "values": [Vector2(520, 330), Vector2(820, 330)]}
+tracks/4/type = "value"
+tracks/4/path = NodePath("CameraAnchor:position")
+tracks/4/keys = {"times": PackedFloat32Array(0, 2.4), "transitions": PackedFloat32Array(1, 1), "update": 0, "values": [Vector2(520, 225), Vector2(650, 225)]}
+
+[sub_resource type="Animation" id="Animation_return"]
+resource_name = "return_to_player"
+length = 1.2
+tracks/0/type = "value"
+tracks/0/path = NodePath("CameraAnchor:position")
+tracks/0/keys = {"times": PackedFloat32Array(0, 1.2), "transitions": PackedFloat32Array(1, 1), "update": 0, "values": [Vector2(650, 225), Vector2(220, 225)]}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_intro"]
+_data = {&"RESET": SubResource("Animation_reset"), &"establish": SubResource("Animation_establish"), &"focus_group": SubResource("Animation_focus_group"), &"kidnapping": SubResource("Animation_kidnapping"), &"return_to_player": SubResource("Animation_return")}
+
+[node name="IntroFamailla" type="Node2D"]
+visible = false
+process_mode = 1
+script = ExtResource("1")
+san_martin_dialogue = ExtResource("6")
+
+[node name="CameraAnchor" type="Node2D" parent="."]
+position = Vector2(400, 225)
+
+[node name="Actors" type="Node2D" parent="."]
+
+[node name="ProtagonistProxy" type="AnimatedSprite2D" parent="Actors"]
+position = Vector2(150, 328)
+scale = Vector2(0.42, 0.42)
+sprite_frames = ExtResource("2")
+animation = &"Idle"
+
+[node name="Champion" type="Sprite2D" parent="Actors"]
+position = Vector2(430, 330)
+scale = Vector2(0.58, 0.58)
+texture = ExtResource("3")
+
+[node name="Palermitano" type="AnimatedSprite2D" parent="Actors"]
+position = Vector2(650, 330)
+scale = Vector2(0.5, 0.5)
+sprite_frames = ExtResource("4")
+animation = &"hipster_run"
+autoplay = "hipster_run"
+
+[node name="Kidnapping" type="Sprite2D" parent="Actors"]
+visible = false
+position = Vector2(520, 330)
+scale = Vector2(0.58, 0.58)
+texture = ExtResource("5")
+
+[node name="FadeLayer" type="CanvasLayer" parent="."]
+visible = false
+layer = 8
+
+[node name="Fade" type="ColorRect" parent="FadeLayer"]
+offset_right = 800.0
+offset_bottom = 450.0
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {&"": SubResource("AnimationLibrary_intro")}

@@ -163,6 +163,87 @@ const config = {
 
 const game = new Phaser.Game(config);
 
+// =============================================================================
+// GESTOR DE CONTROLES TÁCTILES Y ENTRADA VIRTUAL (Móviles / Touch)
+// =============================================================================
+const controlesTactiles = {
+    left: false,
+    right: false,
+    up: false,
+    down: false,
+    salto: false,
+    disparo: false,
+    cabezazo: false,
+    _justUp: false,
+    _justDown: false,
+    _justSalto: false,
+    _justDisparo: false,
+    _justCabezazo: false,
+
+    setButton(name, isPressed) {
+        if (isPressed) {
+            AudioSFX.init();
+            if (navigator.vibrate) {
+                try { navigator.vibrate(12); } catch (e) {}
+            }
+            if (name === 'up' && !this.up) this._justUp = true;
+            if (name === 'down' && !this.down) this._justDown = true;
+            if (name === 'salto' && !this.salto) this._justSalto = true;
+            if (name === 'disparo' && !this.disparo) this._justDisparo = true;
+            if (name === 'cabezazo' && !this.cabezazo) this._justCabezazo = true;
+        }
+        this[name] = isPressed;
+
+        if (isPressed) {
+            if (enCinematica && game && game.scene && game.scene.scenes[0]) {
+                avanzarCinematica(game.scene.scenes[0]);
+            }
+            window.dispatchEvent(new CustomEvent('arcade-button-pressed', { detail: { button: name } }));
+        }
+    },
+
+    consumirJustUp() {
+        const v = this._justUp;
+        this._justUp = false;
+        return v;
+    },
+    consumirJustDown() {
+        const v = this._justDown;
+        this._justDown = false;
+        return v;
+    },
+    consumirJustSalto() {
+        const v = this._justSalto;
+        this._justSalto = false;
+        return v;
+    },
+    consumirJustDisparo() {
+        const v = this._justDisparo;
+        this._justDisparo = false;
+        return v;
+    },
+    consumirJustCabezazo() {
+        const v = this._justCabezazo;
+        this._justCabezazo = false;
+        return v;
+    },
+    resetAll() {
+        this.left = false;
+        this.right = false;
+        this.up = false;
+        this.down = false;
+        this.salto = false;
+        this.disparo = false;
+        this.cabezazo = false;
+        this._justUp = false;
+        this._justDown = false;
+        this._justSalto = false;
+        this._justDisparo = false;
+        this._justCabezazo = false;
+    }
+};
+window.ControlesTactiles = controlesTactiles;
+
 // Variables de estado del jugador y del juego
 let jugador, cursores, teclaZ, teclaX, teclaEnter, teclaC;
 let fondoCerros, fondoUnificado, sueloRuta, sueloRuta2;
@@ -533,8 +614,9 @@ function create() {
 
     this.time.addEvent({ delay: 2200, callback: ejecutarRutinaJefe, callbackScope: this, loop: true });
 
-    this.input.once('pointerdown', () => AudioSFX.init());
-    this.input.keyboard.once('keydown', () => AudioSFX.init());
+    this.input.on('pointerdown', () => AudioSFX.init());
+    this.input.keyboard.on('keydown', () => AudioSFX.init());
+    window.addEventListener('touchstart', () => AudioSFX.init(), { passive: true });
 
     iniciarCinematicaInteractiva(this);
 }
@@ -550,7 +632,9 @@ function update(time, delta) {
         if (Phaser.Input.Keyboard.JustDown(teclaZ) ||
             Phaser.Input.Keyboard.JustDown(teclaX) ||
             Phaser.Input.Keyboard.JustDown(cursores.space) ||
-            Phaser.Input.Keyboard.JustDown(teclaEnter)) {
+            Phaser.Input.Keyboard.JustDown(teclaEnter) ||
+            controlesTactiles.consumirJustDisparo() ||
+            controlesTactiles.consumirJustSalto()) {
             avanzarCinematica(this);
         }
         return;
@@ -565,11 +649,11 @@ function update(time, delta) {
 
     const velocidadBase = modoSanguchazo ? 330 : 230;
 
-    if (cursores.left.isDown) {
+    if (cursores.left.isDown || controlesTactiles.left) {
         jugador.setVelocityX(-velocidadBase);
         jugador.setFlipX(true);
         if (!estaSaltando && !disparando && !cambiandoCarril) jugador.anims.play('correr', true);
-    } else if (cursores.right.isDown) {
+    } else if (cursores.right.isDown || controlesTactiles.right) {
         jugador.setVelocityX(velocidadBase);
         jugador.setFlipX(false);
         if (!estaSaltando && !disparando && !cambiandoCarril) jugador.anims.play('correr', true);
@@ -599,14 +683,14 @@ function update(time, delta) {
             jugador.body.allowGravity = false;
             jugador.setVelocityY(0);
 
-            if (Phaser.Input.Keyboard.JustDown(cursores.up) && carrilActual === CARRIL_INFERIOR_Y) {
+            if ((Phaser.Input.Keyboard.JustDown(cursores.up) || controlesTactiles.consumirJustUp()) && carrilActual === CARRIL_INFERIOR_Y) {
                 cambiarDeCarril(this, CARRIL_SUPERIOR_Y);
-            } else if (Phaser.Input.Keyboard.JustDown(cursores.down) && carrilActual === CARRIL_SUPERIOR_Y) {
+            } else if ((Phaser.Input.Keyboard.JustDown(cursores.down) || controlesTactiles.consumirJustDown()) && carrilActual === CARRIL_SUPERIOR_Y) {
                 cambiarDeCarril(this, CARRIL_INFERIOR_Y);
             }
         }
 
-        if (Phaser.Input.Keyboard.JustDown(cursores.space) && !cambiandoCarril) {
+        if ((Phaser.Input.Keyboard.JustDown(cursores.space) || controlesTactiles.consumirJustSalto()) && !cambiandoCarril) {
             estaSaltando = true;
             vehiculoApoyado = null;
             tiempoInicioSalto = time;
@@ -628,12 +712,12 @@ function update(time, delta) {
             if (!disparando) jugador.anims.play('idle', true);
         }
 
-        if (cursores.space.isUp && jugador.body.velocity.y < -120) {
+        if (cursores.space.isUp && !controlesTactiles.salto && jugador.body.velocity.y < -120) {
             jugador.setVelocityY(jugador.body.velocity.y * 0.50);
         }
     }
 
-    if (teclaZ.isDown || teclaX.isDown) {
+    if (teclaZ.isDown || teclaX.isDown || controlesTactiles.disparo) {
         if (!disparoPresionado) {
             intentarDisparo(this);
             disparoPresionado = true;
@@ -643,7 +727,7 @@ function update(time, delta) {
     }
 
     // Cabezazo activable solo bajo los efectos de la milanesa (modoSanguchazo)
-    if (modoSanguchazo && !cabezazoActivo && Phaser.Input.Keyboard.JustDown(teclaC) && !estaSaltando && !cambiandoCarril) {
+    if (modoSanguchazo && !cabezazoActivo && (Phaser.Input.Keyboard.JustDown(teclaC) || controlesTactiles.consumirJustCabezazo()) && !estaSaltando && !cambiandoCarril) {
         ejecutarCabezazo(this);
     }
 
@@ -766,13 +850,13 @@ function iniciarCinematicaInteractiva(escena) {
     cajaTextoGlobal = escena.add.rectangle(ANCHO_VISTA / 2, ALTO_VISTA - 60, ANCHO_VISTA - 60, 75, 0x000000, 0.90)
         .setScrollFactor(0).setDepth(200);
 
-    textoNarradoGlobal = escena.add.text(ANCHO_VISTA / 2, ALTO_VISTA - 60, 'FAMAILLÁ, CAPITAL DE LA EMPANADA.\nEL CIRUJA DISFRUTA DE UN MEDIODÍA DE PAZ...\n(Presiona Z, Espacio o Clic para continuar)', {
+    textoNarradoGlobal = escena.add.text(ANCHO_VISTA / 2, ALTO_VISTA - 60, 'FAMAILLÁ, CAPITAL DE LA EMPANADA.\nEL CIRUJA DISFRUTA DE UN MEDIODÍA DE PAZ...\n(Toca la pantalla o presiona Z para continuar)', {
         fontSize: '14px', fontFamily: 'Arial Black', fill: '#00ffcc', align: 'center'
     }).setOrigin(0.5).setScrollFactor(0).setDepth(201);
 
     escena.cameras.main.pan(400, ALTO_VISTA / 2, 1800, 'Sine.easeInOut');
 
-    escena.input.once('pointerdown', () => {
+    escena.input.on('pointerdown', () => {
         if (enCinematica) avanzarCinematica(escena);
     });
 }
@@ -782,7 +866,7 @@ function avanzarCinematica(escena) {
 
     if (pasoCinematica === 1) {
         escena.cameras.main.pan(300, ALTO_VISTA / 2, 800, 'Sine.easeInOut');
-        textoNarradoGlobal.setText('¡ATAQUE SORPRESA!\nLOS AGENTES ATRAPAN A LA CAMPEONA DE LA EMPANADA...\n(Presiona Z para continuar)');
+        textoNarradoGlobal.setText('¡ATAQUE SORPRESA!\nLOS AGENTES ATRAPAN A LA CAMPEONA DE LA EMPANADA...\n(Toca la pantalla o presiona Z para continuar)');
         textoNarradoGlobal.setFill('#ff3333');
 
         if (actoresCinematica.campeona) actoresCinematica.campeona.destroy();
@@ -792,7 +876,7 @@ function avanzarCinematica(escena) {
 
         AudioSFX.play('danio');
     } else if (pasoCinematica === 2) {
-        textoNarradoGlobal.setText('PALERMITANO MALVADO: "¡LLEVENLA AL INGENIO!\n¡VAMOS A SERVIR LA EMPANADA DECONSTRUIDA EN FRASCO!"\n(Presiona Z para salir a perseguirlos)');
+        textoNarradoGlobal.setText('PALERMITANO MALVADO: "¡LLEVENLA AL INGENIO!\n¡VAMOS A SERVIR LA EMPANADA DECONSTRUIDA EN FRASCO!"\n(Toca la pantalla o presiona Z para perseguirlos)');
         textoNarradoGlobal.setFill('#ffff00');
 
         escena.tweens.add({
@@ -988,10 +1072,12 @@ function activarModoSanguchazo(escena) {
     modoSanguchazo = true;
     textoEspecial.setText('¡FURIA MILANESA (CABEZAZO CON C)!');
     jugador.setTint(0xffd700);
+    window.dispatchEvent(new CustomEvent('modo-sanguchazo', { detail: { activo: true } }));
     escena.time.delayedCall(10000, () => {
         modoSanguchazo = false;
         textoEspecial.setText('');
         if (jugador && jugador.active && !esInvulnerable) jugador.clearTint();
+        window.dispatchEvent(new CustomEvent('modo-sanguchazo', { detail: { activo: false } }));
     });
 }
 
@@ -1526,13 +1612,16 @@ function mostrarGameOver(escena) {
         fontSize: '20px', fontFamily: 'Arial Black', fill: '#ffd700', stroke: '#000000', strokeThickness: 4, align: 'center'
     }).setOrigin(0.5).setScrollFactor(0).setDepth(301);
 
-    let txtReintentar = escena.add.text(ANCHO_VISTA / 2, ALTO_VISTA / 2 + 60, 'Presiona ESPACIO o haz clic para REINTENTAR', {
-        fontSize: '16px', fontFamily: 'Arial Black', fill: '#00ffcc', stroke: '#000000', strokeThickness: 3, align: 'center'
+    let txtReintentar = escena.add.text(ANCHO_VISTA / 2, ALTO_VISTA / 2 + 60, 'Toca la pantalla, botón de acción o ESPACIO para REINTENTAR', {
+        fontSize: '15px', fontFamily: 'Arial Black', fill: '#00ffcc', stroke: '#000000', strokeThickness: 3, align: 'center'
     }).setOrigin(0.5).setScrollFactor(0).setDepth(301);
 
     escena.tweens.add({ targets: txtReintentar, alpha: 0.3, duration: 500, yoyo: true, repeat: -1 });
 
-    const reiniciarCallback = () => escena.scene.restart();
+    const reiniciarCallback = () => {
+        window.removeEventListener('arcade-button-pressed', reiniciarCallback);
+        escena.scene.restart();
+    };
 
     escena.time.delayedCall(500, () => {
         escena.input.keyboard.once('keydown-SPACE', reiniciarCallback);
@@ -1540,6 +1629,7 @@ function mostrarGameOver(escena) {
         escena.input.keyboard.once('keydown-X', reiniciarCallback);
         escena.input.keyboard.once('keydown-ENTER', reiniciarCallback);
         escena.input.once('pointerdown', reiniciarCallback);
+        window.addEventListener('arcade-button-pressed', reiniciarCallback, { once: true });
     });
 }
 
@@ -1687,13 +1777,16 @@ function llegarALaMeta(jugadorRef, meta) {
         fontSize: '22px', fontFamily: 'Arial Black', fill: '#ffd700', stroke: '#000000', strokeThickness: 4, align: 'center'
     }).setOrigin(0.5).setScrollFactor(0).setDepth(301);
 
-    let txtReiniciar = escena.add.text(ANCHO_VISTA / 2, ALTO_VISTA / 2 + 70, 'Presiona ESPACIO para VOLVER A JUGAR', {
-        fontSize: '16px', fontFamily: 'Arial Black', fill: '#00ffcc', stroke: '#000000', strokeThickness: 3, align: 'center'
+    let txtReiniciar = escena.add.text(ANCHO_VISTA / 2, ALTO_VISTA / 2 + 70, 'Toca la pantalla, botón de acción o ESPACIO para VOLVER A JUGAR', {
+        fontSize: '15px', fontFamily: 'Arial Black', fill: '#00ffcc', stroke: '#000000', strokeThickness: 3, align: 'center'
     }).setOrigin(0.5).setScrollFactor(0).setDepth(301);
 
     escena.tweens.add({ targets: txtReiniciar, alpha: 0.3, duration: 500, yoyo: true, repeat: -1 });
 
-    const reiniciarCallback = () => escena.scene.restart();
+    const reiniciarCallback = () => {
+        window.removeEventListener('arcade-button-pressed', reiniciarCallback);
+        escena.scene.restart();
+    };
 
     escena.time.delayedCall(500, () => {
         escena.input.keyboard.once('keydown-SPACE', reiniciarCallback);
@@ -1701,5 +1794,6 @@ function llegarALaMeta(jugadorRef, meta) {
         escena.input.keyboard.once('keydown-X', reiniciarCallback);
         escena.input.keyboard.once('keydown-ENTER', reiniciarCallback);
         escena.input.once('pointerdown', reiniciarCallback);
+        window.addEventListener('arcade-button-pressed', reiniciarCallback, { once: true });
     });
 }

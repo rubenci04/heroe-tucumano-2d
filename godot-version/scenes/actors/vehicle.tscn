@@ -1,0 +1,30 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/vehicle.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/components/hitbox.tscn" id="2"]
+[ext_resource type="Resource" path="res://data/attacks/vehicle_impact.tres" id="3"]
+
+[sub_resource type="RectangleShape2D" id="RoofShape"]
+size = Vector2(80, 8)
+
+[sub_resource type="RectangleShape2D" id="ProjectileTargetShape"]
+size = Vector2(80, 32)
+
+[node name="TrafficVehicle" type="AnimatableBody2D"]
+script = ExtResource("1")
+impact_definition = ExtResource("3")
+
+[node name="Visual" type="Sprite2D" parent="."]
+texture_filter = 1
+
+[node name="ImpactHitbox" parent="." instance=ExtResource("2")]
+
+[node name="RoofCollision" type="CollisionShape2D" parent="."]
+shape = SubResource("RoofShape")
+one_way_collision = true
+one_way_collision_margin = 8.0
+
+[node name="ProjectileTarget" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ProjectileTarget"]
+shape = SubResource("ProjectileTargetShape")

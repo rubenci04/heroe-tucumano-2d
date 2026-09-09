@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="DialogueSequence" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_sequence.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+sequence_id = &"intro_famailla_san_martin"
+allow_skip = true
+entries = Array[Dictionary]([{
+"speaker": "Hincha de San Martín",
+"text": "Una docena de empanadas y arranca tranquilo el fin de semana."
+}, {
+"speaker": "Campeona de la Empanada",
+"text": "Tranquilo, chango. Esta receta lleva años de amasado y no se apura por nadie."
+}, {
+"speaker": "Empresario palermitano",
+"text": "Veo una oportunidad: receta tradicional, nueva identidad y una experiencia premium en Palermo."
+}, {
+"speaker": "Campeona de la Empanada",
+"text": "¡Soltame, atrevido! Mis empanadas no son un concepto y mi receta no se compra."
+}, {
+"speaker": "Empresario palermitano",
+"text": "La tradición necesita inversión. Llévenla; vamos a deconstruir el producto."
+}, {
+"speaker": "Hincha de San Martín",
+"text": "¡Eh! A la abuela no se la lleva nadie. ¡Voy detrás de ustedes por la Ruta 38!"
+}])
+

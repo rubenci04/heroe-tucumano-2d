@@ -1,0 +1,139 @@
+{
+  "native_player": [
+    {
+      "key": "Idle",
+      "frames": [
+        {
+          "key": "ciruja_idle"
+        }
+      ],
+      "frameRate": 1
+    },
+    {
+      "key": "Run",
+      "frames": [
+        {
+          "key": "ciruja_run0"
+        },
+        {
+          "key": "ciruja_run1"
+        },
+        {
+          "key": "ciruja_run2"
+        },
+        {
+          "key": "ciruja_run3"
+        },
+        {
+          "key": "ciruja_run4"
+        },
+        {
+          "key": "ciruja_run5"
+        }
+      ],
+      "frameRate": 12,
+      "repeat": -1
+    },
+    {
+      "key": "Jump",
+      "frames": [
+        {
+          "key": "ciruja_salto1"
+        },
+        {
+          "key": "ciruja_salto2"
+        },
+        {
+          "key": "ciruja_salto3"
+        },
+        {
+          "key": "ciruja_salto4"
+        }
+      ],
+      "frameRate": 8
+    },
+    {
+      "key": "Throw Orange",
+      "frames": [
+        {
+          "key": "ciruja_disparo_naranja0"
+        },
+        {
+          "key": "ciruja_disparo_naranja1"
+        },
+        {
+          "key": "ciruja_disparo_naranja2"
+        },
+        {
+          "key": "ciruja_disparo_naranja3"
+        },
+        {
+          "key": "ciruja_disparo_naranja4"
+        },
+        {
+          "key": "ciruja_disparo_naranja5"
+        }
+      ],
+      "frameRate": 24
+    },
+    {
+      "key": "Throw Stone",
+      "frames": [
+        {
+          "key": "ciruja_disparo_cascote0"
+        },
+        {
+          "key": "ciruja_disparo_cascote1"
+        },
+        {
+          "key": "ciruja_disparo_cascote2"
+        },
+        {
+          "key": "ciruja_disparo_cascote3"
+        },
+        {
+          "key": "ciruja_disparo_cascote4"
+        }
+      ],
+      "frameRate": 20
+    },
+    {
+      "key": "Headbutt",
+      "frames": [
+        {
+          "key": "ciruja_cabezazo0"
+        },
+        {
+          "key": "ciruja_cabezazo1"
+        },
+        {
+          "key": "ciruja_cabezazo2"
+        }
+      ],
+      "frameRate": 12
+    },
+    {
+      "key": "Hit",
+      "frames": [
+        {
+          "key": "ciruja_idle"
+        }
+      ],
+      "frameRate": 1,
+      "fallback": "Existing Idle frame with runtime tint; dedicated artwork absent"
+    },
+    {
+      "key": "Death",
+      "frames": [
+        {
+          "key": "ciruja_idle"
+        }
+      ],
+      "frameRate": 1,
+      "fallback": "Existing Idle frame with runtime rotation; dedicated artwork absent"
+    }
+  ],
+  "legacy_animations": 22,
+  "playable_and_legacy_animations": 30,
+  "static_asset_animations": 100
+}

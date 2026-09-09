@@ -1,0 +1,704 @@
+[gd_resource type="SpriteFrames" load_steps=101 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/achilata.png" id="1"]
+[ext_resource type="Texture2D" path="res://assets/agente_disparo_bala1.png" id="2"]
+[ext_resource type="Texture2D" path="res://assets/agente_disparo_bala2.png" id="3"]
+[ext_resource type="Texture2D" path="res://assets/agente_run1.png" id="4"]
+[ext_resource type="Texture2D" path="res://assets/agente_run2.png" id="5"]
+[ext_resource type="Texture2D" path="res://assets/agente_run3.png" id="6"]
+[ext_resource type="Texture2D" path="res://assets/agente_salto.png" id="7"]
+[ext_resource type="Texture2D" path="res://assets/arbol_naranjas.png" id="8"]
+[ext_resource type="Texture2D" path="res://assets/auto1.png" id="9"]
+[ext_resource type="Texture2D" path="res://assets/auto2.png" id="10"]
+[ext_resource type="Texture2D" path="res://assets/auto3.png" id="11"]
+[ext_resource type="Texture2D" path="res://assets/bala.png" id="12"]
+[ext_resource type="Texture2D" path="res://assets/botella_agua.png" id="13"]
+[ext_resource type="Texture2D" path="res://assets/bus1.png" id="14"]
+[ext_resource type="Texture2D" path="res://assets/bus2.png" id="15"]
+[ext_resource type="Texture2D" path="res://assets/bus3.png" id="16"]
+[ext_resource type="Texture2D" path="res://assets/bus4.png" id="17"]
+[ext_resource type="Texture2D" path="res://assets/camion_limones.png" id="18"]
+[ext_resource type="Texture2D" path="res://assets/campeona empanadas.png" id="19"]
+[ext_resource type="Texture2D" path="res://assets/cartel_famailla.png" id="20"]
+[ext_resource type="Texture2D" path="res://assets/cascote.png" id="21"]
+[ext_resource type="Texture2D" path="res://assets/ciruja comiendo.png" id="22"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_cabezazo0.png" id="23"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_cabezazo1.png" id="24"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_cabezazo2.png" id="25"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_disparo_cascote0.png" id="26"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_disparo_cascote1.png" id="27"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_disparo_cascote2.png" id="28"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_disparo_cascote3.png" id="29"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_disparo_cascote4.png" id="30"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_disparo_naranja0.png" id="31"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_disparo_naranja1.png" id="32"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_disparo_naranja2.png" id="33"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_disparo_naranja3.png" id="34"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_disparo_naranja4.png" id="35"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_disparo_naranja5.png" id="36"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_idle.png" id="37"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_run0.png" id="38"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_run1.png" id="39"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_run2.png" id="40"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_run3.png" id="41"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_run4.png" id="42"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_run5.png" id="43"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_salto.png" id="44"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_salto1.png" id="45"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_salto2.png" id="46"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_salto3.png" id="47"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_salto4.png" id="48"]
+[ext_resource type="Texture2D" path="res://assets/cofee.png" id="49"]
+[ext_resource type="Texture2D" path="res://assets/empanada.png" id="50"]
+[ext_resource type="Texture2D" path="res://assets/exprebus.png" id="51"]
+[ext_resource type="Texture2D" path="res://assets/final_boss_cofee1.png" id="52"]
+[ext_resource type="Texture2D" path="res://assets/final_boss_cofee2.png" id="53"]
+[ext_resource type="Texture2D" path="res://assets/final_boss_joke1.png" id="54"]
+[ext_resource type="Texture2D" path="res://assets/final_boss_joke2.png" id="55"]
+[ext_resource type="Texture2D" path="res://assets/final_boss_punch1.png" id="56"]
+[ext_resource type="Texture2D" path="res://assets/final_boss_punch2.png" id="57"]
+[ext_resource type="Texture2D" path="res://assets/final_boss_run1.png" id="58"]
+[ext_resource type="Texture2D" path="res://assets/final_boss_run2.png" id="59"]
+[ext_resource type="Texture2D" path="res://assets/final_boss_run3.png" id="60"]
+[ext_resource type="Texture2D" path="res://assets/final_boss_salto1.png" id="61"]
+[ext_resource type="Texture2D" path="res://assets/final_boss_salto2.png" id="62"]
+[ext_resource type="Texture2D" path="res://assets/fondo_cerros.png" id="63"]
+[ext_resource type="Texture2D" path="res://assets/fusion_fondos.png" id="64"]
+[ext_resource type="Texture2D" path="res://assets/grandote_punch1.png" id="65"]
+[ext_resource type="Texture2D" path="res://assets/grandote_punch2.png" id="66"]
+[ext_resource type="Texture2D" path="res://assets/grandote_punch3.png" id="67"]
+[ext_resource type="Texture2D" path="res://assets/grandote_run1.png" id="68"]
+[ext_resource type="Texture2D" path="res://assets/grandote_run2.png" id="69"]
+[ext_resource type="Texture2D" path="res://assets/grandote_run3.png" id="70"]
+[ext_resource type="Texture2D" path="res://assets/grandote_salto.png" id="71"]
+[ext_resource type="Texture2D" path="res://assets/gruta_virgen.png" id="72"]
+[ext_resource type="Texture2D" path="res://assets/hipster_agua1.png" id="73"]
+[ext_resource type="Texture2D" path="res://assets/hipster_agua2.png" id="74"]
+[ext_resource type="Texture2D" path="res://assets/hipster_run1.png" id="75"]
+[ext_resource type="Texture2D" path="res://assets/hipster_run2.png" id="76"]
+[ext_resource type="Texture2D" path="res://assets/hipster_run3.png" id="77"]
+[ext_resource type="Texture2D" path="res://assets/hipster_salto.png" id="78"]
+[ext_resource type="Texture2D" path="res://assets/juntar_cascote1.png" id="79"]
+[ext_resource type="Texture2D" path="res://assets/juntar_cascote2.png" id="80"]
+[ext_resource type="Texture2D" path="res://assets/juntar_cascote3.png" id="81"]
+[ext_resource type="Texture2D" path="res://assets/juntar_cascote4.png" id="82"]
+[ext_resource type="Texture2D" path="res://assets/juntar_cascote5.png" id="83"]
+[ext_resource type="Texture2D" path="res://assets/juntar_naranjas1.png" id="84"]
+[ext_resource type="Texture2D" path="res://assets/juntar_naranjas2.png" id="85"]
+[ext_resource type="Texture2D" path="res://assets/juntar_naranjas3.png" id="86"]
+[ext_resource type="Texture2D" path="res://assets/juntar_naranjas4.png" id="87"]
+[ext_resource type="Texture2D" path="res://assets/juntar_naranjas5.png" id="88"]
+[ext_resource type="Texture2D" path="res://assets/kiosco_coca.png" id="89"]
+[ext_resource type="Texture2D" path="res://assets/montaña_cascote.png" id="90"]
+[ext_resource type="Texture2D" path="res://assets/naranja.png" id="91"]
+[ext_resource type="Texture2D" path="res://assets/palmera.png" id="92"]
+[ext_resource type="Texture2D" path="res://assets/parada_colectivo.png" id="93"]
+[ext_resource type="Texture2D" path="res://assets/poste_luz.png" id="94"]
+[ext_resource type="Texture2D" path="res://assets/sanguche.png" id="95"]
+[ext_resource type="Texture2D" path="res://assets/secuestro_campeona.png" id="96"]
+[ext_resource type="Texture2D" path="res://assets/sol.png" id="97"]
+[ext_resource type="Texture2D" path="res://assets/suelo_ruta.png" id="98"]
+[ext_resource type="Texture2D" path="res://assets/suelo_ruta2.png" id="99"]
+[ext_resource type="Texture2D" path="res://assets/tesa.png" id="100"]
+
+[resource]
+animations = [{
+"frames": [{"duration": 1.0, "texture": ExtResource("1")}],
+"loop": false,
+"name": &"achilata",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("2")}],
+"loop": false,
+"name": &"agente_disparo_bala1",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("3")}],
+"loop": false,
+"name": &"agente_disparo_bala2",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("4")}],
+"loop": false,
+"name": &"agente_run1",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("5")}],
+"loop": false,
+"name": &"agente_run2",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("6")}],
+"loop": false,
+"name": &"agente_run3",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("7")}],
+"loop": false,
+"name": &"agente_salto",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("8")}],
+"loop": false,
+"name": &"arbol_naranjas",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("9")}],
+"loop": false,
+"name": &"auto1",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("10")}],
+"loop": false,
+"name": &"auto2",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("11")}],
+"loop": false,
+"name": &"auto3",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("12")}],
+"loop": false,
+"name": &"bala",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("13")}],
+"loop": false,
+"name": &"botella_agua",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("14")}],
+"loop": false,
+"name": &"bus1",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("15")}],
+"loop": false,
+"name": &"bus2",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("16")}],
+"loop": false,
+"name": &"bus3",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("17")}],
+"loop": false,
+"name": &"bus4",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("18")}],
+"loop": false,
+"name": &"camion_limones",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("19")}],
+"loop": false,
+"name": &"campeona empanadas",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("20")}],
+"loop": false,
+"name": &"cartel_famailla",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("21")}],
+"loop": false,
+"name": &"cascote",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("22")}],
+"loop": false,
+"name": &"ciruja comiendo",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("23")}],
+"loop": false,
+"name": &"ciruja_cabezazo0",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("24")}],
+"loop": false,
+"name": &"ciruja_cabezazo1",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("25")}],
+"loop": false,
+"name": &"ciruja_cabezazo2",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("26")}],
+"loop": false,
+"name": &"ciruja_disparo_cascote0",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("27")}],
+"loop": false,
+"name": &"ciruja_disparo_cascote1",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("28")}],
+"loop": false,
+"name": &"ciruja_disparo_cascote2",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("29")}],
+"loop": false,
+"name": &"ciruja_disparo_cascote3",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("30")}],
+"loop": false,
+"name": &"ciruja_disparo_cascote4",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("31")}],
+"loop": false,
+"name": &"ciruja_disparo_naranja0",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("32")}],
+"loop": false,
+"name": &"ciruja_disparo_naranja1",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("33")}],
+"loop": false,
+"name": &"ciruja_disparo_naranja2",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("34")}],
+"loop": false,
+"name": &"ciruja_disparo_naranja3",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("35")}],
+"loop": false,
+"name": &"ciruja_disparo_naranja4",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("36")}],
+"loop": false,
+"name": &"ciruja_disparo_naranja5",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("37")}],
+"loop": false,
+"name": &"ciruja_idle",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("38")}],
+"loop": false,
+"name": &"ciruja_run0",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("39")}],
+"loop": false,
+"name": &"ciruja_run1",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("40")}],
+"loop": false,
+"name": &"ciruja_run2",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("41")}],
+"loop": false,
+"name": &"ciruja_run3",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("42")}],
+"loop": false,
+"name": &"ciruja_run4",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("43")}],
+"loop": false,
+"name": &"ciruja_run5",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("44")}],
+"loop": false,
+"name": &"ciruja_salto",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("45")}],
+"loop": false,
+"name": &"ciruja_salto1",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("46")}],
+"loop": false,
+"name": &"ciruja_salto2",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("47")}],
+"loop": false,
+"name": &"ciruja_salto3",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("48")}],
+"loop": false,
+"name": &"ciruja_salto4",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("49")}],
+"loop": false,
+"name": &"cofee",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("50")}],
+"loop": false,
+"name": &"empanada",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("51")}],
+"loop": false,
+"name": &"exprebus",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("52")}],
+"loop": false,
+"name": &"final_boss_cofee1",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("53")}],
+"loop": false,
+"name": &"final_boss_cofee2",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("54")}],
+"loop": false,
+"name": &"final_boss_joke1",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("55")}],
+"loop": false,
+"name": &"final_boss_joke2",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("56")}],
+"loop": false,
+"name": &"final_boss_punch1",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("57")}],
+"loop": false,
+"name": &"final_boss_punch2",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("58")}],
+"loop": false,
+"name": &"final_boss_run1",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("59")}],
+"loop": false,
+"name": &"final_boss_run2",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("60")}],
+"loop": false,
+"name": &"final_boss_run3",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("61")}],
+"loop": false,
+"name": &"final_boss_salto1",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("62")}],
+"loop": false,
+"name": &"final_boss_salto2",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("63")}],
+"loop": false,
+"name": &"fondo_cerros",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("64")}],
+"loop": false,
+"name": &"fusion_fondos",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("65")}],
+"loop": false,
+"name": &"grandote_punch1",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("66")}],
+"loop": false,
+"name": &"grandote_punch2",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("67")}],
+"loop": false,
+"name": &"grandote_punch3",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("68")}],
+"loop": false,
+"name": &"grandote_run1",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("69")}],
+"loop": false,
+"name": &"grandote_run2",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("70")}],
+"loop": false,
+"name": &"grandote_run3",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("71")}],
+"loop": false,
+"name": &"grandote_salto",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("72")}],
+"loop": false,
+"name": &"gruta_virgen",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("73")}],
+"loop": false,
+"name": &"hipster_agua1",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("74")}],
+"loop": false,
+"name": &"hipster_agua2",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("75")}],
+"loop": false,
+"name": &"hipster_run1",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("76")}],
+"loop": false,
+"name": &"hipster_run2",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("77")}],
+"loop": false,
+"name": &"hipster_run3",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("78")}],
+"loop": false,
+"name": &"hipster_salto",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("79")}],
+"loop": false,
+"name": &"juntar_cascote1",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("80")}],
+"loop": false,
+"name": &"juntar_cascote2",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("81")}],
+"loop": false,
+"name": &"juntar_cascote3",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("82")}],
+"loop": false,
+"name": &"juntar_cascote4",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("83")}],
+"loop": false,
+"name": &"juntar_cascote5",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("84")}],
+"loop": false,
+"name": &"juntar_naranjas1",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("85")}],
+"loop": false,
+"name": &"juntar_naranjas2",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("86")}],
+"loop": false,
+"name": &"juntar_naranjas3",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("87")}],
+"loop": false,
+"name": &"juntar_naranjas4",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("88")}],
+"loop": false,
+"name": &"juntar_naranjas5",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("89")}],
+"loop": false,
+"name": &"kiosco_coca",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("90")}],
+"loop": false,
+"name": &"montaña_cascote",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("91")}],
+"loop": false,
+"name": &"naranja",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("92")}],
+"loop": false,
+"name": &"palmera",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("93")}],
+"loop": false,
+"name": &"parada_colectivo",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("94")}],
+"loop": false,
+"name": &"poste_luz",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("95")}],
+"loop": false,
+"name": &"sanguche",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("96")}],
+"loop": false,
+"name": &"secuestro_campeona",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("97")}],
+"loop": false,
+"name": &"sol",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("98")}],
+"loop": false,
+"name": &"suelo_ruta",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("99")}],
+"loop": false,
+"name": &"suelo_ruta2",
+"speed": 1.0
+},
+{
+"frames": [{"duration": 1.0, "texture": ExtResource("100")}],
+"loop": false,
+"name": &"tesa",
+"speed": 1.0
+}]

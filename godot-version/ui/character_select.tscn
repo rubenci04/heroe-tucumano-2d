@@ -1,0 +1,94 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/character_select.gd" id="1_script"]
+
+[node name="CharacterSelect" type="Control"]
+process_mode = 3
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_script")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.015, 0.02, 0.04, 0.96)
+mouse_filter = 2
+
+[node name="Panel" type="ColorRect" parent="."]
+layout_mode = 0
+offset_left = 72.0
+offset_top = 62.0
+offset_right = 728.0
+offset_bottom = 388.0
+color = Color(0.075, 0.09, 0.14, 1)
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="Panel"]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 20.0
+offset_right = 632.0
+offset_bottom = 58.0
+theme_override_colors/font_color = Color(1, 0.85, 0.15, 1)
+theme_override_font_sizes/font_size = 26
+text = "ELEGÍ TU HINCHA"
+horizontal_alignment = 1
+
+[node name="SanMartinOption" type="Label" parent="Panel"]
+layout_mode = 0
+offset_left = 46.0
+offset_top = 86.0
+offset_right = 610.0
+offset_bottom = 122.0
+theme_override_font_sizes/font_size = 18
+
+[node name="AtleticoOption" type="Label" parent="Panel"]
+layout_mode = 0
+offset_left = 46.0
+offset_top = 132.0
+offset_right = 610.0
+offset_bottom = 168.0
+theme_override_colors/font_color = Color(0.62, 0.64, 0.68, 1)
+theme_override_font_sizes/font_size = 18
+
+[node name="Description" type="Label" parent="Panel"]
+layout_mode = 0
+offset_left = 46.0
+offset_top = 196.0
+offset_right = 610.0
+offset_bottom = 236.0
+theme_override_colors/font_color = Color(0.88, 0.9, 0.96, 1)
+theme_override_font_sizes/font_size = 15
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="Status" type="Label" parent="Panel"]
+layout_mode = 0
+offset_left = 46.0
+offset_top = 252.0
+offset_right = 610.0
+offset_bottom = 278.0
+theme_override_colors/font_color = Color(0.3, 1, 0.68, 1)
+theme_override_font_sizes/font_size = 14
+horizontal_alignment = 1
+
+[node name="Controls" type="Label" parent="Panel"]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 294.0
+offset_right = 632.0
+offset_bottom = 316.0
+theme_override_colors/font_color = Color(0.78, 0.8, 0.86, 1)
+theme_override_font_sizes/font_size = 12
+text = "↑ ↓ / W S o D-pad · Enter / Espacio o A para confirmar · Esc / B para cancelar"
+horizontal_alignment = 1

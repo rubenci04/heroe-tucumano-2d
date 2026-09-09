@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="EnemyDefinition" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_definition.gd" id="1"]
+[ext_resource type="SpriteFrames" path="res://assets/animations/drone.tres" id="2"]
+[ext_resource type="Resource" path="res://data/projectiles/drone_bolt.tres" id="3"]
+
+[resource]
+script = ExtResource("1")
+enemy_id = &"drone"
+display_name = "Drone"
+attack_mode = 1
+max_health = 3
+move_speed = 105.0
+reward_points = 175
+detection_range = 620.0
+preferred_distance = 300.0
+attack_range = 620.0
+telegraph_duration = 1.0
+projectile_release_duration = 0.1
+recovery_duration = 0.25
+attack_cooldown = 2.0
+contact_damage = 0
+fury_contact_damage = 20
+projectile_definition = ExtResource("3")
+sprite_frames = ExtResource("2")
+run_animation = &"idle"
+attack_animation = &"aim"
+visual_scale = 0.55
+collision_width_ratio = 0.72

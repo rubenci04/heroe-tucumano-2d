@@ -1,0 +1,219 @@
+[gd_scene load_steps=8 format=3]
+[ext_resource type="Script" path="res://scripts/core/hud.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/sol.png" id="2_heat_sun"]
+[sub_resource type="Shader" id="HeatSunTransparencyShader"]
+code = "shader_type canvas_item;\n\nvoid fragment() {\n\tvec4 tint = COLOR;\n\tvec4 source = texture(TEXTURE, UV);\n\tfloat distance_from_white = distance(source.rgb, vec3(1.0));\n\tfloat alpha_mask = smoothstep(0.04, 0.18, distance_from_white);\n\tCOLOR = vec4(source.rgb, source.a * alpha_mask) * tint;\n}\n"
+
+[sub_resource type="ShaderMaterial" id="HeatSunMaterial"]
+shader = SubResource("HeatSunTransparencyShader")
+[sub_resource type="StyleBoxFlat" id="BarBackground"]
+bg_color = Color(0.08,0.08,0.09,1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.8,0.78,0.62,1)
+
+[sub_resource type="StyleBoxFlat" id="LifeFill"]
+bg_color = Color(0.1,0.9,0.3,1)
+
+[sub_resource type="StyleBoxFlat" id="BossFill"]
+bg_color = Color(0.95,0.2,0.1,1)
+
+
+[node name="HUD" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+script = ExtResource("1")
+[node name="HeatShimmer" type="Control" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+[node name="BandUpper" type="ColorRect" parent="HeatShimmer"]
+offset_left = -8.0
+offset_top = 258.0
+offset_right = 808.0
+offset_bottom = 260.0
+color = Color(1,0.82,0.52,1)
+mouse_filter = 2
+[node name="BandMiddle" type="ColorRect" parent="HeatShimmer"]
+offset_left = -8.0
+offset_top = 318.0
+offset_right = 808.0
+offset_bottom = 320.0
+color = Color(1,0.9,0.7,0.9)
+mouse_filter = 2
+[node name="BandLower" type="ColorRect" parent="HeatShimmer"]
+offset_left = -8.0
+offset_top = 374.0
+offset_right = 808.0
+offset_bottom = 376.0
+color = Color(1,0.75,0.42,0.8)
+mouse_filter = 2
+[node name="TopBar" type="ColorRect" parent="."]
+offset_right = 800.0
+offset_bottom = 74.0
+color = Color(0.03,0.035,0.05,0.94)
+mouse_filter = 2
+[node name="HeatSun" type="TextureRect" parent="."]
+visible = false
+material = SubResource("HeatSunMaterial")
+offset_left = 700.0
+offset_top = 105.0
+offset_right = 796.0
+offset_bottom = 201.0
+pivot_offset = Vector2(48,48)
+texture = ExtResource("2_heat_sun")
+expand_mode = 1
+stretch_mode = 5
+mouse_filter = 2
+[node name="LifeTitle" type="Label" parent="."]
+offset_left = 14.0
+offset_top = 8.0
+offset_right = 65.0
+offset_bottom = 27.0
+theme_override_font_sizes/font_size = 15
+text = "VIDA"
+[node name="LifeBar" type="ProgressBar" parent="."]
+offset_left = 66.0
+offset_top = 10.0
+offset_right = 200.0
+offset_bottom = 26.0
+theme_override_styles/background = SubResource("BarBackground")
+theme_override_styles/fill = SubResource("LifeFill")
+max_value = 3.0
+value = 3.0
+show_percentage = false
+mouse_filter = 2
+[node name="Status" type="Label" parent="."]
+offset_left = 220.0
+offset_top = 8.0
+offset_right = 788.0
+offset_bottom = 28.0
+theme_override_colors/font_color = Color(1,0.86,0.2,1)
+theme_override_font_sizes/font_size = 18
+text = "VIDAS 3 · PUNTOS 000000 · MONEDAS 000"
+[node name="Location" type="Label" parent="."]
+offset_left = 14.0
+offset_top = 36.0
+offset_right = 625.0
+offset_bottom = 64.0
+theme_override_colors/font_color = Color(0.25,1,0.7,1)
+theme_override_font_sizes/font_size = 16
+[node name="Combo" type="Label" parent="."]
+visible = false
+offset_left = 630.0
+offset_top = 35.0
+offset_right = 790.0
+offset_bottom = 64.0
+theme_override_colors/font_color = Color(1,0.86,0.2,1)
+theme_override_font_sizes/font_size = 18
+text = "COMBO x0"
+horizontal_alignment = 2
+[node name="BossBar" type="ProgressBar" parent="."]
+visible = false
+offset_left = 225.0
+offset_top = 77.0
+offset_right = 785.0
+offset_bottom = 89.0
+theme_override_styles/background = SubResource("BarBackground")
+theme_override_styles/fill = SubResource("BossFill")
+max_value = 90.0
+show_percentage = false
+mouse_filter = 2
+[node name="BossName" type="Label" parent="."]
+visible = false
+offset_left = 225.0
+offset_top = 91.0
+offset_right = 785.0
+offset_bottom = 113.0
+theme_override_colors/font_color = Color(1,0.38,0.2,1)
+theme_override_font_sizes/font_size = 14
+text = "EL GRANDOTE"
+horizontal_alignment = 1
+[node name="SpecialStatus" type="Label" parent="."]
+offset_left = 14.0
+offset_top = 77.0
+offset_right = 210.0
+offset_bottom = 99.0
+theme_override_colors/font_color = Color(1,0.86,0.2,1)
+theme_override_font_sizes/font_size = 13
+text = "TUCUMANAZO x5"
+[node name="Notice" type="Label" parent="."]
+offset_left = 15.0
+offset_top = 93.0
+offset_right = 785.0
+offset_bottom = 128.0
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 17
+theme_override_colors/font_color = Color(1,0.88,0.15,1)
+theme_override_colors/font_shadow_color = Color(0,0,0,1)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+[node name="HeatAlert" type="Label" parent="."]
+visible = false
+offset_left = 190.0
+offset_top = 132.0
+offset_right = 610.0
+offset_bottom = 164.0
+pivot_offset = Vector2(210,16)
+theme_override_colors/font_color = Color(1,0.12,0.08,1)
+theme_override_colors/font_shadow_color = Color(0.18,0,0,1)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 22
+text = "¡TE ESTÁS INSOLANDO!"
+horizontal_alignment = 1
+mouse_filter = 2
+[node name="BottomBar" type="ColorRect" parent="."]
+offset_top = 432.0
+offset_right = 800.0
+offset_bottom = 450.0
+color = Color(0.03,0.035,0.05,0.95)
+mouse_filter = 2
+[node name="Controls" type="Label" parent="."]
+offset_left = 10.0
+offset_top = 432.0
+offset_right = 790.0
+offset_bottom = 450.0
+theme_override_font_sizes/font_size = 11
+text = "← → mover · ↑ ↓ carril · Espacio salto · Z naranja · X piedra · V Tucumanazo · Esc pausa · R reinicio"
+[node name="PauseLabel" type="Label" parent="."]
+visible = false
+offset_left = 200.0
+offset_top = 170.0
+offset_right = 600.0
+offset_bottom = 270.0
+theme_override_font_sizes/font_size = 34
+text = "PAUSA"
+horizontal_alignment = 1
+vertical_alignment = 1
+[node name="Results" type="ColorRect" parent="."]
+visible = false
+offset_right = 800.0
+offset_bottom = 450.0
+color = Color(0.02,0.025,0.04,0.94)
+[node name="Title" type="Label" parent="Results"]
+offset_left = 20.0
+offset_top = 130.0
+offset_right = 780.0
+offset_bottom = 180.0
+theme_override_font_sizes/font_size = 28
+theme_override_colors/font_color = Color(1,0.85,0.15,1)
+horizontal_alignment = 1
+[node name="Description" type="Label" parent="Results"]
+offset_left = 20.0
+offset_top = 190.0
+offset_right = 780.0
+offset_bottom = 310.0
+theme_override_font_sizes/font_size = 19
+horizontal_alignment = 1
+vertical_alignment = 1

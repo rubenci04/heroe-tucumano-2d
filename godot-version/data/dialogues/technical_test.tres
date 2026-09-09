@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="DialogueSequence" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_sequence.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+sequence_id = &"technical_test"
+allow_skip = true
+entries = Array[Dictionary]([{
+"speaker": "Operador",
+"text": "Primera línea de validación técnica."
+}, {
+"speaker": "Supervisora",
+"text": "Segunda línea, desde datos editables."
+}])

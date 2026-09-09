@@ -1,0 +1,32 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/palermitano_boss.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/components/health_component.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/components/hurtbox.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/components/hitbox.tscn" id="4"]
+[ext_resource type="SpriteFrames" path="res://assets/animations/boss.tres" id="5"]
+[ext_resource type="Resource" path="res://data/attacks/palermitano_chain.tres" id="6"]
+
+[sub_resource type="RectangleShape2D" id="BodyShape"]
+size = Vector2(70, 122)
+
+[node name="PalermitanoBoss" type="CharacterBody2D"]
+script = ExtResource("1")
+chain_definition = ExtResource("6")
+
+[node name="HealthComponent" parent="." instance=ExtResource("2")]
+
+[node name="Hurtbox" parent="." instance=ExtResource("3")]
+
+[node name="ChainHitbox" parent="." instance=ExtResource("4")]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -61)
+shape = SubResource("BodyShape")
+
+[node name="Visual" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, -78)
+scale = Vector2(0.78, 0.78)
+texture_filter = 1
+sprite_frames = ExtResource("5")
+animation = &"boss_run"

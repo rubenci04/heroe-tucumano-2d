@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="ProjectileDefinition" format=3 uid="uid://dncmst8btcdwf"]
+
+[ext_resource type="Script" uid="uid://n6okbylxwaps" path="res://scripts/data/projectile_definition.gd" id="1"]
+
+[sub_resource type="Gradient" id="Gradient_drone_bolt"]
+offsets = PackedFloat32Array(0, 0.45, 1)
+colors = PackedColorArray(1, 0.9, 0.75, 1, 1, 0.05, 0.02, 1, 0.5, 0, 0, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_drone_bolt"]
+gradient = SubResource("Gradient_drone_bolt")
+width = 18
+height = 18
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_drone_bolt"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("GradientTexture2D_drone_bolt")
+}],
+"loop": 1,
+"name": &"fly",
+"speed": 1.0
+}]
+
+[resource]
+script = ExtResource("1")
+projectile_id = &"drone_bolt"
+default_team = &"enemy"
+speed = 320.0
+sprite_frames = SubResource("SpriteFrames_drone_bolt")
+rotation_speed_degrees = 0.0
+collision_size = Vector2(12, 12)

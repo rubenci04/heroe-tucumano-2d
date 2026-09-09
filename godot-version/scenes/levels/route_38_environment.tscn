@@ -1,0 +1,141 @@
+[gd_scene format=3 uid="uid://orephvp188s2"]
+
+[ext_resource type="Texture2D" uid="uid://ducutjcaqt5nf" path="res://assets/fondo_cerros.png" id="1_mountains"]
+[ext_resource type="Texture2D" uid="uid://bxugbo5pwgcc7" path="res://assets/fusion_fondos.png" id="2_panorama"]
+[ext_resource type="Texture2D" uid="uid://fr5rcrqc3rgp" path="res://assets/suelo_ruta.png" id="3_road_back"]
+[ext_resource type="Texture2D" uid="uid://b605g7kb1po4p" path="res://assets/suelo_ruta2.png" id="4_road_front"]
+[ext_resource type="Texture2D" uid="uid://cd8bp1wwwtnw" path="res://assets/cartel_famailla.png" id="5_famailla"]
+[ext_resource type="Texture2D" uid="uid://cvptd82d8mkm8" path="res://assets/palmera.png" id="7_palm"]
+[ext_resource type="Texture2D" uid="uid://bl3mdu7u1ah4f" path="res://assets/kiosco_coca.png" id="8_kiosk"]
+[ext_resource type="Texture2D" uid="uid://cv5j20p8xy2pw" path="res://assets/parada_colectivo.png" id="9_bus_stop"]
+[ext_resource type="Texture2D" uid="uid://ctasukvbn74s7" path="res://assets/arbol_naranjas.png" id="10_orange_tree"]
+[ext_resource type="Texture2D" uid="uid://cy1wikec6all2" path="res://assets/poste_luz.png" id="11_light_post"]
+
+[node name="Route38Environment" type="Node2D" unique_id=656234925]
+texture_filter = 1
+
+[node name="DistantBackground" type="Parallax2D" parent="." unique_id=520776858]
+z_index = -20
+scroll_scale = Vector2(0.05, 1)
+repeat_size = Vector2(1800, 0)
+repeat_times = 2
+
+[node name="MountainsA" type="Sprite2D" parent="DistantBackground" unique_id=780499320]
+texture = ExtResource("1_mountains")
+centered = false
+
+[node name="MountainsB" type="Sprite2D" parent="DistantBackground" unique_id=720715138]
+position = Vector2(900, 0)
+texture = ExtResource("1_mountains")
+centered = false
+flip_h = true
+
+[node name="TownPanorama" type="Node2D" parent="." unique_id=2047983405]
+z_index = -10
+
+[node name="Localities" type="Sprite2D" parent="TownPanorama" unique_id=894823197]
+position = Vector2(-783.00006, -394.99997)
+scale = Vector2(1.02475, 1.5380201)
+texture = ExtResource("2_panorama")
+centered = false
+
+[node name="RoadLayers" type="Node2D" parent="." unique_id=899893553]
+
+[node name="BackLane" type="Parallax2D" parent="RoadLayers" unique_id=1028901360]
+z_index = -5
+repeat_size = Vector2(700, 0)
+repeat_times = 2
+
+[node name="Road" type="Sprite2D" parent="RoadLayers/BackLane" unique_id=1721022136]
+position = Vector2(0, 325)
+texture = ExtResource("3_road_back")
+centered = false
+
+[node name="FrontLane" type="Parallax2D" parent="RoadLayers" unique_id=544472766]
+z_index = -4
+repeat_size = Vector2(700, 0)
+repeat_times = 2
+
+[node name="Road" type="Sprite2D" parent="RoadLayers/FrontLane" unique_id=1778040184]
+position = Vector2(0, 430)
+texture = ExtResource("4_road_front")
+centered = false
+
+[node name="FamaillaLandmarks" type="Node2D" parent="." unique_id=259002624]
+z_index = 2
+
+[node name="EntranceSign" type="Sprite2D" parent="FamaillaLandmarks" unique_id=1284472814]
+position = Vector2(271, 291)
+scale = Vector2(1.1, 1.1)
+texture = ExtResource("5_famailla")
+
+[node name="ShortPalmWest" type="Sprite2D" parent="FamaillaLandmarks" unique_id=611286923]
+position = Vector2(680, 277.95)
+scale = Vector2(0.9, 0.9)
+texture = ExtResource("7_palm")
+
+[node name="CocaKiosk" type="Sprite2D" parent="FamaillaLandmarks" unique_id=2027734626]
+position = Vector2(1453.0001, 260.99997)
+scale = Vector2(1.05, 1.05)
+texture = ExtResource("8_kiosk")
+
+[node name="ShortPalmEast" type="Sprite2D" parent="FamaillaLandmarks" unique_id=1231887265]
+position = Vector2(1150, 277.95)
+scale = Vector2(0.9, 0.9)
+texture = ExtResource("7_palm")
+
+[node name="RouteProps" type="Node2D" parent="." unique_id=1332504303]
+z_index = 2
+
+[node name="BusStop01" type="Sprite2D" parent="RouteProps" unique_id=575712048]
+position = Vector2(2115, 238)
+scale = Vector2(0.85, 0.85)
+texture = ExtResource("9_bus_stop")
+
+[node name="OrangeTree01" type="Sprite2D" parent="RouteProps" unique_id=1473527485]
+position = Vector2(2420, 277.425)
+scale = Vector2(0.85, 0.85)
+texture = ExtResource("10_orange_tree")
+
+[node name="BusStop02" type="Sprite2D" parent="RouteProps" unique_id=1645579942]
+position = Vector2(3600, 267.225)
+scale = Vector2(0.85, 0.85)
+texture = ExtResource("9_bus_stop")
+
+[node name="OrangeTree02" type="Sprite2D" parent="RouteProps" unique_id=184715043]
+position = Vector2(4086, 282)
+scale = Vector2(0.85, 0.85)
+texture = ExtResource("10_orange_tree")
+
+[node name="BusStop03" type="Sprite2D" parent="RouteProps" unique_id=1329967813]
+position = Vector2(4800, 267.225)
+scale = Vector2(0.85, 0.85)
+texture = ExtResource("9_bus_stop")
+
+[node name="OrangeTree03" type="Sprite2D" parent="RouteProps" unique_id=653478817]
+position = Vector2(5120, 277.425)
+scale = Vector2(0.85, 0.85)
+texture = ExtResource("10_orange_tree")
+
+[node name="OrangeTree04" type="Sprite2D" parent="RouteProps" unique_id=1884501901]
+position = Vector2(6420, 277.425)
+scale = Vector2(0.85, 0.85)
+texture = ExtResource("10_orange_tree")
+
+[node name="LightPosts" type="Node2D" parent="." unique_id=681803303]
+z_index = 2
+
+[node name="LightPost01" type="Sprite2D" parent="LightPosts" unique_id=1396046492]
+position = Vector2(1000, 271.475)
+scale = Vector2(0.85, 0.85)
+texture = ExtResource("11_light_post")
+
+[node name="LightPost06" type="Sprite2D" parent="LightPosts" unique_id=1713678245]
+position = Vector2(3800, 271.475)
+scale = Vector2(0.85, 0.85)
+texture = ExtResource("11_light_post")
+
+[node name="LightPost09" type="Sprite2D" parent="LightPosts" unique_id=601735576]
+position = Vector2(5750, 271.475)
+scale = Vector2(0.85, 0.85)
+texture = ExtResource("11_light_post")

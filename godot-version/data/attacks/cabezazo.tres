@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AttackDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/attack_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+attack_id = &"cabezazo"
+damage = 5
+startup_duration = 0.08
+active_duration = 0.08
+recovery_duration = 0.09
+reach = Vector2(90, 90)
+offset = Vector2(45, -45)

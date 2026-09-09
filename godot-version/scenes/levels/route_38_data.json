@@ -1,0 +1,193 @@
+{
+	"note": "Orden de localidades confirmado por el usuario. Umbrales X provisionales de diseño sobre el panorama de 8000 px; no equivalen a distancias geográficas.",
+	"locations": [
+		{
+			"name": "Famaillá",
+			"x": 0.0
+		},
+		{
+			"name": "Acheral",
+			"x": 1400.0
+		},
+		{
+			"name": "Monteros",
+			"x": 2800.0
+		},
+		{
+			"name": "León Rougés",
+			"x": 4200.0
+		},
+		{
+			"name": "Villa Quinteros",
+			"x": 5400.0
+		},
+		{
+			"name": "Río Seco",
+			"x": 6600.0
+		}
+	],
+	"encounters": [
+		{
+			"id": "route_wave_01",
+			"activation": {
+				"type": "player_x_at_least",
+				"value": 900.0
+			},
+			"completion": "all_enemies_defeated",
+			"enemies": [
+				{
+					"enemy_id": "hipster",
+					"x_offset": 550.0,
+					"lane": 0.0
+				},
+				{
+					"enemy_id": "hipster",
+					"x_offset": -180.0,
+					"lane": 1.0
+				}
+			]
+		},
+		{
+			"id": "route_wave_02",
+			"activation": {
+				"type": "player_x_at_least",
+				"value": 2200.0
+			},
+			"completion": "all_enemies_defeated",
+			"enemies": [
+				{
+					"enemy_id": "agente",
+					"x_offset": 550.0,
+					"lane": 1.0
+				},
+				{
+					"enemy_id": "hipster",
+					"x_offset": -180.0,
+					"lane": 0.0
+				}
+			]
+		},
+		{
+			"id": "route_wave_03",
+			"activation": {
+				"type": "player_x_at_least",
+				"value": 3500.0
+			},
+			"completion": "all_enemies_defeated",
+			"enemies": [
+				{
+					"enemy_id": "agente",
+					"x_offset": 550.0,
+					"lane": 0.0
+				},
+				{
+					"enemy_id": "agente",
+					"x_offset": -180.0,
+					"lane": 1.0
+				}
+			]
+		},
+		{
+			"id": "route_drone_01",
+			"activation": {
+				"type": "player_x_at_least",
+				"value": 4100.0
+			},
+			"completion": "all_enemies_defeated",
+			"enemies": [
+				{
+					"enemy_id": "drone",
+					"x_offset": 500.0,
+					"lane": 0.0
+				}
+			]
+		},
+		{
+			"id": "route_wave_04",
+			"activation": {
+				"type": "player_x_at_least",
+				"value": 4700.0
+			},
+			"completion": "all_enemies_defeated",
+			"enemies": [
+				{
+					"enemy_id": "grandote",
+					"x_offset": 550.0,
+					"lane": 1.0
+				},
+				{
+					"enemy_id": "agente",
+					"x_offset": -180.0,
+					"lane": 0.0
+				}
+			]
+		},
+		{
+			"id": "route_drone_02",
+			"activation": {
+				"type": "player_x_at_least",
+				"value": 5400.0
+			},
+			"completion": "all_enemies_defeated",
+			"enemies": [
+				{
+					"enemy_id": "drone",
+					"x_offset": 550.0,
+					"lane": 0.0
+				},
+				{
+					"enemy_id": "drone",
+					"x_offset": -180.0,
+					"lane": 1.0
+				}
+			]
+		},
+		{
+			"id": "route_drone_03",
+			"activation": {
+				"type": "player_x_at_least",
+				"value": 6100.0
+			},
+			"completion": "all_enemies_defeated",
+			"enemies": [
+				{
+					"enemy_id": "drone",
+					"x_offset": 550.0,
+					"lane": 0.0
+				},
+				{
+					"enemy_id": "agente",
+					"x_offset": -180.0,
+					"lane": 1.0
+				}
+			]
+		},
+		{
+			"id": "route_wave_06",
+			"activation": {
+				"type": "player_x_at_least",
+				"value": 7000.0
+			},
+			"completion": "all_enemies_defeated",
+			"enemies": [
+				{
+					"enemy_id": "grandote",
+					"x_offset": 550.0,
+					"lane": 1.0
+				},
+				{
+					"enemy_id": "grandote",
+					"x_offset": -180.0,
+					"lane": 0.0
+				}
+			]
+		}
+	],
+	"boss": {
+		"x": 7600.0,
+		"trigger_x": 7425.0,
+		"location": "Río Seco",
+		"escape_destination": "Ingenio Arcor",
+		"next_level": "Interior de la fábrica (pendiente)"
+	}
+}

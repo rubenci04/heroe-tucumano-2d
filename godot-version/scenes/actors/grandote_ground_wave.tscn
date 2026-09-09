@@ -1,0 +1,19 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/grandote_ground_wave.gd" id="1"]
+[ext_resource type="Resource" path="res://data/attacks/grandote_ground_wave.tres" id="2"]
+
+[sub_resource type="RectangleShape2D" id="WaveShape"]
+size = Vector2(38, 12)
+
+[node name="GrandoteGroundWave" type="Area2D"]
+script = ExtResource("1")
+attack_definition = ExtResource("2")
+
+[node name="Visual" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-20, 0, -9, -8, 0, -18, 10, -8, 22, 0, 8, -3, -7, -3)
+color = Color(0.92, 0.55, 0.16, 0.9)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -6)
+shape = SubResource("WaveShape")

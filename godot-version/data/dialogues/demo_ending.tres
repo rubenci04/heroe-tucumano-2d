@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="DialogueSequence" format=3 uid="uid://cf07dcbdrqkvm"]
+
+[ext_resource type="Script" uid="uid://blvxioxthw8lh" path="res://scripts/data/dialogue_sequence.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+sequence_id = &"demo_ending_acheral"
+entries = Array[Dictionary]([{
+"speaker": "Hincha de San Martín",
+"text": "¡Se terminó el chamuyo, Palermitano! La receta se queda en Tucumán."
+}, {
+"speaker": "El Palermitano",
+"text": "Esto fue apenas una validación de mercado. Nos replegamos hacia Acheral."
+}, {
+"speaker": "Hincha de San Martín",
+"text": "¡Andá nomás! En la Ruta 38 no se afana la receta de nadie."
+}, {
+"speaker": "El Palermitano",
+"text": "Considérenlo una pausa estratégica. Próximo destino: Acheral."
+}])

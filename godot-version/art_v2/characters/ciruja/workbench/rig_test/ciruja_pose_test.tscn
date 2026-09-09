@@ -1,0 +1,171 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://art_v2/characters/ciruja/workbench/rig_test/ciruja_pose_test.gd" id="1_script"]
+
+[sub_resource type="Animation" id="Animation_run_poc"]
+resource_name = "run_poc"
+length = 0.666667
+loop_mode = 1
+step = 0.0833333
+tracks/0/type = "value"
+tracks/0/path = NodePath("RigRoot/BodyPivot:position")
+tracks/0/keys = {"times": PackedFloat32Array(0, 0.0833333, 0.166667, 0.25, 0.333333, 0.416667, 0.5, 0.583333), "transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1), "update": 1, "values": [Vector2(0, 145), Vector2(0, 151), Vector2(0, 143), Vector2(0, 140), Vector2(0, 145), Vector2(0, 151), Vector2(0, 143), Vector2(0, 140)]}
+tracks/1/type = "value"
+tracks/1/path = NodePath("RigRoot/BodyPivot:rotation")
+tracks/1/keys = {"times": PackedFloat32Array(0, 0.0833333, 0.166667, 0.25, 0.333333, 0.416667, 0.5, 0.583333), "transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1), "update": 1, "values": [0.0349066, 0.0523599, 0.0349066, 0.0174533, 0.0349066, 0.0523599, 0.0349066, 0.0174533]}
+tracks/2/type = "value"
+tracks/2/path = NodePath("RigRoot/FrontHip:rotation")
+tracks/2/keys = {"times": PackedFloat32Array(0, 0.0833333, 0.166667, 0.25, 0.333333, 0.416667, 0.5, 0.583333), "transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1), "update": 1, "values": [-0.314159, -0.20944, 0.0349066, 0.279253, 0.314159, 0.20944, -0.0872665, -0.314159]}
+tracks/3/type = "value"
+tracks/3/path = NodePath("RigRoot/FrontHip/FrontKnee:rotation")
+tracks/3/keys = {"times": PackedFloat32Array(0, 0.0833333, 0.166667, 0.25, 0.333333, 0.416667, 0.5, 0.583333), "transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1), "update": 1, "values": [0.0698132, 0.349066, 0.453786, 0.488692, 0.418879, 0.488692, 0.279253, 0.139626]}
+tracks/4/type = "value"
+tracks/4/path = NodePath("RigRoot/FrontHip/FrontKnee/FrontAnkle:rotation")
+tracks/4/keys = {"times": PackedFloat32Array(0, 0.0833333, 0.166667, 0.25, 0.333333, 0.416667, 0.5, 0.583333), "transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1), "update": 1, "values": [0.0698132, 0.139626, -0.0698132, -0.174533, -0.139626, -0.174533, 0.0872665, 0.139626]}
+tracks/5/type = "value"
+tracks/5/path = NodePath("RigRoot/BackHip:rotation")
+tracks/5/keys = {"times": PackedFloat32Array(0, 0.0833333, 0.166667, 0.25, 0.333333, 0.416667, 0.5, 0.583333), "transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1), "update": 1, "values": [0.314159, 0.20944, -0.0872665, -0.314159, -0.314159, -0.20944, 0.0349066, 0.279253]}
+tracks/6/type = "value"
+tracks/6/path = NodePath("RigRoot/BackHip/BackKnee:rotation")
+tracks/6/keys = {"times": PackedFloat32Array(0, 0.0833333, 0.166667, 0.25, 0.333333, 0.416667, 0.5, 0.583333), "transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1), "update": 1, "values": [0.418879, 0.488692, 0.279253, 0.139626, 0.0698132, 0.349066, 0.453786, 0.488692]}
+tracks/7/type = "value"
+tracks/7/path = NodePath("RigRoot/BackHip/BackKnee/BackAnkle:rotation")
+tracks/7/keys = {"times": PackedFloat32Array(0, 0.0833333, 0.166667, 0.25, 0.333333, 0.416667, 0.5, 0.583333), "transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1), "update": 1, "values": [-0.139626, -0.174533, 0.0872665, 0.139626, 0.0698132, 0.139626, -0.0698132, -0.174533]}
+tracks/8/type = "value"
+tracks/8/path = NodePath("RigRoot/BodyPivot/FrontShoulder:rotation")
+tracks/8/keys = {"times": PackedFloat32Array(0, 0.0833333, 0.166667, 0.25, 0.333333, 0.416667, 0.5, 0.583333), "transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1), "update": 1, "values": [0.383972, 0.314159, -0.0349066, -0.349066, -0.383972, -0.314159, 0.0872665, 0.383972]}
+tracks/9/type = "value"
+tracks/9/path = NodePath("RigRoot/BodyPivot/FrontShoulder/FrontElbow:rotation")
+tracks/9/keys = {"times": PackedFloat32Array(0, 0.0833333, 0.166667, 0.25, 0.333333, 0.416667, 0.5, 0.583333), "transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1), "update": 1, "values": [-0.314159, -0.383972, -0.349066, -0.261799, 0.314159, 0.383972, 0.349066, 0.261799]}
+tracks/10/type = "value"
+tracks/10/path = NodePath("RigRoot/BodyPivot/BackShoulder:rotation")
+tracks/10/keys = {"times": PackedFloat32Array(0, 0.0833333, 0.166667, 0.25, 0.333333, 0.416667, 0.5, 0.583333), "transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1), "update": 1, "values": [-0.383972, -0.314159, 0.0872665, 0.383972, 0.383972, 0.314159, -0.0349066, -0.349066]}
+tracks/11/type = "value"
+tracks/11/path = NodePath("RigRoot/BodyPivot/BackShoulder/BackElbow:rotation")
+tracks/11/keys = {"times": PackedFloat32Array(0, 0.0833333, 0.166667, 0.25, 0.333333, 0.416667, 0.5, 0.583333), "transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1), "update": 1, "values": [0.314159, 0.383972, 0.349066, 0.261799, -0.314159, -0.383972, -0.349066, -0.261799]}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_poc"]
+_data = {&"run_poc": SubResource("Animation_run_poc")}
+
+[node name="CirujaPoseTest" type="Node2D"]
+process_mode = 3
+script = ExtResource("1_script")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+z_index = -100
+offset_right = 800.0
+offset_bottom = 450.0
+mouse_filter = 2
+color = Color(0.035, 0.045, 0.065, 1)
+show_behind_parent = true
+
+[node name="Title" type="Label" parent="."]
+offset_left = 16.0
+offset_top = 12.0
+offset_right = 570.0
+offset_bottom = 54.0
+text = "CIRUJA CUTOUT · RUN POC · 8 POSES / 12 FPS\nEspacio: run/pausa  ·  D: pivots  ·  Tab: seleccionar  ·  ←/→: rotar  ·  0: reset"
+theme_override_colors/font_color = Color(0.88, 0.92, 1, 1)
+theme_override_font_sizes/font_size = 14
+
+[node name="GroundGuide" type="Line2D" parent="."]
+points = PackedVector2Array(260, 443, 550, 443)
+width = 1.0
+default_color = Color(0.25, 0.4, 0.5, 0.65)
+
+[node name="RigRoot" type="Node2D" parent="."]
+position = Vector2(400, 190)
+scale = Vector2(0.34, 0.34)
+z_index = -10
+
+[node name="BodyPivot" type="Node2D" parent="RigRoot"]
+position = Vector2(0, 145)
+
+[node name="BackHip" type="Node2D" parent="RigRoot"]
+position = Vector2(55, 145)
+z_index = -3
+
+[node name="BackUpperLegSprite" type="Sprite2D" parent="RigRoot/BackHip"]
+position = Vector2(15, 137)
+
+[node name="BackKnee" type="Node2D" parent="RigRoot/BackHip"]
+position = Vector2(25, 255)
+
+[node name="BackLowerLegSprite" type="Sprite2D" parent="RigRoot/BackHip/BackKnee"]
+position = Vector2(8, 127)
+
+[node name="BackAnkle" type="Node2D" parent="RigRoot/BackHip/BackKnee"]
+position = Vector2(15, 240)
+
+[node name="BackFootSprite" type="Sprite2D" parent="RigRoot/BackHip/BackKnee/BackAnkle"]
+position = Vector2(65, 40)
+
+[node name="BackShoulder" type="Node2D" parent="RigRoot/BodyPivot"]
+position = Vector2(140, -260)
+z_index = -2
+
+[node name="BackUpperArmSprite" type="Sprite2D" parent="RigRoot/BodyPivot/BackShoulder"]
+position = Vector2(42, 108)
+
+[node name="BackElbow" type="Node2D" parent="RigRoot/BodyPivot/BackShoulder"]
+position = Vector2(75, 205)
+
+[node name="BackLowerArmSprite" type="Sprite2D" parent="RigRoot/BodyPivot/BackShoulder/BackElbow"]
+position = Vector2(40, 120)
+
+[node name="BackWrist" type="Node2D" parent="RigRoot/BodyPivot/BackShoulder/BackElbow"]
+position = Vector2(75, 235)
+
+[node name="BackHandVariant" type="Sprite2D" parent="RigRoot/BodyPivot/BackShoulder/BackElbow/BackWrist"]
+visible = false
+position = Vector2(16, 54)
+
+[node name="FrontHip" type="Node2D" parent="RigRoot"]
+position = Vector2(-55, 145)
+z_index = -1
+
+[node name="FrontUpperLegSprite" type="Sprite2D" parent="RigRoot/FrontHip"]
+position = Vector2(-10, 135)
+
+[node name="FrontKnee" type="Node2D" parent="RigRoot/FrontHip"]
+position = Vector2(-25, 245)
+
+[node name="FrontLowerLegSprite" type="Sprite2D" parent="RigRoot/FrontHip/FrontKnee"]
+position = Vector2(-5, 130)
+
+[node name="FrontAnkle" type="Node2D" parent="RigRoot/FrontHip/FrontKnee"]
+position = Vector2(-10, 250)
+
+[node name="FrontFootSprite" type="Sprite2D" parent="RigRoot/FrontHip/FrontKnee/FrontAnkle"]
+position = Vector2(60, 40)
+
+[node name="TorsoSprite" type="Sprite2D" parent="RigRoot/BodyPivot"]
+position = Vector2(0, -145)
+z_index = 0
+
+[node name="HeadSprite" type="Sprite2D" parent="RigRoot/BodyPivot"]
+position = Vector2(20, -460)
+z_index = 1
+
+[node name="FrontShoulder" type="Node2D" parent="RigRoot/BodyPivot"]
+position = Vector2(-140, -255)
+z_index = 2
+
+[node name="FrontUpperArmSprite" type="Sprite2D" parent="RigRoot/BodyPivot/FrontShoulder"]
+position = Vector2(-40, 110)
+
+[node name="FrontElbow" type="Node2D" parent="RigRoot/BodyPivot/FrontShoulder"]
+position = Vector2(-32, 210)
+
+[node name="FrontLowerArmSprite" type="Sprite2D" parent="RigRoot/BodyPivot/FrontShoulder/FrontElbow"]
+position = Vector2(3, 115)
+
+[node name="FrontWrist" type="Node2D" parent="RigRoot/BodyPivot/FrontShoulder/FrontElbow"]
+position = Vector2(0, 235)
+
+[node name="FrontHandVariant" type="Sprite2D" parent="RigRoot/BodyPivot/FrontShoulder/FrontElbow/FrontWrist"]
+visible = false
+position = Vector2(2, 45)
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {&"": SubResource("AnimationLibrary_poc")}

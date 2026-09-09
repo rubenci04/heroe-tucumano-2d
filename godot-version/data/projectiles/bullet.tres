@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="ProjectileDefinition" format=3 uid="uid://ctn12yqrg8738"]
+
+[ext_resource type="Script" uid="uid://n6okbylxwaps" path="res://scripts/data/projectile_definition.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://b3e551hmnjgrh" path="res://assets/bala.png" id="2"]
+
+[sub_resource type="SpriteFrames" id="1"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2")
+}],
+"loop": 1,
+"name": &"fly",
+"speed": 1.0
+}]
+
+[resource]
+script = ExtResource("1")
+projectile_id = &"bullet"
+default_team = &"enemy"
+speed = 114.0
+lifetime = 3.94
+sprite_frames = SubResource("1")
+visual_scale = 0.2
+rotation_speed_degrees = 0.0
+collision_size = Vector2(31.04, 6.12)
+collision_offset = Vector2(0.6, -1)

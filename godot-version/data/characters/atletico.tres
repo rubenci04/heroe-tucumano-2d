@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="CharacterDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/character_definition.gd" id="1_definition"]
+
+[resource]
+script = ExtResource("1_definition")
+character_id = &"atletico"
+display_name = "Hincha de Atlético Tucumán"
+description = "Definición reservada. Apariencia, animaciones, retrato y voz pendientes."
+selectable = false
+sprite_frames = null
+portrait = null
+visual_scale = 0.42
+visual_offset = Vector2(0, -42)
+collision_width_ratio = 0.65
+idle_animation = &""
+run_animation = &""
+jump_animation = &""
+throw_orange_animation = &""
+throw_stone_animation = &""
+headbutt_animation = &""
+hit_animation = &""
+death_animation = &""
+walk_speed = 230.0
+fury_speed = 330.0
+gravity = 1300.0
+jump_speed = 580.0
+lane_duration = 0.2
+floor_snap = 6.0
+max_health = 3
+starting_lives = 3
+voice_clips = Array[AudioStream]([])
+phrases = PackedStringArray()

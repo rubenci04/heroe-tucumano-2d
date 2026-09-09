@@ -1,0 +1,8 @@
+{
+  "passed": false,
+  "originals_checked": 104,
+  "copied_images_checked": 100,
+  "errors": [
+    "Asset mismatch: fusion_fondos.png"
+  ]
+}

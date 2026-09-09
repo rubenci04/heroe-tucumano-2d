@@ -1,0 +1,61 @@
+[gd_resource type="SpriteFrames" format=3 uid="uid://b7xs2560rg7lh"]
+
+[ext_resource type="Texture2D" uid="uid://vuxj3wyd4qdn" path="res://assets/grandote_run1.png" id="1"]
+[ext_resource type="Texture2D" uid="uid://hy417qfrtf3d" path="res://assets/grandote_run2.png" id="2"]
+[ext_resource type="Texture2D" uid="uid://bh6ioplaslvld" path="res://assets/grandote_salto.png" id="3"]
+[ext_resource type="Texture2D" uid="uid://beokvv76p63rw" path="res://assets/grandote_punch1.png" id="4"]
+[ext_resource type="Texture2D" uid="uid://ccxm45h7ct4cy" path="res://assets/grandote_punch2.png" id="5"]
+[ext_resource type="Texture2D" uid="uid://b04j05jwrdg0u" path="res://assets/grandote_punch3.png" id="6"]
+[ext_resource type="Texture2D" uid="uid://brhq8erymp71f" path="res://assets/grandote_golpe_suelo1.png" id="7"]
+[ext_resource type="Texture2D" uid="uid://dip7via2xgcg5" path="res://assets/grandote_golpe_suelo2.png" id="8"]
+[ext_resource type="Texture2D" uid="uid://cthhegqlq5b" path="res://assets/grandote_golpe_suelo3.png" id="9"]
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("7")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9")
+}],
+"loop": 0,
+"name": &"grandote_ground_slam",
+"speed": 1.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6")
+}],
+"loop": 0,
+"name": &"grandote_punch",
+"speed": 9.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2")
+}],
+"loop": 1,
+"name": &"grandote_run",
+"speed": 6.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3")
+}],
+"loop": 0,
+"name": &"grandote_salto",
+"speed": 1.0
+}]

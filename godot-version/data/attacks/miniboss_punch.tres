@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="AttackDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/attack_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+attack_id = &"miniboss_grandote_punch"
+damage = 2
+startup_duration = 0.38
+active_duration = 0.14
+recovery_duration = 0.58
+shape_kind = 0
+reach = Vector2(118, 72)
+offset = Vector2(58, -42)
+

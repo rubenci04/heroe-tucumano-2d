@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="ProjectileDefinition" format=3 uid="uid://wyx4hyh5oeiq"]
+
+[ext_resource type="Script" uid="uid://n6okbylxwaps" path="res://scripts/data/projectile_definition.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://ch1vhy83ryqhv" path="res://assets/cofee.png" id="2"]
+
+[sub_resource type="SpriteFrames" id="1"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2")
+}],
+"loop": 1,
+"name": &"fly",
+"speed": 1.0
+}]
+
+[resource]
+script = ExtResource("1")
+projectile_id = &"coffee"
+default_team = &"enemy"
+speed = 360.0
+sprite_frames = SubResource("1")
+visual_scale = 0.25
+rotation_speed_degrees = 0.0
+collision_size = Vector2(25.2, 29.025)
+collision_offset = Vector2(0.5, -1.875)

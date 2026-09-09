@@ -1,0 +1,39 @@
+{
+  "images": 100,
+  "legacy_loaded": 81,
+  "legacy_unused": [
+    "bus1.png",
+    "bus2.png",
+    "bus3.png",
+    "bus4.png",
+    "ciruja_disparo_cascote0.png",
+    "ciruja_disparo_cascote3.png",
+    "ciruja_disparo_cascote4.png",
+    "ciruja_disparo_naranja0.png",
+    "ciruja_disparo_naranja3.png",
+    "ciruja_disparo_naranja4.png",
+    "ciruja_disparo_naranja5.png",
+    "ciruja_run0.png",
+    "ciruja_run4.png",
+    "ciruja_run5.png",
+    "ciruja_salto1.png",
+    "ciruja_salto2.png",
+    "ciruja_salto3.png",
+    "ciruja_salto4.png",
+    "grandote_run3.png"
+  ],
+  "animation_resources": 5,
+  "animations": 22,
+  "audio_effects": 11,
+  "duplicate_groups": [
+    [
+      "ciruja_disparo_naranja0.png",
+      "ciruja_disparo_naranja2.png"
+    ],
+    [
+      "ciruja_run0.png",
+      "ciruja_run3.png"
+    ]
+  ],
+  "note": "WAV synthesized from captured legacy parameters; band-limited Fourier approximation, not bit-exact browser audio."
+}
