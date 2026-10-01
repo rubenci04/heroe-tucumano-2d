@@ -47,3 +47,11 @@ const DEATH_LIFE := 0.45
 const DEATH_SIZE := 2.5
 const DEATH_BODY_OFFSET := Vector2(0.0, -24.0)
 const DEATH_COLORS := [Color(1.0, 0.9, 0.4), Color(1.0, 0.5, 0.15), Color(0.9, 0.2, 0.1)]
+
+# Skin de Ciruja en la arena prototipo (experimento de arte pixelado, no toca los assets originales)
+enum CirujaSkin { ORIGINAL, VARIANTE_A_SATURADA, VARIANTE_B_APAGADA }
+const CIRUJA_SKIN := CirujaSkin.VARIANTE_B_APAGADA  # cambiar acá: ORIGINAL / VARIANTE_A_SATURADA / VARIANTE_B_APAGADA
+const CIRUJA_SKIN_DIRS := {
+	CirujaSkin.VARIANTE_A_SATURADA: "var_a_saturada",
+	CirujaSkin.VARIANTE_B_APAGADA: "var_b_apagada",
+}

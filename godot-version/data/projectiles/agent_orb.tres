@@ -1,6 +1,6 @@
-[gd_resource type="Resource" script_class="ProjectileDefinition" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="ProjectileDefinition" format=3 uid="uid://cf1qirka4jogk"]
 
-[ext_resource type="Script" path="res://scripts/data/projectile_definition.gd" id="1"]
+[ext_resource type="Script" uid="uid://n6okbylxwaps" path="res://scripts/data/projectile_definition.gd" id="1"]
 
 [sub_resource type="Gradient" id="Gradient_agent_orb"]
 offsets = PackedFloat32Array(0, 0.42, 1)
@@ -16,8 +16,11 @@ fill_to = Vector2(1, 0.5)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_agent_orb"]
 animations = [{
-"frames": [{"duration": 1.0, "texture": SubResource("GradientTexture2D_agent_orb")}],
-"loop": true,
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("GradientTexture2D_agent_orb")
+}],
+"loop": 1,
 "name": &"fly",
 "speed": 1.0
 }]
@@ -26,7 +29,6 @@ animations = [{
 script = ExtResource("1")
 projectile_id = &"agent_orb"
 default_team = &"enemy"
-damage = 1
 speed = 170.0
 lifetime = 4.0
 sprite_frames = SubResource("SpriteFrames_agent_orb")

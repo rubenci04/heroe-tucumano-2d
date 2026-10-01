@@ -6,6 +6,7 @@ const PROJECTILE_SCENE = preload("res://scenes/actors/projectile.tscn")
 const ENEMY_SCENE = preload("res://scenes/actors/enemy.tscn")
 const VEHICLE_SCENE = preload("res://scenes/actors/vehicle.tscn")
 const FEEL_DIRECTOR = preload("res://scripts/prototype/feel_director.gd")
+const CIRUJA_SKIN = preload("res://scripts/prototype/ciruja_skin.gd")
 const ARENA_LEFT := 200.0
 const ARENA_RIGHT := 600.0
 const PLAYER_START := Vector2(260.0,370.0)
@@ -24,6 +25,7 @@ func _ready() -> void:
 	feel = FEEL_DIRECTOR.new()
 	add_child(feel)
 	feel.setup(world,$ViewportContainer,player)
+	CIRUJA_SKIN.apply(player)
 	player.shot_requested.connect(_spawn_projectile)
 	player.respawn_requested.connect(_on_player_respawn_requested)
 	_refill_player()
