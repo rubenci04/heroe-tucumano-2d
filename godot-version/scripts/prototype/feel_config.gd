@@ -50,8 +50,40 @@ const DEATH_COLORS := [Color(1.0, 0.9, 0.4), Color(1.0, 0.5, 0.15), Color(0.9, 0
 
 # Skin de Ciruja en la arena prototipo (experimento de arte pixelado, no toca los assets originales)
 enum CirujaSkin { ORIGINAL, VARIANTE_A_SATURADA, VARIANTE_B_APAGADA }
-const CIRUJA_SKIN := CirujaSkin.VARIANTE_B_APAGADA  # cambiar acá: ORIGINAL / VARIANTE_A_SATURADA / VARIANTE_B_APAGADA
+const CIRUJA_SKIN := CirujaSkin.ORIGINAL  # cambiar acá: ORIGINAL / VARIANTE_A_SATURADA / VARIANTE_B_APAGADA
 const CIRUJA_SKIN_DIRS := {
 	CirujaSkin.VARIANTE_A_SATURADA: "var_a_saturada",
 	CirujaSkin.VARIANTE_B_APAGADA: "var_b_apagada",
 }
+
+# --- Animación procedural (solo sprites visuales, no hitbox) ---
+# Ciruja: inclinación al correr (grados), respiración en idle, stretch/squash en salto/aterrizaje
+const RUN_LEAN_DEG := 6.0
+const RUN_LEAN_SMOOTH := 14.0
+const BREATH_SPEED := 2.4          # ciclos por segundo
+const BREATH_AMOUNT := 0.025       # variación de escala (0.025 = 2.5%)
+const JUMP_STRETCH := 0.14         # estiramiento vertical al subir (a velocidad de salto completa)
+const FALL_STRETCH := 0.06         # estiramiento al caer
+const STRETCH_SMOOTH := 18.0
+const LAND_SQUASH := 0.22          # aplastamiento al aterrizar
+const LAND_SQUASH_TIME := 0.22
+const LAND_MIN_AIR_TIME := 0.08
+# Retroceso al disparar (Ciruja)
+const PLAYER_SHOT_KICK := 3.0      # px hacia atrás
+const PLAYER_SHOT_KICK_IN := 0.03
+const PLAYER_SHOT_KICK_OUT := 0.12
+# Enemigos
+const ENEMY_ANTIC_PULL := 4.0      # px hacia atrás durante la anticipación
+const ENEMY_ANTIC_SQUASH := 0.12   # agacharse
+const ENEMY_ANTIC_LEAN_DEG := 7.0  # inclinación hacia atrás
+const ENEMY_HIT_PUSH := 6.0        # px de empujón al recibir impacto
+const ENEMY_HIT_LEAN_DEG := 8.0
+const ENEMY_HIT_IN := 0.03
+const ENEMY_HIT_OUT := 0.16
+# Muerte de enemigos (copia del sprite animada con tweens)
+const ENEMY_DEATH_DURATION := 0.7
+const ENEMY_DEATH_SPIN_DEG := 100.0
+const ENEMY_DEATH_PUSH := 28.0     # px hacia atrás
+const ENEMY_DEATH_HOP := 14.0      # salto inicial
+const ENEMY_DEATH_FALL := 6.0      # cuánto baja respecto al punto inicial
+const ENEMY_DEATH_FADE_DELAY := 0.3

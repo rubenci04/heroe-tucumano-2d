@@ -7,6 +7,7 @@ const ENEMY_SCENE = preload("res://scenes/actors/enemy.tscn")
 const VEHICLE_SCENE = preload("res://scenes/actors/vehicle.tscn")
 const FEEL_DIRECTOR = preload("res://scripts/prototype/feel_director.gd")
 const CIRUJA_SKIN = preload("res://scripts/prototype/ciruja_skin.gd")
+const PROCEDURAL_ANIM = preload("res://scripts/prototype/procedural_anim.gd")
 const ARENA_LEFT := 200.0
 const ARENA_RIGHT := 600.0
 const PLAYER_START := Vector2(260.0,370.0)
@@ -18,6 +19,7 @@ const PLAYER_START := Vector2(260.0,370.0)
 @onready var vehicles: Node2D = $ViewportContainer/SubViewport/World/Vehicles
 var car: Node2D
 var feel: Node
+var anim: Node
 
 
 func _ready() -> void:
@@ -26,6 +28,9 @@ func _ready() -> void:
 	add_child(feel)
 	feel.setup(world,$ViewportContainer,player)
 	CIRUJA_SKIN.apply(player)
+	anim = PROCEDURAL_ANIM.new()
+	add_child(anim)
+	anim.setup(world,player)
 	player.shot_requested.connect(_spawn_projectile)
 	player.respawn_requested.connect(_on_player_respawn_requested)
 	_refill_player()
@@ -58,6 +63,7 @@ func _spawn_enemy(archetype: String,x: float) -> void:
 	enemy.shot_requested.connect(_spawn_projectile)
 	enemies.add_child(enemy)
 	feel.watch_enemy(enemy)
+	anim.watch_enemy(enemy)
 
 
 func _spawn_car() -> void:
