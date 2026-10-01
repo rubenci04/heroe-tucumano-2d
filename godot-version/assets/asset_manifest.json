@@ -78,19 +78,6 @@
       ]
     },
     {
-      "filename": "agente_salto.png",
-      "path": "res://assets/agente_salto.png",
-      "source": "assets/agente_salto.png",
-      "bytes": 16765,
-      "width": 200,
-      "height": 200,
-      "sha256": "7599e8972a5bfa9a018d8399e0fd6e394f13366a89c4448e88c459deb81837e2",
-      "loaded_by_legacy": true,
-      "animations": [
-        "agente_salto"
-      ]
-    },
-    {
       "filename": "arbol_naranjas.png",
       "path": "res://assets/arbol_naranjas.png",
       "source": "assets/arbol_naranjas.png",
@@ -153,61 +140,6 @@
       "width": 139,
       "height": 149,
       "sha256": "64a0ae1b41f3214dda6a035450c419e61e79492d1d2d8c8a2d3de57e1e785ce8",
-      "loaded_by_legacy": true,
-      "animations": []
-    },
-    {
-      "filename": "bus1.png",
-      "path": "res://assets/bus1.png",
-      "source": "assets/bus1.png",
-      "bytes": 35091,
-      "width": 189,
-      "height": 81,
-      "sha256": "2e5a68ae3d55ca01377fed0be46d1aebf71cb7fd672e8a4cf53ce7f9f4cef253",
-      "loaded_by_legacy": false,
-      "animations": []
-    },
-    {
-      "filename": "bus2.png",
-      "path": "res://assets/bus2.png",
-      "source": "assets/bus2.png",
-      "bytes": 38508,
-      "width": 200,
-      "height": 80,
-      "sha256": "7364b48acf2249a969e678e4fb111126d344482f2d27c431ef7e1ef0edccd403",
-      "loaded_by_legacy": false,
-      "animations": []
-    },
-    {
-      "filename": "bus3.png",
-      "path": "res://assets/bus3.png",
-      "source": "assets/bus3.png",
-      "bytes": 31661,
-      "width": 191,
-      "height": 76,
-      "sha256": "f30f991a98c2721aaaebf0dfcff961fbe7a64fbeff7e1e8cf33364de8e35f9fc",
-      "loaded_by_legacy": false,
-      "animations": []
-    },
-    {
-      "filename": "bus4.png",
-      "path": "res://assets/bus4.png",
-      "source": "assets/bus4.png",
-      "bytes": 33217,
-      "width": 189,
-      "height": 76,
-      "sha256": "209f0030bb0a9a7496a672b93a416b75fb9f69331cbf8958ee70258d689e82a7",
-      "loaded_by_legacy": false,
-      "animations": []
-    },
-    {
-      "filename": "camion_limones.png",
-      "path": "res://assets/camion_limones.png",
-      "source": "assets/camion_limones.png",
-      "bytes": 33181,
-      "width": 190,
-      "height": 88,
-      "sha256": "c824222fc0949e89fead925024fd769c1c0ba583a8e6216a2de61aeaac29947a",
       "loaded_by_legacy": true,
       "animations": []
     },
@@ -651,32 +583,6 @@
       ]
     },
     {
-      "filename": "final_boss_punch1.png",
-      "path": "res://assets/final_boss_punch1.png",
-      "source": "assets/final_boss_punch1.png",
-      "bytes": 47485,
-      "width": 200,
-      "height": 200,
-      "sha256": "e6b32717cfa6ba2ac7d2d78ecc937ef8daebd596971e6ddac64185ea27ceedfc",
-      "loaded_by_legacy": true,
-      "animations": [
-        "boss_punch"
-      ]
-    },
-    {
-      "filename": "final_boss_punch2.png",
-      "path": "res://assets/final_boss_punch2.png",
-      "source": "assets/final_boss_punch2.png",
-      "bytes": 15970,
-      "width": 200,
-      "height": 200,
-      "sha256": "a1705ae9e6d85253e0f7a3afcec67d6fef01f86592746986f4b639c24392e58c",
-      "loaded_by_legacy": true,
-      "animations": [
-        "boss_punch"
-      ]
-    },
-    {
       "filename": "final_boss_run1.png",
       "path": "res://assets/final_boss_run1.png",
       "source": "assets/final_boss_run1.png",
@@ -716,32 +622,6 @@
       ]
     },
     {
-      "filename": "final_boss_salto1.png",
-      "path": "res://assets/final_boss_salto1.png",
-      "source": "assets/final_boss_salto1.png",
-      "bytes": 51201,
-      "width": 200,
-      "height": 200,
-      "sha256": "7f7e4739d557c75f062350b5177c7db57bc2e61ddb0510d7f8e70fbaf725630f",
-      "loaded_by_legacy": true,
-      "animations": [
-        "boss_salto"
-      ]
-    },
-    {
-      "filename": "final_boss_salto2.png",
-      "path": "res://assets/final_boss_salto2.png",
-      "source": "assets/final_boss_salto2.png",
-      "bytes": 18452,
-      "width": 200,
-      "height": 200,
-      "sha256": "3083b5b80a44287fa4df4fb4149bc5d995c550d2639a0ecc45e1e20d202cc3c9",
-      "loaded_by_legacy": true,
-      "animations": [
-        "boss_salto"
-      ]
-    },
-    {
       "filename": "fondo_cerros.png",
       "path": "res://assets/fondo_cerros.png",
       "source": "assets/fondo_cerros.png",
@@ -749,17 +629,6 @@
       "width": 900,
       "height": 450,
       "sha256": "b41eb6f9cf940f45c698d35a1b0b13c80b5cbc32f0d3d05dfda8e5c9c6c8871b",
-      "loaded_by_legacy": true,
-      "animations": []
-    },
-    {
-      "filename": "fusion_fondos.png",
-      "path": "res://assets/fusion_fondos.png",
-      "source": "assets/fusion_fondos.png",
-      "bytes": 4432424,
-      "width": 8000,
-      "height": 697,
-      "sha256": "7e9143368d13470ddd1976e09f69f322ac297f4407d7f11991dd80f074be7323",
       "loaded_by_legacy": true,
       "animations": []
     },
@@ -840,19 +709,6 @@
       "animations": []
     },
     {
-      "filename": "grandote_salto.png",
-      "path": "res://assets/grandote_salto.png",
-      "source": "assets/grandote_salto.png",
-      "bytes": 22488,
-      "width": 200,
-      "height": 200,
-      "sha256": "243b730fbc570442220ccb5f8dd1a6e5ec91ec6418f198d9a909d06708680393",
-      "loaded_by_legacy": true,
-      "animations": [
-        "grandote_salto"
-      ]
-    },
-    {
       "filename": "gruta_virgen.png",
       "path": "res://assets/gruta_virgen.png",
       "source": "assets/gruta_virgen.png",
@@ -862,214 +718,6 @@
       "sha256": "4ba35fe828d4060b88ac69c554b9b3d9afaf7a93330d65c813b7df1d684b6d77",
       "loaded_by_legacy": true,
       "animations": []
-    },
-    {
-      "filename": "hipster_agua1.png",
-      "path": "res://assets/hipster_agua1.png",
-      "source": "assets/hipster_agua1.png",
-      "bytes": 46222,
-      "width": 200,
-      "height": 200,
-      "sha256": "2b7191bba8f58618a65743d350fce1c339c595d1bfa699b8338cdc6f581d9c75",
-      "loaded_by_legacy": true,
-      "animations": [
-        "hipster_lanzar"
-      ]
-    },
-    {
-      "filename": "hipster_agua2.png",
-      "path": "res://assets/hipster_agua2.png",
-      "source": "assets/hipster_agua2.png",
-      "bytes": 41147,
-      "width": 200,
-      "height": 200,
-      "sha256": "7c711c307bd167421ac7602a89f297a55d57c5b116a710a1811390c60197a895",
-      "loaded_by_legacy": true,
-      "animations": [
-        "hipster_lanzar"
-      ]
-    },
-    {
-      "filename": "hipster_run1.png",
-      "path": "res://assets/hipster_run1.png",
-      "source": "assets/hipster_run1.png",
-      "bytes": 44967,
-      "width": 200,
-      "height": 200,
-      "sha256": "496621cab0340017c75d88988b86cee7b4396c31267c2f3056be57ce6b8a8924",
-      "loaded_by_legacy": true,
-      "animations": [
-        "hipster_run"
-      ]
-    },
-    {
-      "filename": "hipster_run2.png",
-      "path": "res://assets/hipster_run2.png",
-      "source": "assets/hipster_run2.png",
-      "bytes": 41839,
-      "width": 200,
-      "height": 200,
-      "sha256": "1171a4541ff3efed64d4aefc398de5424a14607caae5c7e3502abf54e7e43e35",
-      "loaded_by_legacy": true,
-      "animations": [
-        "hipster_run"
-      ]
-    },
-    {
-      "filename": "hipster_run3.png",
-      "path": "res://assets/hipster_run3.png",
-      "source": "assets/hipster_run3.png",
-      "bytes": 43735,
-      "width": 200,
-      "height": 200,
-      "sha256": "6f885e465a0fd88da72b1f7ecd79440b56e8ce2bcfed642bd0f6ea8d617cb979",
-      "loaded_by_legacy": true,
-      "animations": [
-        "hipster_run"
-      ]
-    },
-    {
-      "filename": "hipster_salto.png",
-      "path": "res://assets/hipster_salto.png",
-      "source": "assets/hipster_salto.png",
-      "bytes": 53625,
-      "width": 200,
-      "height": 200,
-      "sha256": "4ee413f0f05e5e59a6c638ac7b9a2f5be120b267b52aa18bbfa1fc7f7316ae51",
-      "loaded_by_legacy": true,
-      "animations": [
-        "hipster_salto"
-      ]
-    },
-    {
-      "filename": "juntar_cascote1.png",
-      "path": "res://assets/juntar_cascote1.png",
-      "source": "assets/juntar_cascote1.png",
-      "bytes": 15488,
-      "width": 200,
-      "height": 200,
-      "sha256": "69584d018dc0f40348e19ed0d7b7ad9ab0432888418ff89052145d092efdf0a2",
-      "loaded_by_legacy": true,
-      "animations": [
-        "juntar_cascotes"
-      ]
-    },
-    {
-      "filename": "juntar_cascote2.png",
-      "path": "res://assets/juntar_cascote2.png",
-      "source": "assets/juntar_cascote2.png",
-      "bytes": 15361,
-      "width": 200,
-      "height": 200,
-      "sha256": "d2e52c46364c0fb6705ed6416d4cf74ff402e5b73bbab40707976f1d9a2b1429",
-      "loaded_by_legacy": true,
-      "animations": [
-        "juntar_cascotes"
-      ]
-    },
-    {
-      "filename": "juntar_cascote3.png",
-      "path": "res://assets/juntar_cascote3.png",
-      "source": "assets/juntar_cascote3.png",
-      "bytes": 14845,
-      "width": 200,
-      "height": 200,
-      "sha256": "d3f59ccde5796c885eb94e31d5d54f99198cfc2e496ba11791aaa55aa0989c8d",
-      "loaded_by_legacy": true,
-      "animations": [
-        "juntar_cascotes"
-      ]
-    },
-    {
-      "filename": "juntar_cascote4.png",
-      "path": "res://assets/juntar_cascote4.png",
-      "source": "assets/juntar_cascote4.png",
-      "bytes": 15410,
-      "width": 200,
-      "height": 200,
-      "sha256": "b1f85f1ef94134c3f68b9978d3447178f1dfdac3e5e32c5dd3e908a22317fcb9",
-      "loaded_by_legacy": true,
-      "animations": [
-        "juntar_cascotes"
-      ]
-    },
-    {
-      "filename": "juntar_cascote5.png",
-      "path": "res://assets/juntar_cascote5.png",
-      "source": "assets/juntar_cascote5.png",
-      "bytes": 15059,
-      "width": 200,
-      "height": 200,
-      "sha256": "5a4db1636453e37191c7991ebe5c5e6179a71bb44c0e70af3c47bcbcf74c9f68",
-      "loaded_by_legacy": true,
-      "animations": [
-        "juntar_cascotes"
-      ]
-    },
-    {
-      "filename": "juntar_naranjas1.png",
-      "path": "res://assets/juntar_naranjas1.png",
-      "source": "assets/juntar_naranjas1.png",
-      "bytes": 57897,
-      "width": 200,
-      "height": 200,
-      "sha256": "7b2567891564489206142affc479ea3f1d992683805ecf47a4882813688e9ca2",
-      "loaded_by_legacy": true,
-      "animations": [
-        "juntar_naranjas"
-      ]
-    },
-    {
-      "filename": "juntar_naranjas2.png",
-      "path": "res://assets/juntar_naranjas2.png",
-      "source": "assets/juntar_naranjas2.png",
-      "bytes": 69977,
-      "width": 200,
-      "height": 200,
-      "sha256": "f0c4d605efa8396cb8af423fb6b29f3ca1ac7ce6db284fbef03f10cb3d1dafb4",
-      "loaded_by_legacy": true,
-      "animations": [
-        "juntar_naranjas"
-      ]
-    },
-    {
-      "filename": "juntar_naranjas3.png",
-      "path": "res://assets/juntar_naranjas3.png",
-      "source": "assets/juntar_naranjas3.png",
-      "bytes": 68336,
-      "width": 200,
-      "height": 200,
-      "sha256": "d049bcaf7468ac6048797e275acdfe1055148418773a686a6da56f3ac6408f91",
-      "loaded_by_legacy": true,
-      "animations": [
-        "juntar_naranjas"
-      ]
-    },
-    {
-      "filename": "juntar_naranjas4.png",
-      "path": "res://assets/juntar_naranjas4.png",
-      "source": "assets/juntar_naranjas4.png",
-      "bytes": 67758,
-      "width": 200,
-      "height": 200,
-      "sha256": "835ad16cc147e6bf7ae10693c06162ca60cd07b9bf7b9c854a914f417623c553",
-      "loaded_by_legacy": true,
-      "animations": [
-        "juntar_naranjas"
-      ]
-    },
-    {
-      "filename": "juntar_naranjas5.png",
-      "path": "res://assets/juntar_naranjas5.png",
-      "source": "assets/juntar_naranjas5.png",
-      "bytes": 65810,
-      "width": 200,
-      "height": 200,
-      "sha256": "969430957f06b8c3797b4fca3bc6ec836cf7b564381ae025941c7431b53c372d",
-      "loaded_by_legacy": true,
-      "animations": [
-        "juntar_naranjas"
-      ]
     },
     {
       "filename": "kiosco_coca.png",
@@ -1174,21 +822,10 @@
       "filename": "suelo_ruta.png",
       "path": "res://assets/suelo_ruta.png",
       "source": "assets/suelo_ruta.png",
-      "bytes": 206347,
-      "width": 700,
-      "height": 136,
-      "sha256": "922aede2f95c109538aeb633e7acea46fe632a4533e06ffc6aafac5c03e723d4",
-      "loaded_by_legacy": true,
-      "animations": []
-    },
-    {
-      "filename": "suelo_ruta2.png",
-      "path": "res://assets/suelo_ruta2.png",
-      "source": "assets/suelo_ruta2.png",
-      "bytes": 207473,
-      "width": 700,
-      "height": 136,
-      "sha256": "60ccd1a273ff2fb40fbf437d490abdcdffcba32bb91d3fd5ad3e66b6e2abf08a",
+      "bytes": 107462,
+      "width": 652,
+      "height": 134,
+      "sha256": "81dfbf73ced661725b703b298702e3e5b471187508b52917d4c1cca855e195dd",
       "loaded_by_legacy": true,
       "animations": []
     },

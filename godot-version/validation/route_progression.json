@@ -1,0 +1,60 @@
+{
+  "checks": 15,
+  "completed": [
+    "route_wave_01",
+    "route_micro_01",
+    "route_micro_02",
+    "route_wave_02",
+    "route_wave_03",
+    "route_micro_03",
+    "route_drone_01",
+    "route_drone_02",
+    "route_micro_04",
+    "route_wave_04",
+    "route_micro_05",
+    "route_micro_06",
+    "route_wave_06"
+  ],
+  "failures": [],
+  "final": {
+    "active": [],
+    "active_count": 0,
+    "completed": [
+      "route_wave_01",
+      "route_micro_01",
+      "route_micro_02",
+      "route_wave_02",
+      "route_wave_03",
+      "route_micro_03",
+      "route_drone_01",
+      "route_drone_02",
+      "route_micro_04",
+      "route_wave_04",
+      "route_micro_05",
+      "route_micro_06",
+      "route_wave_06"
+    ],
+    "ground_projectiles": 0,
+    "offscreen": 0,
+    "pending": 0,
+    "player_x": 7400.0,
+    "tokens": 0
+  },
+  "passed": true,
+  "peak_visible": 7,
+  "started": [
+    "route_wave_01",
+    "route_micro_01",
+    "route_micro_02",
+    "route_wave_02",
+    "route_wave_03",
+    "route_micro_03",
+    "route_drone_01",
+    "route_drone_02",
+    "route_micro_04",
+    "route_wave_04",
+    "route_micro_05",
+    "route_micro_06",
+    "route_wave_06"
+  ]
+}

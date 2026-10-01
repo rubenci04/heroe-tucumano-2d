@@ -6,14 +6,10 @@ signal vehicle_spawned(vehicle: Node)
 signal vehicle_removed(vehicle_id: int)
 
 const VEHICLE_SCENE = preload("res://scenes/actors/vehicle.tscn")
-const VEHICLE_CONFIGS: Array[Dictionary] = [
-	{"asset":&"auto1","scale":0.84,"speed":160.0},
-	{"asset":&"auto2","scale":1.10,"speed":180.0},
-	{"asset":&"auto3","scale":0.95,"speed":160.0},
-	{"asset":&"camion_limones","scale":1.25,"speed":125.0},
-	{"asset":&"exprebus","scale":1.15,"speed":130.0},
-	{"asset":&"tesa","scale":1.30,"speed":130.0},
-]
+const SET_PIECE_CONFIGS: Dictionary = {
+	&"exprebus": {"scale":1.007,"speed":130.0},
+	&"tesa": {"scale":0.922,"speed":130.0},
+}
 
 @export_range(1,8,1) var max_simultaneous: int = 2
 @export_range(0.25,30.0,0.05) var spawn_interval: float = 4.0
@@ -29,6 +25,7 @@ var sequence_index: int = 0
 var _vehicle_container: Node
 var _player: Node2D
 var _active_vehicles: Dictionary = {}
+var _started_set_pieces: Dictionary = {}
 var _clearing: bool = false
 
 
@@ -42,34 +39,29 @@ func configure(vehicle_container: Node,player: Node2D) -> bool:
 func update_traffic(delta: float,player_x: float) -> void:
 	_cleanup_invalid_references()
 	_despawn_distant_vehicles(player_x)
-	if not enabled or not is_position_active(player_x):
-		return
-	spawn_remaining = maxf(0.0,spawn_remaining-delta)
-	if spawn_remaining <= 0.0 and get_active_vehicle_count() < max_simultaneous:
-		spawn_now(player_x)
+	# El tráfico aleatorio está retirado. Los colectivos se crean sólo por trigger explícito.
 
 
 func spawn_now(player_x: float) -> Node:
-	if not enabled or not is_position_active(player_x) or not is_instance_valid(_vehicle_container) or not is_instance_valid(_player):
+	return null
+
+
+func spawn_set_piece(event_id: StringName,asset_id: StringName,spawn_x: float,direction: int = -1,speed_override: float = -1.0,emit_warning: bool = true) -> Node:
+	if not enabled or event_id.is_empty() or _started_set_pieces.has(event_id) \
+			or not SET_PIECE_CONFIGS.has(asset_id) or not is_instance_valid(_vehicle_container):
 		return null
-	if get_active_vehicle_count() >= max_simultaneous:
-		return null
-	var config: Dictionary = VEHICLE_CONFIGS[sequence_index%VEHICLE_CONFIGS.size()]
-	var lane := sequence_index%GameConfig.LANES.size()
-	var direction := -1 if sequence_index%2 == 0 else 1
-	var spawn_x := player_x+(camera_half_width+offscreen_margin)*(-direction)
-	if absf(spawn_x-player_x) < camera_half_width+offscreen_margin:
-		return null
+	var config: Dictionary = SET_PIECE_CONFIGS[asset_id]
 	var vehicle = VEHICLE_SCENE.instantiate()
-	vehicle.configure(config.asset,float(config.scale),lane,direction,float(config.speed))
-	vehicle.position = Vector2(spawn_x,GameConfig.LANES[lane])
+	var resolved_speed := speed_override if speed_override > 0.0 else float(config.speed)
+	vehicle.configure(asset_id,float(config.scale),0,direction,resolved_speed)
+	vehicle.position = Vector2(spawn_x,GameConfig.GROUND_Y)
 	vehicle.despawn_requested.connect(_on_vehicle_despawn_requested)
 	vehicle.tree_exiting.connect(_on_vehicle_exiting.bind(vehicle.get_instance_id()),CONNECT_ONE_SHOT)
-	vehicle_warning.emit(lane,direction)
+	if emit_warning:
+		vehicle_warning.emit(0,direction)
 	_vehicle_container.add_child(vehicle)
 	_active_vehicles[vehicle.get_instance_id()] = weakref(vehicle)
-	sequence_index += 1
-	spawn_remaining = spawn_interval
+	_started_set_pieces[event_id] = true
 	vehicle_spawned.emit(vehicle)
 	return vehicle
 
@@ -116,11 +108,14 @@ func reset_runtime_state(clear_existing: bool = true) -> void:
 	enabled = true
 	sequence_index = 0
 	spawn_remaining = initial_spawn_delay
+	_started_set_pieces.clear()
 
 
 func _despawn_distant_vehicles(player_x: float) -> void:
 	var maximum_distance := camera_half_width+despawn_margin
 	for vehicle in get_active_vehicles():
+		if vehicle.has_meta("designed_route_event"):
+			continue # The designed event owns its fixed exit and timeout.
 		if absf(vehicle.position.x-player_x) > maximum_distance:
 			vehicle.request_despawn()
 			vehicle.queue_free()

@@ -1,0 +1,8 @@
+{
+  "checks": 12,
+  "errors": [],
+  "minimum_speed": 123.75,
+  "passed": true,
+  "speed": 225.0,
+  "trigger_x": 4400.0
+}

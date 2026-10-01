@@ -16,9 +16,29 @@ const TUCUMANAZO_COUNTER_COMPONENT = preload("res://scripts/components/special_m
 const TUCUMANAZO_DEFINITION = preload("res://scripts/data/tucumanazo_definition.gd")
 const TUCUMANAZO_WAVE_VISUAL = preload("res://scripts/actors/tucumanazo_wave_visual.gd")
 const DEFAULT_CHARACTER_DEFINITION: CHARACTER_DEFINITION = preload("res://data/characters/san_martin.tres")
+const ANIMATION_MANIFEST_PATH := "res://data/animation_manifest.json"
 
-enum State { IDLE, RUN, JUMP, THROW, COLLECT, HIT, DEATH }
-enum SpecialPhase { READY, STARTUP, ACTIVE, RECOVERY }
+enum State { IDLE, RUN, JUMP, THROW, COLLECT, HIT, DEATH, SUPER_STARTUP, SUPER_RUSH, SUPER_FINISH, SUPER_RECOVERY }
+enum SpecialPhase { READY, STARTUP, ACTIVE, RECOVERY, RUSH, FINISH }
+const PUNCH_RANGE := 78.0
+const PUNCH_FPS := 14.0
+const PUNCH_DURATION := 7.0/PUNCH_FPS
+const MUZZLE_OFFSETS: Dictionary = {
+	Vector2i(1,0): Vector2(32.0,-42.0),
+	Vector2i(-1,0): Vector2(-32.0,-42.0),
+	Vector2i(0,-1): Vector2(0.0,-74.0),
+	Vector2i(1,-1): Vector2(26.0,-68.0),
+	Vector2i(-1,-1): Vector2(-26.0,-68.0),
+	Vector2i(1,1): Vector2(26.0,-24.0),
+	Vector2i(-1,1): Vector2(-26.0,-24.0),
+	Vector2i(0,1): Vector2(0.0,-24.0)
+}
+var punch_active := false
+var punch_elapsed := 0.0
+var punch_direction := 1
+var punch_hits: Dictionary = {}
+var punch_hitbox: Area2D
+const PUNCH_DAMAGE := 2
 const COLLECTION_DURATION := 0.5
 const COLLECTION_REWARD_TIME := 0.4
 const COLLECTION_KINDS := [&"orange_tree",&"stone_pile"]
@@ -28,6 +48,9 @@ var state: State = State.IDLE
 var special_phase: SpecialPhase = SpecialPhase.READY
 var special_phase_remaining: float = 0.0
 var special_active: bool = false
+var special_direction := 1
+var special_rush_distance := 0.0
+var special_rush_speed := 0.0
 var _special_hit_stop_used: bool = false
 var _hit_stop_active: bool = false
 var _hit_stop_generation: int = 0
@@ -44,7 +67,9 @@ var hit_time: float = 0.0
 var action_time: float = 0.0
 var shot_cooldown: float = 0.0
 var fury_time: float = 0.0
-var heat: float = 0.0
+var heat: float = 0.0:
+	set(value):
+		heat = value if GameConfig.HEAT_ENABLED else 0.0
 var heat_damage_time: float = 0.0
 var collection_active: bool = false
 var collection_kind: String = ""
@@ -52,6 +77,7 @@ var collection_remaining: float = 0.0
 var collection_reward_granted: bool = false
 var _collection_pickup: Node
 var action_animation: StringName = &"Idle"
+## Compatibilidad de lectura para saves/tests antiguos; el cambio de carril está retirado.
 var changing_lane: bool = false
 var lane_progress: float = 0.0
 var lane_start: float = 370.0
@@ -73,8 +99,10 @@ var last_definition_error: String = ""
 @onready var combo_component: COMBO_COMPONENT = $ComboComponent
 @onready var tucumanazo_counter: TUCUMANAZO_COUNTER_COMPONENT = $TucumanazoCounterComponent
 @onready var tucumanazo_hitbox: HITBOX = $TucumanazoHitbox
+@onready var super_rush_hitbox: HITBOX = $SuperRushHitbox
 @onready var tucumanazo_wave_visual: TUCUMANAZO_WAVE_VISUAL = $TucumanazoWaveVisual
 @onready var visual: AnimatedSprite2D = $Visual
+var _visual_frame_offsets: Dictionary = {}
 
 var health: int:
 	get:
@@ -101,9 +129,12 @@ func _ready() -> void:
 		if not apply_character_definition(DEFAULT_CHARACTER_DEFINITION):
 			push_error("La definición predeterminada de San Martín no es válida: %s" % last_definition_error)
 			return
+	_load_visual_frame_offsets()
+	visual.frame_changed.connect(_apply_visual_frame_offset)
 	motion_mode = CharacterBody2D.MOTION_MODE_GROUNDED
 	collision_layer = GameConfig.PLAYER_LAYER
-	collision_mask = 1 << lane_index
+	lane_index = 0
+	collision_mask = GameConfig.PLAYER_WORLD_MASK
 	var body_shape := CollisionFactory.add_shape(self,visual.sprite_frames.get_frame_texture(character_definition.idle_animation,0),character_visual_scale,true,collision_width_ratio)
 	hurtbox.configure(self,health_component,team,lane_index,GameConfig.PLAYER_LAYER)
 	hurtbox.copy_shape_from(body_shape)
@@ -113,8 +144,22 @@ func _ready() -> void:
 		tucumanazo_counter.configure(tucumanazo_definition.starting_uses,tucumanazo_definition.starting_uses)
 		tucumanazo_hitbox.configure(self,team,lane_index,tucumanazo_definition,facing,GameConfig.ENEMY_LAYER)
 	tucumanazo_hitbox.impact_confirmed.connect(_on_tucumanazo_impact)
+	super_rush_hitbox.impact_confirmed.connect(_on_super_rush_impact)
+	punch_hitbox = Area2D.new()
+	punch_hitbox.name = "PunchHitbox"
+	punch_hitbox.collision_layer = 0
+	punch_hitbox.collision_mask = 0
+	punch_hitbox.monitoring = false
+	punch_hitbox.monitorable = false
+	var punch_shape := CollisionShape2D.new()
+	punch_shape.shape = RectangleShape2D.new()
+	punch_shape.shape.size = Vector2(PUNCH_RANGE,48.0)
+	punch_shape.disabled = true
+	punch_hitbox.add_child(punch_shape)
+	add_child(punch_hitbox)
 	add_to_group("player")
 	visual.play(character_definition.idle_animation)
+	_apply_visual_frame_offset()
 
 func apply_character_definition(definition: CHARACTER_DEFINITION) -> bool:
 	if definition == null:
@@ -143,7 +188,7 @@ func apply_character_definition(definition: CHARACTER_DEFINITION) -> bool:
 	return true
 
 func get_height() -> float:
-	return maxf(0.0,GameConfig.LANES[lane_index]-position.y)
+	return maxf(0.0,GameConfig.GROUND_Y-position.y)
 
 func _physics_process(delta: float) -> void:
 	if state == State.DEATH:
@@ -153,8 +198,9 @@ func _physics_process(delta: float) -> void:
 	shot_cooldown = maxf(0.0,shot_cooldown-delta)
 	_update_tucumanazo(delta)
 	_update_collection(delta)
+	_update_punch(delta)
 	fury_time = maxf(0.0,fury_time-delta)
-	if position.x > 3200.0 and controls_enabled:
+	if GameConfig.HEAT_ENABLED and position.x > 3200.0 and controls_enabled:
 		var previous_heat_percent := int(heat)
 		heat = minf(100.0,heat+2.1*delta)
 		if heat >= 100.0:
@@ -175,50 +221,54 @@ func _physics_process(delta: float) -> void:
 	else:
 		visual.modulate = Color.WHITE
 	visual.modulate.a = 0.4 if invulnerability > 0.0 and int(invulnerability*12.0)%2 == 0 else 1.0
-	var axis: float = Input.get_axis("move_left","move_right") if controls_enabled and hit_time <= 0.0 and not special_active and not collection_active else 0.0
-	if hit_time <= 0.0:
+	var axis: float = Input.get_axis("move_left","move_right") if controls_enabled and hit_time <= 0.0 and not special_active and not collection_active and not punch_active else 0.0
+	if special_active:
+		facing = special_direction
+		velocity.x = special_direction*minf(special_rush_speed,maxf(0.0,tucumanazo_definition.rush_distance-special_rush_distance)/maxf(delta,0.001)) if special_phase == SpecialPhase.RUSH else 0.0
+	elif hit_time <= 0.0:
 		velocity.x = axis * (fury_speed if fury_time > 0.0 else walk_speed)
 	if not is_zero_approx(axis):
 		facing = -1 if axis < 0.0 else 1
 	visual.flip_h = facing < 0
-	if changing_lane:
-		lane_progress = minf(1.0,lane_progress+delta/lane_duration)
-		var next_y: float = lerpf(lane_start,lane_target,smoothstep(0.0,1.0,lane_progress))-sin(lane_progress*PI)*20.0
-		velocity.y = (next_y-position.y)/delta
-		move_and_slide()
-		if lane_progress >= 1.0:
-			changing_lane = false
-			lane_index = destination_lane
-			hurtbox.lane_index = lane_index
-			collision_mask = 1 << lane_index
-			position.y = lane_target
-			velocity.y = 0.0
-	else:
-		velocity.y += gravity*delta
-		if controls_enabled and hit_time <= 0.0 and not special_active and not collection_active:
-			var projectile_input_pressed := Input.is_action_just_pressed("throw_orange") or Input.is_action_just_pressed("throw_stone")
-			if is_on_floor():
-				if absf(position.y-GameConfig.LANES[lane_index]) < 8.0:
-					if Input.is_action_just_pressed("lane_up") and lane_index == 1 and not projectile_input_pressed:
-						begin_lane_change(0)
-					elif Input.is_action_just_pressed("lane_down") and lane_index == 0 and not projectile_input_pressed:
-						begin_lane_change(1)
-				if Input.is_action_just_pressed("jump") and not changing_lane:
-					velocity.y = -jump_speed
-					AudioManager.play_effect("salto")
-			if Input.is_action_just_released("jump") and velocity.y < -120.0:
-				velocity.y *= 0.5
-			if not changing_lane:
-				if Input.is_action_just_pressed("tucumanazo"):
-					start_tucumanazo()
-				elif Input.is_action_just_pressed("throw_orange"):
-					throw_projectile("orange")
-				elif Input.is_action_just_pressed("throw_stone"):
-					throw_projectile("stone")
-		move_and_slide()
+	velocity.y += gravity*delta
+	if controls_enabled and hit_time <= 0.0 and not special_active and not collection_active:
+		if is_on_floor() and Input.is_action_just_pressed("jump"):
+			velocity.y = -jump_speed
+			AudioManager.play_effect("salto")
+		if Input.is_action_just_released("jump") and velocity.y < -120.0:
+			velocity.y *= 0.5
+		if Input.is_action_just_pressed("tucumanazo"):
+			start_tucumanazo()
+		elif Input.is_action_just_pressed("throw_orange"):
+			throw_projectile("orange")
+		elif Input.is_action_just_pressed("throw_stone"):
+			throw_projectile("stone")
+	var motion_start := global_position
+	var rushing := special_active and special_phase == SpecialPhase.RUSH
+	move_and_slide()
 	position.x = clampf(position.x,20.0,GameConfig.WORLD_WIDTH-20.0)
-	z_index = int(GameConfig.LANES[lane_index])
-	if collection_active:
+	if rushing:
+		var allowed := _super_motion_bounds()
+		position.x = clampf(position.x,allowed.x,allowed.y)
+		# A sweep over actual travelled space cannot hit through a blocking wall.
+		_poll_super_hitbox(super_rush_hitbox,motion_start,global_position)
+		if special_active:
+			special_rush_distance += absf(global_position.x-motion_start.x)
+			if special_rush_distance >= tucumanazo_definition.rush_distance-0.1 or is_on_wall() \
+					or position.x <= allowed.x+0.1 or position.x >= allowed.y-0.1 or not is_on_floor():
+				_begin_super_finish()
+	if special_active and special_phase == SpecialPhase.ACTIVE:
+		_poll_super_hitbox(tucumanazo_hitbox,global_position,global_position)
+	z_index = 15
+	if special_active:
+		match special_phase:
+			SpecialPhase.STARTUP: state = State.SUPER_STARTUP
+			SpecialPhase.RUSH: state = State.SUPER_RUSH
+			SpecialPhase.FINISH,SpecialPhase.ACTIVE: state = State.SUPER_FINISH
+			SpecialPhase.RECOVERY: state = State.SUPER_RECOVERY
+	elif punch_active:
+		state = State.THROW
+	elif collection_active:
 		state = State.COLLECT
 		play_animation(character_definition.idle_animation)
 	elif hit_time > 0.0:
@@ -227,7 +277,7 @@ func _physics_process(delta: float) -> void:
 	elif action_time > 0.0:
 		state = State.THROW
 		play_animation(action_animation)
-	elif not is_on_floor() or changing_lane:
+	elif not is_on_floor():
 		state = State.JUMP
 		play_animation(character_definition.jump_animation)
 	elif not is_zero_approx(axis):
@@ -238,21 +288,20 @@ func _physics_process(delta: float) -> void:
 		play_animation(character_definition.idle_animation)
 
 func begin_lane_change(destination: int) -> void:
-	if changing_lane or state == State.DEATH or special_active or collection_active:
-		return
-	lane_start = position.y
-	lane_target = GameConfig.LANES[destination]
-	destination_lane = destination
-	lane_progress = 0.0
-	changing_lane = true
-	collision_mask = 0
-	AudioManager.play_effect("salto")
+	# API legacy intencionalmente inerte durante la migración de saves/tests.
+	destination_lane = 0
+	lane_index = 0
+	changing_lane = false
+	lane_start = GameConfig.GROUND_Y
+	lane_target = GameConfig.GROUND_Y
 
 func register_valid_hit(_hurtbox: Area2D,impact_id: StringName) -> void:
 	combo_component.register_hit(impact_id)
 
 func start_tucumanazo() -> bool:
-	if not controls_enabled or state == State.DEATH or changing_lane or special_active or collection_active:
+	if not controls_enabled or state == State.DEATH or special_active or collection_active:
+		return false
+	if not is_on_floor() or hit_time > 0.0:
 		return false
 	if shot_cooldown > 0.0:
 		return false
@@ -260,8 +309,13 @@ func start_tucumanazo() -> bool:
 		return false
 	if not tucumanazo_counter.consume_one():
 		return false
+	cancel_punch()
 	special_active = true
+	special_direction = facing
+	special_rush_distance = 0.0
+	special_rush_speed = walk_speed*tucumanazo_definition.rush_speed_multiplier
 	special_phase = SpecialPhase.STARTUP
+	state = State.SUPER_STARTUP
 	special_phase_remaining = tucumanazo_definition.startup_duration
 	_special_hit_stop_used = false
 	velocity.x = 0.0
@@ -269,6 +323,8 @@ func start_tucumanazo() -> bool:
 	action_time = tucumanazo_definition.get_total_duration()
 	shot_cooldown = tucumanazo_definition.get_total_duration()
 	play_animation(character_definition.headbutt_animation)
+	visual.pause()
+	visual.frame = 0
 	special_feedback_requested.emit(tucumanazo_definition.phrase)
 	AudioManager.play_effect("alerta")
 	return true
@@ -279,12 +335,21 @@ func cancel_tucumanazo() -> void:
 	special_active = false
 	special_phase = SpecialPhase.READY
 	special_phase_remaining = 0.0
+	special_rush_distance = 0.0
+	velocity.x = 0.0
+	super_rush_hitbox.deactivate()
 	tucumanazo_hitbox.deactivate()
+	super_rush_hitbox._hit_targets.clear()
+	tucumanazo_hitbox._hit_targets.clear()
 	tucumanazo_wave_visual.cancel()
 	_cancel_hit_stop()
 	screen_shake_requested.emit(0.0,0.0)
 	if action_animation == character_definition.headbutt_animation:
 		action_time = 0.0
+	visual.speed_scale = 1.0
+	if state in [State.SUPER_STARTUP,State.SUPER_RUSH,State.SUPER_FINISH,State.SUPER_RECOVERY]:
+		state = State.IDLE
+		visual.play(character_definition.idle_animation)
 
 func _update_tucumanazo(delta: float) -> void:
 	if not special_active:
@@ -294,22 +359,85 @@ func _update_tucumanazo(delta: float) -> void:
 		var carried_time := -special_phase_remaining
 		match special_phase:
 			SpecialPhase.STARTUP:
+				special_phase = SpecialPhase.RUSH
+				state = State.SUPER_RUSH
+				special_phase_remaining = tucumanazo_definition.rush_timeout
+				super_rush_hitbox.configure(self,team,lane_index,tucumanazo_definition.rush_attack,special_direction,GameConfig.ENEMY_LAYER)
+				super_rush_hitbox.activate(tucumanazo_definition.rush_timeout)
+				visual.speed_scale = tucumanazo_definition.rush_speed_multiplier
+				visual.play(character_definition.run_animation)
+			SpecialPhase.RUSH:
+				_begin_super_finish()
+			SpecialPhase.FINISH:
 				special_phase = SpecialPhase.ACTIVE
 				special_phase_remaining = tucumanazo_definition.active_duration-carried_time
-				tucumanazo_hitbox.configure(self,team,lane_index,tucumanazo_definition,facing,GameConfig.ENEMY_LAYER)
+				visual.pause()
+				visual.frame = mini(2,visual.sprite_frames.get_frame_count(character_definition.headbutt_animation)-1)
+				tucumanazo_hitbox.configure(self,team,lane_index,tucumanazo_definition,special_direction,GameConfig.ENEMY_LAYER)
 				tucumanazo_hitbox.activate(tucumanazo_definition.active_duration)
 				tucumanazo_wave_visual.activate(tucumanazo_definition.radius,tucumanazo_definition.active_duration)
 				screen_shake_requested.emit(tucumanazo_definition.screen_shake_intensity,tucumanazo_definition.screen_shake_duration)
 			SpecialPhase.ACTIVE:
 				tucumanazo_hitbox.deactivate()
 				special_phase = SpecialPhase.RECOVERY
+				state = State.SUPER_RECOVERY
+				visual.frame = mini(3,visual.sprite_frames.get_frame_count(character_definition.headbutt_animation)-1)
 				special_phase_remaining = tucumanazo_definition.recovery_duration-carried_time
 			SpecialPhase.RECOVERY:
-				special_active = false
-				special_phase = SpecialPhase.READY
-				special_phase_remaining = 0.0
+				cancel_tucumanazo()
+				shot_cooldown = 0.0
+
+
+func _super_motion_bounds() -> Vector2:
+	var bounds := Vector2(20.0,GameConfig.WORLD_WIDTH-20.0)
+	var level := get_parent()
+	if level.get("boss_active") == true:
+		bounds = level.BOSS_ARENA_BOUNDS
+	elif level.get("miniboss_active") == true:
+		bounds = level.MINIBOSS_ARENA_BOUNDS
+	return bounds
+
+
+func _begin_super_finish() -> void:
+	super_rush_hitbox.deactivate()
+	velocity.x = 0.0
+	special_phase = SpecialPhase.FINISH
+	state = State.SUPER_FINISH
+	special_phase_remaining = tucumanazo_definition.finish_startup_duration
+	visual.speed_scale = 1.0
+	visual.play(character_definition.headbutt_animation)
+	visual.frame = 0
+
+
+func _poll_super_hitbox(hitbox: HITBOX,from: Vector2,to: Vector2) -> void:
+	if not hitbox.active:
+		return
+	var query := PhysicsShapeQueryParameters2D.new()
+	query.shape = hitbox.collision_shape.shape
+	query.collision_mask = GameConfig.ENEMY_LAYER
+	query.collide_with_areas = true
+	query.collide_with_bodies = false
+	var steps := maxi(1,ceili(from.distance_to(to)/16.0))
+	for index in range(steps+1):
+		query.transform = hitbox.collision_shape.global_transform
+		query.transform.origin += from.lerp(to,float(index)/steps)-global_position
+		for hit in get_world_2d().direct_space_state.intersect_shape(query):
+			hitbox.try_hit(hit.collider)
+
+
+func _on_super_rush_impact(target_hurtbox: Area2D,_impact_id: StringName) -> void:
+	_apply_super_knockback(target_hurtbox,tucumanazo_definition.rush_knockback_speed)
+	AudioManager.play_effect("golpe")
+	screen_shake_requested.emit(2.0,0.08)
+
+
+func _apply_super_knockback(target_hurtbox: Area2D,speed: float) -> void:
+	var actor = target_hurtbox.combat_owner
+	if is_instance_valid(actor) and actor.has_method("receive_super_knockback"):
+		actor.receive_super_knockback(special_direction*speed,tucumanazo_definition.stagger_duration)
 
 func _on_tucumanazo_impact(_hurtbox: Area2D,_impact_id: StringName) -> void:
+	_apply_super_knockback(_hurtbox,tucumanazo_definition.final_knockback_speed)
 	if _special_hit_stop_used:
 		return
 	_special_hit_stop_used = true
@@ -343,12 +471,21 @@ static func resolve_shot_direction(raw_direction: Vector2,_airborne: bool,fallba
 func get_shot_direction() -> Vector2:
 	var raw_direction := Vector2(
 		Input.get_axis("move_left","move_right"),
-		Input.get_axis("lane_up","lane_down")
+		Input.get_axis("aim_up","aim_down")
 	)
 	return resolve_shot_direction(raw_direction,not is_on_floor(),facing)
 
+static func get_muzzle_offset(shot_direction: Vector2) -> Vector2:
+	var key := Vector2i(int(signf(shot_direction.x)),int(signf(shot_direction.y)))
+	return MUZZLE_OFFSETS.get(key,MUZZLE_OFFSETS[Vector2i(1,0)])
+
 func throw_projectile(kind: String,aim_override: Vector2 = Vector2.ZERO) -> void:
 	if shot_cooldown > 0.0 or special_active or collection_active:
+		return
+	if not controls_enabled or state == State.DEATH or hit_time > 0.0:
+		return
+	if _find_punch_target() != null:
+		start_punch()
 		return
 	if kind == "stone" and stones <= 0:
 		return
@@ -360,16 +497,85 @@ func throw_projectile(kind: String,aim_override: Vector2 = Vector2.ZERO) -> void
 	action_time = 0.25
 	shot_cooldown = 0.25
 	var shot_direction := get_shot_direction() if aim_override.is_zero_approx() else resolve_shot_direction(aim_override,not is_on_floor(),facing)
-	shot_requested.emit(global_position+Vector2(0.0,-42.0)+shot_direction*24.0,lane_index,shot_direction,kind,team)
+	shot_requested.emit(global_position+get_muzzle_offset(shot_direction),lane_index,shot_direction,kind,team)
 	AudioManager.play_effect("disparo_cascote" if kind == "stone" else "disparo_naranja")
 	_emit_status_changed()
 
+func _punch_target_valid(enemy: Node) -> bool:
+	if not is_instance_valid(enemy) or enemy.get("active") != true or not enemy.has_node("Hurtbox"):
+		return false
+	var offset: Vector2 = enemy.global_position-global_position
+	var direction_to_use := punch_direction if punch_active else facing
+	if absf(offset.x)>PUNCH_RANGE or offset.x*direction_to_use < -16.0 or absf(offset.y)>36.0:
+		return false
+	var origin := global_position+Vector2(0,-38)
+	var endpoint: Vector2 = enemy.global_position+Vector2(0,-38)
+	var query := PhysicsRayQueryParameters2D.create(origin,endpoint,GameConfig.PLAYER_WORLD_MASK,[get_rid()])
+	query.hit_from_inside = true
+	return get_world_2d().direct_space_state.intersect_ray(query).is_empty()
+
+func _find_punch_target() -> Node:
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		if _punch_target_valid(enemy):
+			return enemy
+	return null
+
+func start_punch() -> void:
+	if special_active:
+		return
+	punch_active = true
+	punch_elapsed = 0.0
+	punch_direction = facing
+	punch_hits.clear()
+	action_animation = &"Punch"
+	action_time = PUNCH_DURATION
+	shot_cooldown = PUNCH_DURATION+0.12
+	velocity.x = 0.0
+	visual.play(&"Punch")
+	visual.pause()
+	visual.frame = 0
+
+func cancel_punch() -> void:
+	punch_active = false
+	if is_instance_valid(punch_hitbox):
+		punch_hitbox.get_child(0).set_deferred("disabled",true)
+
+func _update_punch(delta: float) -> void:
+	if not punch_active:
+		return
+	punch_elapsed += delta
+	var frame_index := mini(6,int(punch_elapsed*PUNCH_FPS))
+	visual.frame = frame_index
+	punch_hitbox.position = Vector2(punch_direction*PUNCH_RANGE*0.5,-38)
+	var shape_node: CollisionShape2D = punch_hitbox.get_child(0)
+	shape_node.disabled = frame_index not in [2,3,4]
+	if not shape_node.disabled:
+		var query := PhysicsShapeQueryParameters2D.new()
+		query.shape = shape_node.shape
+		query.transform = shape_node.global_transform
+		query.collision_mask = GameConfig.ENEMY_LAYER
+		query.collide_with_areas = true
+		query.collide_with_bodies = false
+		for hit in get_world_2d().direct_space_state.intersect_shape(query):
+			var hurtbox = hit.collider
+			var enemy = hurtbox.get_parent()
+			if _punch_target_valid(enemy) and not punch_hits.has(enemy.get_instance_id()):
+				punch_hits[enemy.get_instance_id()] = true
+				enemy.take_damage(PUNCH_DAMAGE,&"player")
+	if punch_elapsed >= PUNCH_DURATION:
+		cancel_punch()
+
 func take_damage(amount: int, _source_team: String = "enemy") -> void:
+	if _source_team == "sun" and not GameConfig.HEAT_ENABLED:
+		return
 	if state == State.DEATH or not controls_enabled:
 		return
+	if special_active and special_phase == SpecialPhase.RUSH and _source_team == "enemy":
+		return # Weak body contact only; hostile hitboxes/projectiles use HealthComponent directly.
 	health_component.take_damage(amount,_source_team)
 
 func _on_health_damaged(_amount: int,current_health: int,_source) -> void:
+	cancel_punch()
 	cancel_collection()
 	cancel_tucumanazo()
 	combo_component.break_combo()
@@ -378,6 +584,7 @@ func _on_health_damaged(_amount: int,current_health: int,_source) -> void:
 		_apply_hit_response()
 
 func _on_health_depleted() -> void:
+	cancel_punch()
 	cancel_collection()
 	cancel_tucumanazo()
 	combo_component.reset()
@@ -408,20 +615,21 @@ func get_respawn_state() -> Dictionary:
 
 
 func respawn_at(respawn_position: Vector2, saved_state: Dictionary,invulnerability_duration: float = -1.0) -> void:
+	cancel_punch()
 	cancel_collection()
 	cancel_tucumanazo()
 	combo_component.reset()
 	state = State.IDLE
 	velocity = Vector2.ZERO
 	position = respawn_position
-	lane_index = 0 if absf(respawn_position.y-GameConfig.LANES[0]) <= absf(respawn_position.y-GameConfig.LANES[1]) else 1
+	lane_index = 0
 	destination_lane = lane_index
-	lane_start = GameConfig.LANES[lane_index]
+	lane_start = GameConfig.GROUND_Y
 	lane_target = lane_start
 	lane_progress = 0.0
 	changing_lane = false
 	collision_layer = GameConfig.PLAYER_LAYER
-	collision_mask = 1 << lane_index
+	collision_mask = GameConfig.PLAYER_WORLD_MASK
 	hurtbox.lane_index = lane_index
 	hurtbox.set_receiving_enabled(true)
 	tucumanazo_hitbox.lane_index = lane_index
@@ -462,18 +670,20 @@ func collect(kind: String) -> void:
 			AudioManager.play_effect("empanada")
 		"sanguche":
 			health_component.restore_full()
+			tucumanazo_counter.reset_full()
 			lives = mini(3,lives+1)
 			fury_time = 10.0
 			AudioManager.play_effect("sanguche")
 		"achilata":
 			score += 100
-			heat = maxf(0.0,heat-50.0)
+			if GameConfig.HEAT_ENABLED:
+				heat = maxf(0.0,heat-50.0)
 			AudioManager.play_effect("achilata")
 	_emit_status_changed()
 
 
 func begin_pickup_interaction(kind: String,pickup: Node) -> bool:
-	if collection_active or not controls_enabled or state == State.DEATH or changing_lane or special_active:
+	if collection_active or not controls_enabled or state == State.DEATH or special_active:
 		return false
 	if not COLLECTION_KINDS.has(StringName(kind)) or not is_instance_valid(pickup):
 		return false
@@ -543,6 +753,36 @@ func _emit_hud_status() -> void:
 func play_animation(animation_name: StringName) -> void:
 	if visual.animation != animation_name:
 		visual.play(animation_name)
+		_apply_visual_frame_offset()
+
+func _load_visual_frame_offsets() -> void:
+	_visual_frame_offsets.clear()
+	if visual.sprite_frames == null or visual.sprite_frames.resource_path != "res://assets/animations/player.tres":
+		return
+	var data = JSON.parse_string(FileAccess.get_file_as_string(ANIMATION_MANIFEST_PATH))
+	if not data is Dictionary or not data.has("characters") or not data.characters.has("ciruja"):
+		return
+	var aliases := {
+		&"idle": &"Idle", &"correr": &"Run", &"salto": &"Jump",
+		&"disparar_naranja": &"Throw Orange", &"disparar_cascote": &"Throw Stone",
+		&"cabezazo_anim": &"Headbutt"
+	}
+	for animation_name: String in data.characters.ciruja.animations:
+		var entry: Dictionary = data.characters.ciruja.animations[animation_name]
+		if entry.has("frame_offsets") and entry.frame_offsets is Array:
+			_visual_frame_offsets[StringName(animation_name)] = entry.frame_offsets
+	for alias: StringName in aliases:
+		if _visual_frame_offsets.has(aliases[alias]):
+			_visual_frame_offsets[alias] = _visual_frame_offsets[aliases[alias]]
+
+func _apply_visual_frame_offset() -> void:
+	var offsets: Array = _visual_frame_offsets.get(visual.animation,[])
+	if visual.frame >= 0 and visual.frame < offsets.size():
+		var value: Array = offsets[visual.frame]
+		visual.offset = Vector2(float(value[0]),float(value[1]))
+	else:
+		visual.offset = Vector2.ZERO
 
 func _exit_tree() -> void:
+	cancel_tucumanazo()
 	_cancel_hit_stop()

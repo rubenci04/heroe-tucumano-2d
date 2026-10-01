@@ -10,6 +10,7 @@ const HEALTH_COMPONENT = preload("res://scripts/components/health_component.gd")
 const HITBOX = preload("res://scripts/components/hitbox.gd")
 const HURTBOX = preload("res://scripts/components/hurtbox.gd")
 const ATTACK_DEFINITION = preload("res://scripts/data/attack_definition.gd")
+const ANIMATION_OFFSET_PROFILE = preload("res://scripts/components/animation_offset_profile.gd")
 
 enum BossState { INTRO, DECIDE, TELEGRAPH, ATTACK, RECOVERY, DEFEATED }
 enum Pattern { NONE, CHARGE, PUNCH, GROUND_SLAM }
@@ -42,6 +43,7 @@ var _locked_facing: int = -1
 var _defeat_emitted: bool = false
 var _base_visual_position := Vector2(0,-90)
 var _pattern_order: Array[Pattern] = [Pattern.PUNCH,Pattern.CHARGE,Pattern.GROUND_SLAM]
+var _visual_offset_profiles: Dictionary = {}
 
 @onready var health_component: HEALTH_COMPONENT = $HealthComponent
 @onready var hurtbox: HURTBOX = $Hurtbox
@@ -66,13 +68,20 @@ func _ready() -> void:
 	health_component.depleted.connect(_on_health_depleted)
 	health_component.configure(max_health,max_health,0.12)
 	collision_layer = GameConfig.ENEMY_LAYER
-	collision_mask = 1 << lane_index
+	lane_index = 0
+	collision_mask = GameConfig.WORLD_LAYER
 	floor_snap_length = 6.0
 	hurtbox.configure(self,health_component,team,lane_index,GameConfig.ENEMY_LAYER)
 	hurtbox.copy_shape_from(body_shape)
 	attack_hitbox.configure(self,team,lane_index,punch_definition,facing,GameConfig.PLAYER_LAYER)
 	attack_hitbox.deactivate()
+	_visual_offset_profiles = ANIMATION_OFFSET_PROFILE.load_character(&"grandote",{
+		&"grandote_run":"Run",&"grandote_punch":"Punch",&"grandote_ground_slam":"Ground Slam"
+	})
+	visual.frame_changed.connect(_refresh_visual_frame_offset)
+	visual.animation_changed.connect(_refresh_visual_frame_offset)
 	visual.play(&"grandote_run")
+	_refresh_visual_frame_offset()
 	_base_visual_position = visual.position
 	_state_remaining = intro_duration
 	_state_duration = intro_duration
@@ -94,8 +103,6 @@ func _physics_process(delta: float) -> void:
 			if _state_remaining <= 0.0:
 				_enter_decide()
 		BossState.DECIDE:
-			if _align_lane(delta):
-				return
 			_tick_state(delta)
 			if _state_remaining <= 0.0:
 				begin_pattern(_pattern_order[_next_pattern_index])
@@ -112,7 +119,7 @@ func _physics_process(delta: float) -> void:
 				pattern_completed.emit(current_pattern)
 				current_pattern = Pattern.NONE
 				_enter_decide()
-	z_index = int(GameConfig.LANES[lane_index])+2
+	z_index = 16
 
 
 func begin_pattern(pattern: Pattern) -> bool:
@@ -127,10 +134,14 @@ func begin_pattern(pattern: Pattern) -> bool:
 	_state_remaining = definition.startup_duration
 	_state_duration = definition.startup_duration
 	velocity = Vector2.ZERO
-	visual.play(&"grandote_salto" if pattern == Pattern.GROUND_SLAM else &"grandote_punch")
+	visual.play(&"grandote_ground_slam" if pattern == Pattern.GROUND_SLAM else &"grandote_punch")
 	AudioManager.play_effect("alerta")
 	pattern_started.emit(pattern)
 	return true
+
+
+func _refresh_visual_frame_offset() -> void:
+	ANIMATION_OFFSET_PROFILE.apply(visual,_visual_offset_profiles)
 
 
 func get_pattern_definition(pattern: Pattern) -> ATTACK_DEFINITION:
@@ -203,17 +214,7 @@ func _enter_decide() -> void:
 
 
 func _align_lane(delta: float) -> bool:
-	if target.lane_index == lane_index:
-		return false
-	collision_mask = 0
-	position.y = move_toward(position.y,GameConfig.LANES[target.lane_index],lane_move_speed*delta)
-	if absf(position.y-GameConfig.LANES[target.lane_index]) <= 0.1:
-		lane_index = target.lane_index
-		position.y = GameConfig.LANES[lane_index]
-		hurtbox.lane_index = lane_index
-		attack_hitbox.lane_index = lane_index
-		collision_mask = 1 << lane_index
-	return true
+	return false
 
 
 func _apply_gravity_and_move(delta: float) -> void:
@@ -268,4 +269,3 @@ func _definitions_are_valid() -> bool:
 	return charge_definition != null and charge_definition.is_valid() \
 		and punch_definition != null and punch_definition.is_valid() \
 		and ground_slam_definition != null and ground_slam_definition.is_valid()
-

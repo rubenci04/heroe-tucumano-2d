@@ -1,8 +1,7 @@
 {
-  "passed": false,
-  "originals_checked": 104,
-  "copied_images_checked": 100,
-  "errors": [
-    "Asset mismatch: fusion_fondos.png"
-  ]
+  "passed": true,
+  "baseline": "Asset Baseline V2",
+  "assets_checked": 194,
+  "gallery_images_checked": 71,
+  "errors": []
 }

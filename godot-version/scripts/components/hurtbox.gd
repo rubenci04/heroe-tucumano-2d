@@ -64,6 +64,7 @@ func can_receive_attack(attacker: Node,attacker_team: StringName,attacker_lane: 
 		return false
 	if attacker == null or attacker == combat_owner:
 		return false
-	if attacker_team == team or attacker_lane != lane_index:
+	# attacker_lane/lane_index remain in the compatibility signature only.
+	if attacker_team == team:
 		return false
 	return definition != null and definition.has_method("is_valid") and definition.is_valid()

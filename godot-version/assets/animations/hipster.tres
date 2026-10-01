@@ -1,28 +1,34 @@
-[gd_resource type="SpriteFrames" load_steps=7 format=3]
+[gd_resource type="SpriteFrames" load_steps=15 format=3]
 
-[ext_resource type="Texture2D" path="res://assets/hipster_run1.png" id="1"]
-[ext_resource type="Texture2D" path="res://assets/hipster_run2.png" id="2"]
-[ext_resource type="Texture2D" path="res://assets/hipster_run3.png" id="3"]
-[ext_resource type="Texture2D" path="res://assets/hipster_salto.png" id="4"]
-[ext_resource type="Texture2D" path="res://assets/hipster_agua1.png" id="5"]
-[ext_resource type="Texture2D" path="res://assets/hipster_agua2.png" id="6"]
+[ext_resource type="Texture2D" path="res://assets/hipster_scooter_idle.png" id="1_idle"]
+[ext_resource type="Texture2D" path="res://assets/hipster_scooter0.png" id="2_ride0"]
+[ext_resource type="Texture2D" path="res://assets/hipster_scooter1.png" id="3_ride1"]
+[ext_resource type="Texture2D" path="res://assets/hipster_scooter2.png" id="4_ride2"]
+[ext_resource type="Texture2D" path="res://assets/hipster_scooter3.png" id="5_ride3"]
+[ext_resource type="Texture2D" path="res://assets/hipster_scooter4.png" id="6_ride4"]
+[ext_resource type="Texture2D" path="res://assets/hipster_scooter_disparocafe1.png" id="7_shoot1"]
+[ext_resource type="Texture2D" path="res://assets/hipster_scooter_disparocafe2.png" id="8_shoot2"]
+[ext_resource type="Texture2D" path="res://assets/hipster_scooter_disparocafe3.png" id="9_shoot3"]
+[ext_resource type="Texture2D" path="res://assets/hipster_scooter_disparocafe4.png" id="10_shoot4"]
+[ext_resource type="Texture2D" path="res://assets/hipster_scooter_disparocafe5.png" id="11_shoot5"]
+[ext_resource type="Texture2D" path="res://assets/hipster_scooter_disparocafe6.png" id="12_shoot6"]
+[ext_resource type="Texture2D" path="res://assets/hipster_scooter_disparocafe7.png" id="13_shoot7"]
+[ext_resource type="Texture2D" path="res://assets/hipster_scooter_disparocafe8.png" id="14_shoot8"]
 
 [resource]
 animations = [{
-"frames": [{"duration": 1.0, "texture": ExtResource("1")}, {"duration": 1.0, "texture": ExtResource("2")}, {"duration": 1.0, "texture": ExtResource("3")}],
+"frames": [{"duration": 1.0, "texture": ExtResource("1_idle")}],
+"loop": true,
+"name": &"hipster_idle",
+"speed": 1.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("2_ride0")}, {"duration": 1.0, "texture": ExtResource("3_ride1")}, {"duration": 1.0, "texture": ExtResource("4_ride2")}, {"duration": 1.0, "texture": ExtResource("5_ride3")}, {"duration": 1.0, "texture": ExtResource("6_ride4")}],
 "loop": true,
 "name": &"hipster_run",
-"speed": 8.0
-},
-{
-"frames": [{"duration": 1.0, "texture": ExtResource("4")}],
-"loop": false,
-"name": &"hipster_salto",
-"speed": 1.0
-},
-{
-"frames": [{"duration": 1.0, "texture": ExtResource("5")}, {"duration": 1.0, "texture": ExtResource("6")}],
+"speed": 10.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("7_shoot1")}, {"duration": 1.0, "texture": ExtResource("8_shoot2")}, {"duration": 1.0, "texture": ExtResource("9_shoot3")}, {"duration": 1.0, "texture": ExtResource("10_shoot4")}, {"duration": 1.0, "texture": ExtResource("11_shoot5")}, {"duration": 1.0, "texture": ExtResource("12_shoot6")}, {"duration": 1.0, "texture": ExtResource("13_shoot7")}, {"duration": 1.0, "texture": ExtResource("14_shoot8")}],
 "loop": false,
 "name": &"hipster_lanzar",
-"speed": 6.0
+"speed": 16.0
 }]

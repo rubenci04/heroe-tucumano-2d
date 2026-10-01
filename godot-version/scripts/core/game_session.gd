@@ -27,6 +27,11 @@ var respawn_position: Vector2 = Vector2.ZERO
 var checkpoint_completed_encounters: Array[StringName] = []
 var checkpoint_collected_pickups: Array[StringName] = []
 var checkpoint_player_state: Dictionary = {}
+var checkpoint_level_state: Dictionary = {}
+var checkpoint_sector: String = ""
+var checkpoint_score: int = 0
+var checkpoint_coins: int = 0
+var pending_checkpoint_restore: bool = false
 var demo_state: int = DemoState.GAMEPLAY
 
 
@@ -40,6 +45,9 @@ func begin_new_run(preserve_character: bool = true) -> void:
 	checkpoint_completed_encounters.clear()
 	checkpoint_collected_pickups.clear()
 	checkpoint_player_state.clear()
+	checkpoint_level_state.clear()
+	checkpoint_sector = ""
+	pending_checkpoint_restore = false
 	set_demo_state(DemoState.GAMEPLAY)
 	progress_changed.emit(score, coins)
 	checkpoint_changed.emit(active_checkpoint)
@@ -94,6 +102,9 @@ func set_respawn_baseline(position: Vector2, player_state: Dictionary) -> void:
 	checkpoint_player_state = player_state.duplicate(true)
 	checkpoint_completed_encounters.clear()
 	checkpoint_collected_pickups.clear()
+	checkpoint_level_state.clear()
+	checkpoint_score = score
+	checkpoint_coins = coins
 
 
 func set_checkpoint(
@@ -101,7 +112,9 @@ func set_checkpoint(
 	position: Vector2 = Vector2.ZERO,
 	completed_encounters: Array[StringName] = [],
 	collected_pickups: Array[StringName] = [],
-	player_state: Dictionary = {}
+	player_state: Dictionary = {},
+	level_state: Dictionary = {},
+	sector: String = ""
 ) -> bool:
 	if checkpoint_id.is_empty() or active_checkpoint == checkpoint_id:
 		return false
@@ -110,6 +123,10 @@ func set_checkpoint(
 	checkpoint_completed_encounters = completed_encounters.duplicate()
 	checkpoint_collected_pickups = collected_pickups.duplicate()
 	checkpoint_player_state = player_state.duplicate(true)
+	checkpoint_level_state = level_state.duplicate(true)
+	checkpoint_sector = sector
+	checkpoint_score = score
+	checkpoint_coins = coins
 	checkpoint_changed.emit(active_checkpoint)
 	return true
 

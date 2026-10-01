@@ -1,0 +1,10 @@
+{
+  "checks": 26,
+  "coffee_interval": 0.28,
+  "coffee_speed": 300.0,
+  "errors": [],
+  "estimated_seconds": 56.25,
+  "hp": 90,
+  "max_agents": 2,
+  "passed": true
+}

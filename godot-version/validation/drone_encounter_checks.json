@@ -1,0 +1,10 @@
+{
+  "attack_cap": 1,
+  "checks": 20,
+  "entry_interval": 0.55,
+  "errors": [],
+  "passed": true,
+  "read_delay": 1.0,
+  "tutorial_x": 4100,
+  "wave_x": 6100
+}

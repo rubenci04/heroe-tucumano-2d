@@ -2,29 +2,31 @@
 
 [ext_resource type="Script" path="res://scripts/data/enemy_definition.gd" id="1"]
 [ext_resource type="SpriteFrames" path="res://assets/animations/agente.tres" id="2"]
-[ext_resource type="Resource" path="res://data/projectiles/bullet.tres" id="3"]
+[ext_resource type="Resource" path="res://data/projectiles/agent_orb.tres" id="3"]
 
 [resource]
 script = ExtResource("1")
 enemy_id = &"agente"
 display_name = "Agente de seguridad"
 attack_mode = 1
-max_health = 5
-move_speed = 75.0
+max_health = 3
+move_speed = 52.0
 reward_points = 150
 detection_range = 8000.0
 preferred_distance = 190.0
 attack_range = 650.0
-telegraph_duration = 0.3
-projectile_release_duration = 0.05
-recovery_duration = 0.15
-attack_cooldown = 2.6
+telegraph_duration = 0.45
+projectile_release_duration = 0.31
+recovery_duration = 0.65
+entry_duration = 0.25
+reaction_time = 0.25
+attack_cooldown = 3.2
 contact_damage = 1
 fury_contact_damage = 20
 projectile_definition = ExtResource("3")
 sprite_frames = ExtResource("2")
 run_animation = &"agente_run"
 attack_animation = &"agente_disparar"
-visual_scale = 0.4
-visual_offset = Vector2(0, -40)
+visual_scale = 0.36
+visual_offset = Vector2(0, -50.4)
 collision_width_ratio = 0.65

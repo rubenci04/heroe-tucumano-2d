@@ -18,7 +18,7 @@ func _ready() -> void:
 	background.color = Color(0.03, 0.045, 0.065, 0.99)
 	background.size = Vector2(800,450)
 	add_child(background)
-	add_label("ARCHIVO DE ASSETS · 100 PNG / 30 animaciones / 11 sonidos", Vector2(22,15), 18)
+	add_label("ARCHIVO LEGACY · %d PNG / 30 animaciones / 11 sonidos" % images.size(), Vector2(22,15), 18)
 	var close_button := Button.new()
 	close_button.text = "Cerrar [F1]"
 	close_button.position = Vector2(675,50)
@@ -90,6 +90,8 @@ func add_label(text: String, at: Vector2, font_size: int) -> Label:
 	return label
 
 func show_image(index: int) -> void:
+	if index < 0 or index >= images.size():
+		return
 	var item: Dictionary = images[index]
 	preview.texture = load(item.path)
 	info.text = "%d × %d px · %d bytes\n%s\nAnimaciones: %d" % [

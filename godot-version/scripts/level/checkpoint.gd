@@ -6,6 +6,7 @@ signal activated(checkpoint_id: StringName, respawn_position: Vector2)
 @export var checkpoint_id: StringName = &"route_midpoint"
 @export var respawn_offset: Vector2 = Vector2(0.0,-22.5)
 var is_activated: bool = false
+var activation_guard: Callable
 
 
 func _ready() -> void:
@@ -24,4 +25,6 @@ func activate_for(body: Node) -> bool:
 
 
 func _on_body_entered(body: Node) -> void:
+	if activation_guard.is_valid() and not activation_guard.call():
+		return
 	activate_for(body)

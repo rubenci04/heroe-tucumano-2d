@@ -1,141 +1,117 @@
 [gd_scene format=3 uid="uid://orephvp188s2"]
 
-[ext_resource type="Texture2D" uid="uid://ducutjcaqt5nf" path="res://assets/fondo_cerros.png" id="1_mountains"]
-[ext_resource type="Texture2D" uid="uid://bxugbo5pwgcc7" path="res://assets/fusion_fondos.png" id="2_panorama"]
-[ext_resource type="Texture2D" uid="uid://fr5rcrqc3rgp" path="res://assets/suelo_ruta.png" id="3_road_back"]
-[ext_resource type="Texture2D" uid="uid://b605g7kb1po4p" path="res://assets/suelo_ruta2.png" id="4_road_front"]
-[ext_resource type="Texture2D" uid="uid://cd8bp1wwwtnw" path="res://assets/cartel_famailla.png" id="5_famailla"]
-[ext_resource type="Texture2D" uid="uid://cvptd82d8mkm8" path="res://assets/palmera.png" id="7_palm"]
-[ext_resource type="Texture2D" uid="uid://bl3mdu7u1ah4f" path="res://assets/kiosco_coca.png" id="8_kiosk"]
-[ext_resource type="Texture2D" uid="uid://cv5j20p8xy2pw" path="res://assets/parada_colectivo.png" id="9_bus_stop"]
-[ext_resource type="Texture2D" uid="uid://ctasukvbn74s7" path="res://assets/arbol_naranjas.png" id="10_orange_tree"]
-[ext_resource type="Texture2D" uid="uid://cy1wikec6all2" path="res://assets/poste_luz.png" id="11_light_post"]
+[ext_resource type="Script" uid="uid://dyiuoggtatbk2" path="res://scripts/level/route_environment.gd" id="environment"]
+[ext_resource type="Texture2D" uid="uid://7d0ipwu02okr" path="res://assets/semaforo1.png" id="light"]
+[ext_resource type="Texture2D" uid="uid://dhs1fpl81m4g1" path="res://assets/fondo_completo.png" id="panorama"]
+[ext_resource type="Texture2D" uid="uid://cy1wikec6all2" path="res://assets/poste_luz.png" id="post"]
+[ext_resource type="Texture2D" uid="uid://bexhs1pkfqc0c" path="res://assets/cañas_solas.png" id="reeds"]
+[ext_resource type="Texture2D" uid="uid://fr5rcrqc3rgp" path="res://assets/suelo_ruta.png" id="road"]
+[ext_resource type="Texture2D" uid="uid://cd8bp1wwwtnw" path="res://assets/cartel_famailla.png" id="sign"]
+[ext_resource type="Texture2D" uid="uid://ducutjcaqt5nf" path="res://assets/fondo_cerros.png" id="sky"]
 
-[node name="Route38Environment" type="Node2D" unique_id=656234925]
+[sub_resource type="AtlasTexture" id="AtlasTexture_panorama_a"]
+atlas = ExtResource("panorama")
+region = Rect2(0, 0, 2667, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_panorama_b"]
+atlas = ExtResource("panorama")
+region = Rect2(2667, 0, 2666, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_panorama_c"]
+atlas = ExtResource("panorama")
+region = Rect2(5333, 0, 2667, 1024)
+
+[node name="Route38Environment" type="Node2D" unique_id=1309162670]
 texture_filter = 1
+script = ExtResource("environment")
 
-[node name="DistantBackground" type="Parallax2D" parent="." unique_id=520776858]
+[node name="DistantBackground" type="Parallax2D" parent="." unique_id=317980110]
 z_index = -20
-scroll_scale = Vector2(0.05, 1)
-repeat_size = Vector2(1800, 0)
-repeat_times = 2
+scroll_scale = Vector2(0.08, 0)
+repeat_size = Vector2(1806, 0)
+repeat_times = 3
 
-[node name="MountainsA" type="Sprite2D" parent="DistantBackground" unique_id=780499320]
-texture = ExtResource("1_mountains")
+[node name="MountainsA" type="Sprite2D" parent="DistantBackground" unique_id=2122133138]
+scale = Vector2(0.51, 0.51)
+texture = ExtResource("sky")
 centered = false
 
-[node name="MountainsB" type="Sprite2D" parent="DistantBackground" unique_id=720715138]
-position = Vector2(900, 0)
-texture = ExtResource("1_mountains")
+[node name="MountainsB" type="Sprite2D" parent="DistantBackground" unique_id=1522930375]
+position = Vector2(903, 0)
+scale = Vector2(0.51, 0.51)
+texture = ExtResource("sky")
 centered = false
 flip_h = true
 
-[node name="TownPanorama" type="Node2D" parent="." unique_id=2047983405]
-z_index = -10
+[node name="MainPanorama" type="Parallax2D" parent="." unique_id=1234422360]
+z_index = -15
+scroll_scale = Vector2(0.66, 0)
 
-[node name="Localities" type="Sprite2D" parent="TownPanorama" unique_id=894823197]
-position = Vector2(-783.00006, -394.99997)
-scale = Vector2(1.02475, 1.5380201)
-texture = ExtResource("2_panorama")
+[node name="FondoA" type="Sprite2D" parent="MainPanorama"]
+position = Vector2(0, -232.76)
+scale = Vector2(0.84, 0.84)
+texture = SubResource("AtlasTexture_panorama_a")
 centered = false
 
-[node name="RoadLayers" type="Node2D" parent="." unique_id=899893553]
+[node name="FondoB" type="Sprite2D" parent="MainPanorama"]
+position = Vector2(2240.28, -232.76)
+scale = Vector2(0.84, 0.84)
+texture = SubResource("AtlasTexture_panorama_b")
+centered = false
 
-[node name="BackLane" type="Parallax2D" parent="RoadLayers" unique_id=1028901360]
+[node name="FondoC" type="Sprite2D" parent="MainPanorama"]
+position = Vector2(4479.72, -232.76)
+scale = Vector2(0.84, 0.84)
+texture = SubResource("AtlasTexture_panorama_c")
+centered = false
+
+[node name="MidgroundBuildings" type="Node2D" parent="." unique_id=1872954688]
+z_index = -8
+
+[node name="Reeds01" type="Sprite2D" parent="MidgroundBuildings" unique_id=608480878]
+position = Vector2(1180, 298.45)
+scale = Vector2(0.45, 0.45)
+texture = ExtResource("reeds")
+
+[node name="RoadLayers" type="Node2D" parent="." unique_id=833184330]
+
+[node name="BackLane" type="Parallax2D" parent="RoadLayers" unique_id=529259031]
 z_index = -5
-repeat_size = Vector2(700, 0)
-repeat_times = 2
+scroll_scale = Vector2(1, 0)
+repeat_size = Vector2(658, 0)
+repeat_times = 3
 
-[node name="Road" type="Sprite2D" parent="RoadLayers/BackLane" unique_id=1721022136]
+[node name="Road" type="Sprite2D" parent="RoadLayers/BackLane" unique_id=923999532]
 position = Vector2(0, 325)
-texture = ExtResource("3_road_back")
+texture = ExtResource("road")
 centered = false
 
-[node name="FrontLane" type="Parallax2D" parent="RoadLayers" unique_id=544472766]
-z_index = -4
-repeat_size = Vector2(700, 0)
-repeat_times = 2
-
-[node name="Road" type="Sprite2D" parent="RoadLayers/FrontLane" unique_id=1778040184]
-position = Vector2(0, 430)
-texture = ExtResource("4_road_front")
+[node name="RoadMirror" type="Sprite2D" parent="RoadLayers/BackLane" unique_id=1247261786]
+position = Vector2(329, 325)
+texture = ExtResource("road")
 centered = false
+flip_h = true
 
-[node name="FamaillaLandmarks" type="Node2D" parent="." unique_id=259002624]
-z_index = 2
+[node name="FamaillaLandmarks" type="Node2D" parent="." unique_id=843673936]
+z_index = -2
 
-[node name="EntranceSign" type="Sprite2D" parent="FamaillaLandmarks" unique_id=1284472814]
-position = Vector2(271, 291)
-scale = Vector2(1.1, 1.1)
-texture = ExtResource("5_famailla")
+[node name="EntranceSign" type="Sprite2D" parent="FamaillaLandmarks" unique_id=464977522]
+position = Vector2(271, 288.6)
+scale = Vector2(0.8, 0.8)
+texture = ExtResource("sign")
 
-[node name="ShortPalmWest" type="Sprite2D" parent="FamaillaLandmarks" unique_id=611286923]
-position = Vector2(680, 277.95)
-scale = Vector2(0.9, 0.9)
-texture = ExtResource("7_palm")
+[node name="RouteProps" type="Node2D" parent="." unique_id=1982873496]
+z_index = -2
 
-[node name="CocaKiosk" type="Sprite2D" parent="FamaillaLandmarks" unique_id=2027734626]
-position = Vector2(1453.0001, 260.99997)
-scale = Vector2(1.05, 1.05)
-texture = ExtResource("8_kiosk")
+[node name="TrafficLight01" type="Sprite2D" parent="RouteProps" unique_id=636765752]
+position = Vector2(3400, 263.4)
+scale = Vector2(0.7, 0.7)
+texture = ExtResource("light")
 
-[node name="ShortPalmEast" type="Sprite2D" parent="FamaillaLandmarks" unique_id=1231887265]
-position = Vector2(1150, 277.95)
-scale = Vector2(0.9, 0.9)
-texture = ExtResource("7_palm")
+[node name="LightPosts" type="Node2D" parent="." unique_id=1268351297]
+z_index = -2
 
-[node name="RouteProps" type="Node2D" parent="." unique_id=1332504303]
-z_index = 2
-
-[node name="BusStop01" type="Sprite2D" parent="RouteProps" unique_id=575712048]
-position = Vector2(2115, 238)
-scale = Vector2(0.85, 0.85)
-texture = ExtResource("9_bus_stop")
-
-[node name="OrangeTree01" type="Sprite2D" parent="RouteProps" unique_id=1473527485]
-position = Vector2(2420, 277.425)
-scale = Vector2(0.85, 0.85)
-texture = ExtResource("10_orange_tree")
-
-[node name="BusStop02" type="Sprite2D" parent="RouteProps" unique_id=1645579942]
-position = Vector2(3600, 267.225)
-scale = Vector2(0.85, 0.85)
-texture = ExtResource("9_bus_stop")
-
-[node name="OrangeTree02" type="Sprite2D" parent="RouteProps" unique_id=184715043]
-position = Vector2(4086, 282)
-scale = Vector2(0.85, 0.85)
-texture = ExtResource("10_orange_tree")
-
-[node name="BusStop03" type="Sprite2D" parent="RouteProps" unique_id=1329967813]
-position = Vector2(4800, 267.225)
-scale = Vector2(0.85, 0.85)
-texture = ExtResource("9_bus_stop")
-
-[node name="OrangeTree03" type="Sprite2D" parent="RouteProps" unique_id=653478817]
-position = Vector2(5120, 277.425)
-scale = Vector2(0.85, 0.85)
-texture = ExtResource("10_orange_tree")
-
-[node name="OrangeTree04" type="Sprite2D" parent="RouteProps" unique_id=1884501901]
-position = Vector2(6420, 277.425)
-scale = Vector2(0.85, 0.85)
-texture = ExtResource("10_orange_tree")
-
-[node name="LightPosts" type="Node2D" parent="." unique_id=681803303]
-z_index = 2
-
-[node name="LightPost01" type="Sprite2D" parent="LightPosts" unique_id=1396046492]
-position = Vector2(1000, 271.475)
-scale = Vector2(0.85, 0.85)
-texture = ExtResource("11_light_post")
-
-[node name="LightPost06" type="Sprite2D" parent="LightPosts" unique_id=1713678245]
-position = Vector2(3800, 271.475)
-scale = Vector2(0.85, 0.85)
-texture = ExtResource("11_light_post")
-
-[node name="LightPost09" type="Sprite2D" parent="LightPosts" unique_id=601735576]
-position = Vector2(5750, 271.475)
-scale = Vector2(0.85, 0.85)
-texture = ExtResource("11_light_post")
+[node name="LightPost01" type="Sprite2D" parent="LightPosts" unique_id=2007794917]
+position = Vector2(950, 264.625)
+scale = Vector2(0.75, 0.75)
+texture = ExtResource("post")

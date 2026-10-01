@@ -36,10 +36,12 @@ var _received_projectile_impacts: Dictionary = {}
 
 func _ready() -> void:
 	direction = -1 if direction < 0 else 1
-	lane_index = clampi(lane_index,0,GameConfig.LANES.size()-1)
+	lane_index = 0
 	base_speed = maxf(1.0,speed)
 	current_speed = base_speed
-	collision_layer = 1 << lane_index
+	# Roof transport is physical only for bodies opting into the platform layer.
+	# Player shots still reach ProjectileTarget (ENEMY_LAYER) for designed buses.
+	collision_layer = GameConfig.PLAYER_PLATFORM_LAYER
 	collision_mask = 0
 	add_to_group("mobile_platforms")
 	var texture := load("res://assets/%s.png" % asset_id) as Texture2D
@@ -52,8 +54,9 @@ func _ready() -> void:
 	visual.position.y = -texture.get_height()*image_scale*0.5
 	# Legacy vehicles face left; mirror only those travelling towards the right.
 	visual.flip_h = direction > 0
-	z_index = int(GameConfig.LANES[lane_index])+1
+	z_index = 12
 	var opaque_bounds := CollisionFactory.opaque_bounds(texture)
+	visual.position.y = (texture.get_height()*0.5-opaque_bounds.end.y)*image_scale
 	var roof_shape := RectangleShape2D.new()
 	roof_shape.size = Vector2(maxf(24.0,opaque_bounds.size.x*image_scale*0.8),8.0)
 	roof_collision.shape = roof_shape
@@ -66,10 +69,10 @@ func _ready() -> void:
 		active = false
 		return
 	runtime_impact.reach = Vector2(
-		maxf(24.0,texture.get_width()*image_scale*0.82),
-		maxf(18.0,texture.get_height()*image_scale*0.68)
+		maxf(24.0,opaque_bounds.size.x*image_scale*0.82),
+		maxf(18.0,opaque_bounds.size.y*image_scale*0.60)
 	)
-	runtime_impact.offset = Vector2(0.0,-texture.get_height()*image_scale*0.38)
+	runtime_impact.offset = Vector2(0.0,-opaque_bounds.size.y*image_scale*0.34)
 	impact_hitbox.collision_shape.shape = RectangleShape2D.new()
 	if not impact_hitbox.configure(self,&"traffic",lane_index,runtime_impact,direction,GameConfig.PLAYER_LAYER):
 		push_error("TrafficVehicle no pudo configurar su Hitbox")
@@ -89,7 +92,7 @@ func _ready() -> void:
 func configure(vehicle_asset: StringName,vehicle_scale: float,vehicle_lane: int,travel_direction: int,travel_speed: float) -> void:
 	asset_id = vehicle_asset
 	image_scale = maxf(0.1,vehicle_scale)
-	lane_index = clampi(vehicle_lane,0,GameConfig.LANES.size()-1)
+	lane_index = 0
 	direction = -1 if travel_direction < 0 else 1
 	speed = maxf(1.0,travel_speed)
 	base_speed = speed
@@ -109,7 +112,7 @@ func _physics_process(delta: float) -> void:
 func receive_projectile_hit(projectile: Node) -> bool:
 	if not active or projectile == null or projectile.get("team") != &"player":
 		return false
-	if int(projectile.get("lane_index")) != lane_index or StringName(projectile.get("kind")) not in [&"orange",&"stone"]:
+	if StringName(projectile.get("kind")) not in [&"orange",&"stone"]:
 		return false
 	var impact_id := int(projectile.get("impact_serial"))
 	if impact_id <= 0 or _received_projectile_impacts.has(impact_id):
@@ -130,6 +133,10 @@ func get_speed_ratio() -> float:
 
 func get_roof_world_y() -> float:
 	return global_position.y+roof_collision.position.y-4.0
+
+
+func get_ground_anchor_world_y() -> float:
+	return global_position.y
 
 
 func _update_slowdown(delta: float) -> void:

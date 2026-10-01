@@ -23,7 +23,9 @@ func _ready() -> void:
 	$Visual.animation = &"idle"
 	$Visual.scale = Vector2.ONE*image_scale
 	$Visual.position.y = -texture.get_height()*image_scale*0.5
-	z_index = int(position.y)
+	var visual_bounds := CollisionFactory.opaque_bounds(texture)
+	$Visual.position.y = (texture.get_height()*0.5-visual_bounds.end.y)*image_scale
+	z_index = 8 if kind == "orange_tree" else 18
 	CollisionFactory.add_shape(self,texture,image_scale,true,0.8)
 	body_entered.connect(_on_body_entered)
 	set_collected_state(used)
@@ -37,7 +39,7 @@ func _process(delta: float) -> void:
 	queue_redraw()
 
 func _on_body_entered(body: Node2D) -> void:
-	if used or interaction_active or not body.has_method("collect") or body.lane_index != lane_index or body.get_height()>30.0:
+	if used or interaction_active or not body.has_method("collect"):
 		return
 	if kind in ["orange_tree","stone_pile"] and body.has_method("begin_pickup_interaction"):
 		interaction_active = true

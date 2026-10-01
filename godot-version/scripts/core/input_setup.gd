@@ -2,9 +2,12 @@ extends RefCounted
 static func configure() -> void:
 	if InputMap.has_action("headbutt"):
 		InputMap.erase_action("headbutt")
+	for retired_action: StringName in [&"lane_up",&"lane_down"]:
+		if InputMap.has_action(retired_action):
+			InputMap.erase_action(retired_action)
 	var bindings: Dictionary = {
 		"move_left": [KEY_LEFT,KEY_A], "move_right": [KEY_RIGHT,KEY_D],
-		"lane_up": [KEY_UP,KEY_W], "lane_down": [KEY_DOWN,KEY_S],
+		"aim_up": [KEY_UP,KEY_W], "aim_down": [KEY_DOWN,KEY_S],
 		"jump": [KEY_SPACE], "throw_orange": [KEY_Z], "throw_stone": [KEY_X],
 		"tucumanazo": [KEY_V], "asset_gallery": [KEY_F1], "restart": [KEY_R], "pause": [KEY_ESCAPE],
 		"select_previous": [KEY_UP,KEY_W], "select_next": [KEY_DOWN,KEY_S],
@@ -19,8 +22,8 @@ static func configure() -> void:
 	var gamepad_bindings: Dictionary = {
 		"move_left": JOY_BUTTON_DPAD_LEFT,
 		"move_right": JOY_BUTTON_DPAD_RIGHT,
-		"lane_up": JOY_BUTTON_DPAD_UP,
-		"lane_down": JOY_BUTTON_DPAD_DOWN,
+		"aim_up": JOY_BUTTON_DPAD_UP,
+		"aim_down": JOY_BUTTON_DPAD_DOWN,
 		"jump": JOY_BUTTON_A,
 		"throw_orange": JOY_BUTTON_RIGHT_SHOULDER,
 		"throw_stone": JOY_BUTTON_LEFT_SHOULDER,
@@ -39,8 +42,8 @@ static func configure() -> void:
 	var gamepad_axis_bindings: Dictionary = {
 		"move_left": [JOY_AXIS_LEFT_X,-1.0],
 		"move_right": [JOY_AXIS_LEFT_X,1.0],
-		"lane_up": [JOY_AXIS_LEFT_Y,-1.0],
-		"lane_down": [JOY_AXIS_LEFT_Y,1.0],
+		"aim_up": [JOY_AXIS_LEFT_Y,-1.0],
+		"aim_down": [JOY_AXIS_LEFT_Y,1.0],
 	}
 	for action: String in gamepad_axis_bindings:
 		var axis_binding: Array = gamepad_axis_bindings[action]

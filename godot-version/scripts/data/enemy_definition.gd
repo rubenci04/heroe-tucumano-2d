@@ -24,6 +24,13 @@ enum AttackMode { MELEE, PROJECTILE }
 @export var melee_attack: AttackDefinition
 @export var projectile_definition: ProjectileDefinition
 
+@export_group("Ranged lifecycle")
+@export_range(0.0,1.0,0.01) var entry_duration: float = 0.0
+@export_range(0.0,1.0,0.01) var reaction_time: float = 0.0
+@export_range(0.0,1.0,0.01) var reposition_duration: float = 0.3
+@export_range(0.0,100.0,1.0) var distance_tolerance: float = 30.0
+@export_range(0.0,0.2,0.01) var first_action_stagger: float = 0.12
+
 @export_group("Visual")
 @export var sprite_frames: SpriteFrames
 @export var run_animation: StringName = &""
@@ -57,6 +64,8 @@ func get_validation_errors() -> PackedStringArray:
 		errors.append("display_name must not be empty")
 	if max_health <= 0:
 		errors.append("max_health must be greater than zero")
+	if entry_duration < 0.0 or reaction_time < 0.0 or reposition_duration < 0.0 or distance_tolerance < 0.0 or first_action_stagger < 0.0:
+		errors.append("ranged lifecycle durations/tolerance must not be negative")
 	if detection_range < attack_range:
 		errors.append("detection_range must cover attack_range")
 	if attack_range < preferred_distance:

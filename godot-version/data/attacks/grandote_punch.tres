@@ -10,5 +10,5 @@ startup_duration = 0.3
 active_duration = 0.08
 recovery_duration = 0.12
 shape_kind = 0
-reach = Vector2(105, 70)
-offset = Vector2(52.5, -35)
+reach = Vector2(36, 32)
+offset = Vector2(26, -60)

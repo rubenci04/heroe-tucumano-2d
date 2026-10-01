@@ -1,0 +1,17 @@
+{
+  "captures": [
+    "background_A.png",
+    "background_AB.png",
+    "background_B.png",
+    "background_BC.png",
+    "background_C.png",
+    "ground_auto.png",
+    "ground_camion_limones.png",
+    "ground_parada.png",
+    "ground_buses.png"
+  ],
+  "resolution": [
+    800,
+    450
+  ]
+}

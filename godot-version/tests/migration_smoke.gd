@@ -32,6 +32,17 @@ func frames(count: int) -> void:
 		await physics_frame
 	await process_frame
 
+
+func wait_for_reloaded_scene(previous_scene: Node, label: String, max_frames: int = 120) -> Node:
+	for frame_index in range(max_frames):
+		await process_frame
+		var candidate := current_scene
+		if is_instance_valid(candidate) and candidate != previous_scene \
+				and candidate.has_node("Route38") and candidate.has_node("Interface/CharacterSelect"):
+			return candidate
+	check(false,"%s recreates a valid Main scene within %d process frames" % [label,max_frames])
+	return null
+
 func run_tests() -> void:
 	var game_session = root.get_node("GameSession")
 	var audio_manager = root.get_node("AudioManager")
@@ -80,9 +91,11 @@ func run_tests() -> void:
 		&"orange": [1,560.0,&"player"],
 		&"stone": [3,700.0,&"player"],
 		&"bottle": [1,162.0,&"enemy"],
-		&"coffee": [1,360.0,&"enemy"],
+		&"coffee": [1,300.0,&"enemy"],
+		&"hipster_coffee": [1,115.0,&"enemy"],
 		&"bullet": [1,114.0,&"enemy"],
-		&"drone_bolt": [1,320.0,&"enemy"]
+		&"agent_orb": [1,170.0,&"enemy"],
+		&"drone_bolt": [1,175.0,&"enemy"]
 	}
 	for projectile_id: StringName in projectile_expectations:
 		var projectile_definition = load("res://data/projectiles/%s.tres" % projectile_id)
@@ -90,8 +103,12 @@ func run_tests() -> void:
 		check(projectile_definition != null and projectile_definition.is_valid(),"ProjectileDefinition is valid: "+projectile_id)
 		check(projectile_definition.damage==expected[0] and projectile_definition.speed==expected[1] and projectile_definition.default_team==expected[2],"Projectile balance comes from data: "+projectile_id)
 	var bullet_definition = load("res://data/projectiles/bullet.tres")
+	var agent_orb_definition = load("res://data/projectiles/agent_orb.tres")
 	var bottle_definition = load("res://data/projectiles/bottle.tres")
 	check(bullet_definition.speed==114.0 and bottle_definition.speed==162.0 and bullet_definition.lifetime==3.94 and bottle_definition.lifetime==3.94,"Enemy projectiles receive the second 20 percent slowdown while retaining their prior useful travel distance")
+	check(bullet_definition.damage==1 and bullet_definition.visual_scale==0.11 and bullet_definition.collision_size==Vector2(16,4) and bullet_definition.collision_offset==Vector2(0,-0.5),"Agente bullet keeps one damage with a compact visual and collider")
+	check(bullet_definition.rotation_speed_degrees==0.0 and bullet_definition.sprite_frames.get_frame_texture(&"fly",0).resource_path=="res://assets/bala.png","Agente bullet uses the tracer art without continuous rotation")
+	check(agent_orb_definition.damage==1 and agent_orb_definition.visual_scale==0.85 and agent_orb_definition.collision_size==Vector2(10,10) and agent_orb_definition.rotation_speed_degrees==0.0,"Independent Agent orb is a compact non-rotating 15.3px red projectile")
 	var invalid_enemy_definition := ENEMY_DEFINITION.new()
 	check(not invalid_enemy_definition.is_valid() and not invalid_enemy_definition.get_validation_errors().is_empty(),"Incomplete EnemyDefinition reports validation errors")
 	var grandote_definition = load("res://data/enemies/grandote.tres")
@@ -99,17 +116,28 @@ func run_tests() -> void:
 	var drone_definition = load("res://data/enemies/drone.tres")
 	check(grandote_definition != null and grandote_definition.is_valid() and grandote_definition.enemy_id==&"grandote","Vertical-slice melee EnemyDefinition is valid and has stable identity")
 	check(agente_definition != null and agente_definition.is_valid() and agente_definition.enemy_id==&"agente","Vertical-slice ranged EnemyDefinition is valid and has stable identity")
+	var agente_frames: SpriteFrames = agente_definition.sprite_frames
+	check(agente_frames.get_frame_count(&"agente_idle")==1 and agente_frames.get_frame_count(&"agente_run")==8 and agente_frames.get_frame_count(&"agente_disparar")==5 and agente_frames.get_frame_count(&"agente_punch")==7,"Agente exposes every canonical new frame without changing its AI contract")
+	check(agente_frames.get_animation_speed(&"agente_run")==12.0 and agente_frames.get_animation_speed(&"agente_disparar")==15.0 and not agente_frames.get_animation_loop(&"agente_disparar"),"Agente uses the canonical run and ranged-attack playback settings")
 	check(drone_definition != null and drone_definition.is_valid() and drone_definition.enemy_id==&"drone" and drone_definition.max_health==3,"Drone has a valid reusable EnemyDefinition with three health")
 	var drone_frames: SpriteFrames = load("res://assets/animations/drone.tres")
 	var drone_texture_paths := ["res://assets/drone_1.png","res://assets/drone_2.png","res://assets/drone_3.png"]
 	check(drone_frames.get_frame_texture(&"idle",0).resource_path==drone_texture_paths[0] and drone_frames.get_frame_texture(&"aim",0).resource_path==drone_texture_paths[1] and drone_frames.get_frame_texture(&"fire",0).resource_path==drone_texture_paths[2],"Drone maps drone_1, drone_2 and drone_3 to idle, aim and fire")
 	var drone_textures: Array[Texture2D] = [load(drone_texture_paths[0]),load(drone_texture_paths[1]),load(drone_texture_paths[2])]
-	check(drone_textures.all(func(texture: Texture2D): return texture.get_width()==150 and texture.get_height()==150),"The three drone source PNGs retain their exact 150x150 dimensions")
+	var drone_expected_sizes := [Vector2i(151,151),Vector2i(150,150),Vector2i(150,150)]
+	check(range(drone_textures.size()).all(func(index: int): return Vector2i(drone_textures[index].get_width(),drone_textures[index].get_height())==drone_expected_sizes[index]),"Drone source PNGs retain their canonical current dimensions")
 	check(grandote_definition.attack_mode==ENEMY_DEFINITION.AttackMode.MELEE and grandote_definition.melee_attack is ATTACK_DEFINITION,"Grandote legacy basic uses AttackDefinition for melee")
-	check(agente_definition.attack_mode==ENEMY_DEFINITION.AttackMode.PROJECTILE and agente_definition.projectile_definition is PROJECTILE_DEFINITION and agente_definition.projectile_definition.projectile_id==&"bullet","Agente uses ProjectileDefinition for ranged attacks")
-	check(grandote_definition.max_health==10 and grandote_definition.move_speed==100.0 and grandote_definition.attack_range==100.0 and grandote_definition.reward_points==300,"Melee health, speed, range and reward come from data")
-	check(agente_definition.max_health==5 and agente_definition.move_speed==75.0 and agente_definition.attack_range==650.0 and agente_definition.attack_cooldown==2.6,"Ranged health, speed, range and cooldown come from data")
-	check(load("res://data/enemies/hipster.tres").is_valid() and load("res://data/enemies/boss.tres").is_valid(),"Current level enemy ids retain valid compatibility definitions")
+	check(agente_definition.attack_mode==ENEMY_DEFINITION.AttackMode.PROJECTILE and agente_definition.projectile_definition is PROJECTILE_DEFINITION and agente_definition.projectile_definition.projectile_id==&"agent_orb","Agente uses its independent orb ProjectileDefinition for ranged attacks")
+	check(grandote_definition.max_health==6 and grandote_definition.move_speed==45.0 and grandote_definition.attack_range==54.0 and grandote_definition.reward_points==300,"Melee health is reduced to six hits without changing movement or reward")
+	check(agente_definition.max_health==3 and agente_definition.move_speed==52.0 and agente_definition.attack_range==650.0 and agente_definition.attack_cooldown==3.2,"Agent uses three health and a slower attack cadence without movement changes")
+	var hipster_definition = load("res://data/enemies/hipster.tres")
+	var ciruja_reference_height: float = CollisionFactory.opaque_bounds(load("res://assets/ciruja_idle.png")).size.y*0.42
+	var grandote_reference_height: float = CollisionFactory.opaque_bounds(load("res://assets/grandote_idle.png")).size.y*grandote_definition.visual_scale
+	check(grandote_reference_height>=ciruja_reference_height*1.15 and grandote_reference_height<=ciruja_reference_height*1.22,"Grandote remains about 1.20x Ciruja within caricatured human proportions")
+	check(hipster_definition.is_valid() and load("res://data/enemies/boss.tres").is_valid(),"Current level enemy ids retain valid compatibility definitions")
+	check(hipster_definition.sprite_frames.get_frame_count(&"hipster_idle")==1 and hipster_definition.sprite_frames.get_frame_count(&"hipster_run")==5 and hipster_definition.sprite_frames.get_frame_count(&"hipster_lanzar")==8,"Hipster exposes the complete scooter and coffee sequences")
+	check(hipster_definition.sprite_frames.get_animation_speed(&"hipster_run")==10.0 and hipster_definition.sprite_frames.get_animation_speed(&"hipster_lanzar")==16.0,"Hipster preserves its ranged AI with canonical presentation timing")
+	check(hipster_definition.projectile_definition.projectile_id==&"hipster_coffee" and hipster_definition.projectile_definition.sprite_frames.get_frame_texture(&"fly",0).resource_path=="res://assets/cofee.png","Scooter Hipster uses the visible coffee projectile and never the legacy bottle")
 	var enemy_source := FileAccess.get_file_as_string("res://scripts/actors/enemy.gd")
 	check("if archetype" not in enemy_source and "match archetype" not in enemy_source and '"health":' not in enemy_source,"Enemy controller has no behavior or statistics branches by archetype name")
 	var projectile_source := FileAccess.get_file_as_string("res://scripts/actors/projectile.gd")
@@ -146,7 +174,8 @@ func run_tests() -> void:
 	var palermitano_scene: PackedScene = load("res://scenes/actors/palermitano_boss.tscn")
 	var palermitano_frames: SpriteFrames = load("res://assets/animations/boss.tres")
 	check(palermitano_chain.is_valid() and palermitano_chain.damage==2 and palermitano_chain.attack_id==&"palermitano_chain","Palermitano chain has a valid two-damage AttackDefinition")
-	check(palermitano_scene != null and palermitano_frames.has_animation(&"boss_cofee") and palermitano_frames.has_animation(&"boss_punch") and palermitano_frames.has_animation(&"boss_joke"),"Palermitano reuses the legacy boss art for coffee, chain and summon telegraphs")
+	check(palermitano_scene != null and palermitano_frames.get_frame_count(&"boss_idle")==1 and palermitano_frames.get_frame_count(&"boss_run")==7 and palermitano_frames.get_frame_count(&"boss_punch")==10 and palermitano_frames.get_frame_count(&"boss_cofee")==6 and palermitano_frames.get_frame_count(&"boss_joke")==8 and palermitano_frames.get_frame_count(&"boss_order")==4,"Palermitano uses every canonical useful frame for its preserved behavior set")
+	check(range(palermitano_frames.get_frame_count(&"boss_joke")).all(func(frame: int): return palermitano_frames.get_frame_texture(&"boss_joke",frame).resource_path not in ["res://assets/final_boss_joke8.png","res://assets/final_boss_joke10.png"]),"Palermitano excludes the two demonstrably opaque/blank Joke frames without deleting their source assets")
 	var special_probe := TUCUMANAZO_COUNTER_COMPONENT.new()
 	root.add_child(special_probe)
 	special_probe.configure(tucumanazo_definition.starting_uses,tucumanazo_definition.starting_uses)
@@ -189,10 +218,11 @@ func run_tests() -> void:
 	target_hurtbox.team = &"enemy"
 	target_hurtbox.lane_index = 1
 	attack_hitbox.activate()
-	check(not attack_hitbox.try_hit(target_hurtbox) and target_health.current_health==3,"Hitbox and Hurtbox on different lanes do not interact")
+	check(attack_hitbox.try_hit(target_hurtbox) and target_health.current_health==1,"Legacy lane metadata no longer filters combat on the single plane")
+	target_health.restore_full(true)
 	target_hurtbox.lane_index = 0
 	attack_hitbox.activate()
-	check(attack_hitbox.try_hit(target_hurtbox) and target_health.current_health==1,"A new valid activation can damage the target again")
+	check(attack_hitbox.try_hit(target_hurtbox) and target_health.current_health==3,"A new valid activation can damage the target again")
 	attacker_owner.queue_free()
 	target_owner.queue_free()
 	var san_martin = load("res://data/characters/san_martin.tres")
@@ -223,7 +253,7 @@ func run_tests() -> void:
 	var ending_palermitano_lines: Array = demo_ending.entries.filter(func(entry: Dictionary): return String(entry.speaker).begins_with("Empresario palermitano"))
 	check(demo_ending.entries.size()==4 and demo_ending.entries.any(func(entry: Dictionary): return "Acheral" in String(entry.text)) and ending_palermitano_lines.all(func(entry: Dictionary): return "ura" not in String(entry.text).to_lower()),"Ending points to Acheral while preserving the Palermitano voice")
 	var manifest: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://assets/asset_manifest.json"))
-	check(manifest.images.size() == 100,"100 original images")
+	check(manifest.images.size() == 71,"Legacy gallery references only the 71 source files still present after the asset renewal")
 	for item: Dictionary in manifest.images:
 		check(load(item.path) is Texture2D,"Texture imported: "+item.filename)
 	var animation_count: int = 0
@@ -233,9 +263,15 @@ func run_tests() -> void:
 		animation_count += resource.get_animation_names().size()
 		for animation: StringName in resource.get_animation_names():
 			check(resource.get_frame_count(animation)>0,"Nonempty animation: "+animation)
-	check(animation_count == 31,"Existing animation definitions plus the isolated three-frame Grandote ground slam")
+	check(animation_count == 33,"Canonical character actions replace unavailable legacy entries with an explicit bounded runtime set")
+	var player_frames: SpriteFrames = load("res://assets/animations/player.tres")
+	check(player_frames.get_frame_count(&"Run")==7 and player_frames.get_frame_count(&"Jump")==6 and player_frames.get_frame_count(&"Throw Orange")==7 and player_frames.get_frame_count(&"Throw Stone")==6 and player_frames.get_frame_count(&"Headbutt")==4,"Ciruja canonical runtime animations use every available useful frame")
+	check(player_frames.has_animation(&"Punch") and player_frames.get_frame_count(&"Punch")==7 and player_frames.has_animation(&"Eat"),"Ciruja newly detected Punch and Eat actions remain available without changing combat logic")
+	var canonical_manifest = JSON.parse_string(FileAccess.get_file_as_string("res://data/animation_manifest.json"))
+	check(canonical_manifest is Dictionary and canonical_manifest.characters.has("ciruja") and canonical_manifest.characters.has("palermitano"),"Canonical animation manifest loads all priority character families")
+	check(load("res://scenes/debug/animation_preview.tscn") is PackedScene,"Ciruja animation preview remains available as an isolated development scene")
 	var library: SpriteFrames = load("res://assets/animations/asset_library.tres")
-	check(library.get_animation_names().size()==100,"AnimatedSprite2D poses for all 100 images")
+	check(library.get_animation_names().size()==71,"AnimatedSprite2D poses cover all 71 current legacy-gallery images without stale references")
 	for effect: String in root.get_node("AudioManager").EFFECTS:
 		check(load("res://audio/"+effect+".wav") is AudioStreamWAV,"WAV: "+effect)
 	var scene = load("res://scenes/main.tscn").instantiate()
@@ -252,27 +288,37 @@ func run_tests() -> void:
 	var traffic_director = route.get_node("TrafficDirector")
 	var environment = route.get_node("Environment")
 	var distant_background = environment.get_node("DistantBackground")
-	var road_back = environment.get_node("RoadLayers/BackLane")
-	var road_front = environment.get_node("RoadLayers/FrontLane")
+	var panorama: Parallax2D = environment.get_node("MainPanorama")
+	var panorama_sprites: Array[Node] = [panorama.get_node("FondoA"),panorama.get_node("FondoB"),panorama.get_node("FondoC")]
+	var road_back: Parallax2D = environment.get_node("RoadLayers/BackLane")
 	var environment_sprites: Array[Node] = environment.find_children("*","Sprite2D",true,false)
-	check(environment is Node2D and environment.scene_file_path=="res://scenes/levels/route_38_environment.tscn","Route loads its reusable editor-composed environment scene")
-	check(distant_background is Parallax2D and distant_background.scroll_scale==Vector2(0.05,1.0),"Distant mountains preserve their coherent slow horizontal parallax")
-	check(distant_background.repeat_size==Vector2(1800,0) and distant_background.repeat_times>=2 and distant_background.get_node("MountainsB").flip_h,"Distant background alternates mirrored tiles to avoid visible edge gaps")
-	check(road_back is Parallax2D and road_front is Parallax2D and road_back.scroll_scale==Vector2.ONE and road_front.scroll_scale==Vector2.ONE,"Both road planes remain anchored to gameplay coordinates")
-	check(road_back.repeat_size==Vector2(700,0) and road_front.repeat_size==Vector2(700,0) and road_back.repeat_times>=2 and road_front.repeat_times>=2,"Road planes use declarative continuous repetition")
-	check(environment.get_node("TownPanorama/Localities").texture.get_width()>=GameConfig.WORLD_WIDTH,"Locality panorama covers the complete route while remaining aligned to world space")
-	check(environment_sprites.size()==19 and environment_sprites.all(func(sprite: Node): return sprite.get("texture") is Texture2D),"All 19 current environmental sprites have valid imported legacy textures")
-	check(environment_sprites.all(func(sprite: Node): return sprite.get_script()==null) and environment.find_children("*","CollisionObject2D",true,false).is_empty(),"Static decoration has no per-prop scripts or gameplay collisions")
-	check(environment.get_node("FamaillaLandmarks/EntranceSign").position.is_equal_approx(Vector2(271,291)) and environment.get_node_or_null("FamaillaLandmarks/RoadsideShrine")==null and is_equal_approx(environment.get_node("FamaillaLandmarks/CocaKiosk").position.x,1453.0001),"Current Famailla landmarks retain their intentional route composition")
+	check(panorama_sprites.all(func(sprite: Sprite2D): return sprite.texture is AtlasTexture and (sprite.texture as AtlasTexture).atlas.resource_path=="res://assets/fondo_completo.png" and sprite.visible and sprite.scale==Vector2(0.84,0.84)),"Fondo completo remains active as three uniform non-destructive atlas regions")
+	var panorama_width: float = 8000.0*panorama_sprites[0].scale.x
+	check(panorama_width >= (GameConfig.WORLD_WIDTH-800.0)*panorama.scroll_scale.x+800.0 and panorama.repeat_size==Vector2.ZERO,"Segmented primary panorama covers both camera limits without repetition or destructive stretch")
+	var sky_a: Sprite2D = distant_background.get_node("MountainsA")
+	var sky_b: Sprite2D = distant_background.get_node("MountainsB")
+	check(sky_b.position.x <= sky_a.texture.get_width()*sky_a.scale.x and sky_b.position.y==sky_a.position.y and sky_b.flip_h,"Mirrored distant-sky modules have no horizontal gap or vertical jump")
+	check(distant_background.scroll_scale.x<panorama.scroll_scale.x and panorama.scroll_scale.x<road_back.scroll_scale.x,"Sky, panorama and road have coherent depth speeds")
+	check(road_back.repeat_size.x==2*(road_back.get_node("Road").texture.get_width()-1) and road_back.repeat_times>=3,"Road mirrors matching edges with one pixel overlap")
+	check(environment.get_node_or_null("RouteSectors")==null and environment.get_node_or_null("RoadLayers/FrontLane")==null,"Old regional overlays and duplicate ground are absent")
+	check(environment_sprites.size()==11 and environment_sprites.all(func(sprite: Node): return sprite.get("texture") is Texture2D),"All retained environmental sprites and three panorama regions load valid textures")
+	check(environment_sprites.all(func(sprite: Node): return sprite.get_script()==null) and environment.find_children("*","CollisionObject2D",true,false).is_empty(),"Static decoration remains separate from gameplay collisions")
+	check(environment.get_node("FamaillaLandmarks").z_index<10 and environment.get_node("RouteProps").z_index<10 and environment.get_node("MidgroundBuildings").z_index<10,"Decorative props render behind gameplay actors and platforms")
+	check(environment.get_node("MidgroundBuildings").get_child_count()==1 and environment.get_node("LightPosts").get_child_count()==1,"Sparse complementary props preserve breathing room around baked structures")
 	var route_stone_positions: Array = route.get_node("Objects").get_children().filter(func(item: Node): return item.get("kind")=="stone_pile").map(func(item: Node): return item.position.x)
 	route_stone_positions.sort()
-	check(route_stone_positions==[1250.0,4450.0] and absf(route_stone_positions[0]-environment.get_node("FamaillaLandmarks/CocaKiosk").position.x)>200.0,"Stone piles are independent pickups with clear space from the Coca kiosk")
-	check(environment.get_node("RouteProps").get_child_count()==7 and environment.get_node("LightPosts").get_child_count()==3 and environment.get_node("LightPosts/LightPost06").position.is_equal_approx(Vector2(3800,271.475)) and environment.get_node("LightPosts/LightPost09").position.is_equal_approx(Vector2(5750,271.475)),"Current route props remain editable scene nodes with intentional spaced composition")
+	check(route_stone_positions==[1250.0,4450.0] and environment.get_node_or_null("FamaillaLandmarks/CocaKiosk")==null,"Duplicate decorative kiosk is removed while pickup positions remain stable")
 	var route_environment_source := FileAccess.get_file_as_string("res://scripts/core/route_38.gd")
 	check("add_image" not in route_environment_source and "add_prop" not in route_environment_source and "Sprite2D.new" not in route_environment_source,"Route gameplay code no longer constructs static decoration procedurally")
+	var environment_scene_source := FileAccess.get_file_as_string("res://scenes/levels/route_38_environment.tscn")
+	check("fusion_fondos" not in environment_scene_source and "fusion_fondosanime" not in environment_scene_source,"Runtime environment has no dependency on either giant fused panorama asset")
 	check(player is CharacterBody2D,"Player uses CharacterBody2D")
 	check(player.character_definition==san_martin,"Player loads the San Martin definition")
 	check(player.visual.sprite_frames==san_martin.sprite_frames and player.visual.scale==Vector2(0.42,0.42),"Player applies definition visuals without changing appearance")
+	player.play_animation(&"Run")
+	player.visual.frame = 2
+	player._apply_visual_frame_offset()
+	check(player.visual.offset.is_equal_approx(Vector2(-3.5,3.5)),"Ciruja frame offsets stabilize variable canvases without changing collision")
 	check(player.walk_speed==230.0 and player.gravity==1300.0 and player.jump_speed==580.0 and player.lane_duration==0.2,"Player applies existing movement values from data")
 	check(player.health==3 and player.max_health==3 and player.lives==3,"Player applies existing health values from data")
 	check(player.health_component.get_script().resource_path=="res://scripts/components/health_component.gd","Player uses the shared HealthComponent contract")
@@ -305,13 +351,14 @@ func run_tests() -> void:
 	check(player.character_definition==active_definition and not player.last_definition_error.is_empty(),"Rejected definition preserves the active character and explains the failure")
 	check(scene.current_state==GAME_SESSION.DemoState.CHARACTER_SELECT and character_select.visible,"Main starts at CHARACTER_SELECT")
 	var required_gamepad_actions: Array[StringName] = [
-		&"move_left",&"move_right",&"lane_up",&"lane_down",&"jump",&"throw_orange",&"throw_stone",
+		&"move_left",&"move_right",&"aim_up",&"aim_down",&"jump",&"throw_orange",&"throw_stone",
 		&"tucumanazo",&"pause",&"restart",&"select_previous",&"select_next",
 		&"select_confirm",&"select_cancel",&"dialogue_advance",&"dialogue_skip"
 	]
 	check(required_gamepad_actions.all(func(action: StringName): return InputMap.action_get_events(action).any(func(event: InputEvent): return event is InputEventJoypadButton or event is InputEventJoypadMotion)),"Keyboard gameplay and every vertical-slice flow have semantic gamepad bindings")
 	check(not InputMap.has_action(&"headbutt") and not player.has_method("start_headbutt") and not player.has_node("HeadbuttHitbox"),"Cabezazo has no independent runtime input, method or Hitbox")
-	check(InputMap.action_get_events(&"move_left").any(func(event: InputEvent): return event is InputEventJoypadMotion and event.axis==JOY_AXIS_LEFT_X and event.axis_value<0.0) and InputMap.action_get_events(&"lane_down").any(func(event: InputEvent): return event is InputEventJoypadMotion and event.axis==JOY_AXIS_LEFT_Y and event.axis_value>0.0),"Left stick supports horizontal movement and lane changes")
+	check(not InputMap.has_action(&"lane_up") and not InputMap.has_action(&"lane_down"),"Retired lane actions are absent from the runtime InputMap")
+	check(InputMap.action_get_events(&"move_left").any(func(event: InputEvent): return event is InputEventJoypadMotion and event.axis==JOY_AXIS_LEFT_X and event.axis_value<0.0) and InputMap.action_get_events(&"aim_down").any(func(event: InputEvent): return event is InputEventJoypadMotion and event.axis==JOY_AXIS_LEFT_Y and event.axis_value>0.0),"Left stick supports horizontal movement and directional aim")
 	check(traffic_director.get_active_vehicle_count()==0 and traffic_director.enabled,"TrafficDirector initializes empty and ready for gameplay")
 	check(game_session.demo_state==GAME_SESSION.DemoState.CHARACTER_SELECT,"GameSession tracks character selection state")
 	check(not player.controls_enabled,"Character selection disables player controls")
@@ -416,30 +463,32 @@ func run_tests() -> void:
 	check(player.controls_enabled,"Returning to gameplay restores control after flow cancellation")
 	var traffic_warning_count := [0]
 	traffic_director.vehicle_warning.connect(func(_lane: int,_direction: int): traffic_warning_count[0] += 1)
-	check(traffic_director.spawn_now(1000.0)==null,"Traffic remains inactive outside its configured route section")
+	check(traffic_director.spawn_now(1000.0)==null,"Random traffic spawning is retired")
 	var traffic_player_position: Vector2 = player.position
 	var traffic_player_lane: int = player.lane_index
-	player.position = Vector2(2500,GameConfig.LANES[0])
+	player.position = Vector2(2500,GameConfig.GROUND_Y)
 	player.lane_index = 0
 	player.hurtbox.lane_index = 0
-	var first_vehicle = traffic_director.spawn_now(player.position.x)
-	var second_vehicle = traffic_director.spawn_now(player.position.x)
-	check(first_vehicle != null and first_vehicle is AnimatableBody2D and first_vehicle.asset_id==&"auto1" and first_vehicle.lane_index==0 and first_vehicle.direction==-1 and is_equal_approx(first_vehicle.image_scale,0.84) and first_vehicle.base_speed==160.0 and first_vehicle.current_speed==160.0 and first_vehicle.impact_hitbox.attack_definition.reach.is_equal_approx(Vector2(128.1168,47.4096)),"Traffic spawns an interactive compact auto with its reduced base speed and lane-specific body")
-	check(second_vehicle != null and second_vehicle.asset_id==&"auto2" and second_vehicle.lane_index==1 and second_vehicle.direction==1 and is_equal_approx(second_vehicle.image_scale,1.10) and second_vehicle.base_speed==180.0,"Traffic supports the faster calibrated yellow auto and opposite lane flow")
-	check(absf(first_vehicle.position.x-player.position.x)>=traffic_director.camera_half_width+traffic_director.offscreen_margin and absf(second_vehicle.position.x-player.position.x)>=traffic_director.camera_half_width+traffic_director.offscreen_margin,"Vehicles spawn outside the camera and player safety area")
-	var compact_auto_reach: float = first_vehicle.impact_hitbox.attack_definition.reach.x
+	var first_vehicle = traffic_director.spawn_set_piece(&"smoke_exprebus",&"exprebus",player.position.x+600.0,-1)
+	var second_vehicle = traffic_director.spawn_set_piece(&"smoke_tesa",&"tesa",player.position.x-600.0,1)
+	check(first_vehicle != null and first_vehicle is AnimatableBody2D and first_vehicle.asset_id==&"exprebus" and first_vehicle.lane_index==0 and first_vehicle.direction==-1 and is_equal_approx(first_vehicle.image_scale,1.007) and first_vehicle.base_speed==130.0 and first_vehicle.current_speed==130.0,"Expresbus starts only through an explicit deterministic set piece")
+	check(second_vehicle != null and second_vehicle.asset_id==&"tesa" and second_vehicle.lane_index==0 and second_vehicle.direction==1 and is_equal_approx(second_vehicle.image_scale,0.922) and second_vehicle.base_speed==130.0,"Tesa shares the explicit set-piece contract on the single plane")
+	check(first_vehicle.position.y==GameConfig.GROUND_Y and second_vehicle.position.y==GameConfig.GROUND_Y,"Mobile buses use the single combat ground")
 	var first_roof_shape := first_vehicle.roof_collision.shape as RectangleShape2D
 	var first_impact_shape := first_vehicle.impact_hitbox.collision_shape.shape as RectangleShape2D
 	var first_impact_top: float = first_vehicle.impact_hitbox.collision_shape.position.y-first_impact_shape.size.y*0.5
 	var first_roof_bottom: float = first_vehicle.roof_collision.position.y+first_roof_shape.size.y*0.5
-	check(first_vehicle.collision_layer==(1<<first_vehicle.lane_index) and first_roof_shape.size.is_equal_approx(Vector2(124.32,8.0)) and first_vehicle.roof_collision.one_way_collision,"Mobile auto exposes only its scale-derived one-way roof on the matching lane")
+	var bus_bounds: Rect2 = CollisionFactory.opaque_bounds(first_vehicle.visual.texture)
+	var bus_visible_bottom: float = first_vehicle.visual.position.y+(bus_bounds.end.y-first_vehicle.visual.texture.get_height()*0.5)*first_vehicle.image_scale
+	check(absf(bus_visible_bottom)<0.01 and first_roof_shape.size.y==8.0,"Bus wheels align to its ground origin independently of transparent canvas margins")
+	check(first_vehicle.collision_layer==GameConfig.PLAYER_PLATFORM_LAYER and first_roof_shape.size.is_equal_approx(Vector2(210.2616,8.0)) and first_vehicle.roof_collision.one_way_collision,"Mobile bus exposes a one-way roof on the dedicated Player platform layer")
 	check(first_impact_top>first_roof_bottom and first_vehicle.projectile_target.collision_layer==GameConfig.ENEMY_LAYER,"Safe roof is vertically separated from the lower traffic damage and projectile target region")
-	check(traffic_warning_count[0]==2,"Each vehicle emits one warning before entering the visible route")
-	check(traffic_director.get_active_vehicle_count()==traffic_director.max_simultaneous and traffic_director.spawn_now(player.position.x)==null,"TrafficDirector enforces its simultaneous vehicle budget")
+	check(traffic_warning_count[0]==2,"Each designed bus encounter emits one approach warning")
+	check(traffic_director.get_active_vehicle_count()==2 and traffic_director.spawn_set_piece(&"smoke_exprebus",&"exprebus",player.position.x,-1)==null,"A set-piece event cannot start twice")
 	player.health_component.restore_full(true)
 	var health_before_traffic: int = player.health
 	check(first_vehicle.impact_hitbox.try_hit(player.hurtbox) and player.health==health_before_traffic-1,"Vehicle damage reaches Player through Hitbox, Hurtbox and HealthComponent")
-	check(not first_vehicle.impact_hitbox.try_hit(player.hurtbox) and not second_vehicle.impact_hitbox.try_hit(player.hurtbox),"A vehicle cannot duplicate one impact and a different lane cannot hit Player")
+	check(not first_vehicle.impact_hitbox.try_hit(player.hurtbox),"A vehicle cannot duplicate one impact activation")
 	var slowdown_orange = PROJECTILE_SCENE.instantiate()
 	slowdown_orange.kind = &"orange"
 	slowdown_orange.team = &"player"
@@ -460,15 +509,14 @@ func run_tests() -> void:
 		slowdown_projectile._resolve_collision(first_vehicle.projectile_target)
 		check(slowdown_projectile.spent,"Valid vehicle slowdown projectile is consumed: "+String(slowdown_kind))
 	check(is_equal_approx(first_vehicle.get_speed_ratio(),0.55) and first_vehicle.current_speed>0.0,"Repeated hits accumulate only to the configurable 55 percent speed floor")
-	var wrong_lane_projectile = PROJECTILE_SCENE.instantiate()
-	wrong_lane_projectile.kind = &"orange"
-	wrong_lane_projectile.team = &"player"
-	wrong_lane_projectile.lane_index = 1-first_vehicle.lane_index
-	route.get_node("Projectiles").add_child(wrong_lane_projectile)
-	wrong_lane_projectile.set_physics_process(false)
-	wrong_lane_projectile._resolve_collision(first_vehicle.projectile_target)
-	check(not wrong_lane_projectile.spent and is_equal_approx(first_vehicle.get_speed_ratio(),0.55),"Opposite-lane projectile cannot affect or be consumed by a vehicle")
-	wrong_lane_projectile.queue_free()
+	var legacy_lane_projectile = PROJECTILE_SCENE.instantiate()
+	legacy_lane_projectile.kind = &"orange"
+	legacy_lane_projectile.team = &"player"
+	legacy_lane_projectile.lane_index = 1
+	route.get_node("Projectiles").add_child(legacy_lane_projectile)
+	legacy_lane_projectile.set_physics_process(false)
+	legacy_lane_projectile._resolve_collision(first_vehicle.projectile_target)
+	check(legacy_lane_projectile.spent and is_equal_approx(first_vehicle.get_speed_ratio(),0.55),"Legacy projectile lane metadata does not filter a valid single-plane hit")
 	first_vehicle._update_slowdown(1.5)
 	var minimum_vehicle_speed: float = first_vehicle.current_speed
 	first_vehicle._update_slowdown(1.0)
@@ -480,37 +528,34 @@ func run_tests() -> void:
 	var distant_player_x: float = first_vehicle.position.x-traffic_director.camera_half_width-traffic_director.despawn_margin-1.0
 	traffic_director.update_traffic(0.0,distant_player_x)
 	check(traffic_director.get_active_vehicle_count()==1,"Traffic despawns vehicles after they leave the camera margin")
-	var third_vehicle = traffic_director.spawn_now(player.position.x)
-	check(third_vehicle != null and third_vehicle.asset_id==&"auto3" and third_vehicle.lane_index==0 and is_equal_approx(third_vehicle.image_scale,0.95) and third_vehicle.base_speed==160.0,"Traffic sequence adds compatible auto3 as an interactive compact variant")
+	var third_vehicle = traffic_director.spawn_set_piece(&"smoke_exprebus_2",&"exprebus",player.position.x,-1)
+	check(third_vehicle != null and third_vehicle.asset_id==&"exprebus" and third_vehicle.lane_index==0,"A different designed event may reuse Expresbus")
 	traffic_director.reset_runtime_state(true)
 	await frames(2)
-	traffic_director.sequence_index = 3
-	var truck_vehicle = traffic_director.spawn_now(player.position.x)
-	check(truck_vehicle != null and truck_vehicle.asset_id==&"camion_limones" and is_equal_approx(truck_vehicle.image_scale,1.25) and truck_vehicle.base_speed==125.0 and truck_vehicle.impact_hitbox.attack_definition.reach.is_equal_approx(Vector2(194.75,74.8)) and truck_vehicle.roof_collision.shape.size.is_equal_approx(Vector2(190.0,8.0)) and truck_vehicle.impact_hitbox.attack_definition.reach.x>compact_auto_reach,"Interactive lemon truck is larger and slower than compact traffic")
+	var unsupported_vehicle = traffic_director.spawn_set_piece(&"smoke_unsupported",&"camion_limones",player.position.x,-1)
+	check(unsupported_vehicle==null,"Ordinary cars and trucks cannot enter the mobile set-piece path")
 	traffic_director.reset_runtime_state(true)
 	await frames(2)
-	traffic_director.sequence_index = 4
-	var exprebus_vehicle = traffic_director.spawn_now(player.position.x)
-	check(exprebus_vehicle != null and exprebus_vehicle.asset_id==&"exprebus" and is_equal_approx(exprebus_vehicle.image_scale,1.15) and exprebus_vehicle.base_speed==130.0 and exprebus_vehicle.roof_collision.shape.size.is_equal_approx(Vector2(182.16,8.0)) and exprebus_vehicle.impact_hitbox.attack_definition.reach.x>compact_auto_reach,"Exprebus uses the shared interactive roof, slowdown and traffic damage contract")
+	var exprebus_vehicle = traffic_director.spawn_set_piece(&"smoke_exprebus_reset",&"exprebus",player.position.x,-1)
+	check(exprebus_vehicle != null and exprebus_vehicle.asset_id==&"exprebus" and is_equal_approx(exprebus_vehicle.image_scale,1.007) and exprebus_vehicle.base_speed==130.0 and exprebus_vehicle.roof_collision.shape.size.is_equal_approx(Vector2(210.2616,8.0)),"Exprebus uses the shared interactive roof, slowdown and traffic damage contract")
 	traffic_director.reset_runtime_state(true)
 	await frames(2)
-	traffic_director.sequence_index = 5
-	var tesa_vehicle = traffic_director.spawn_now(player.position.x)
-	check(tesa_vehicle != null and tesa_vehicle.asset_id==&"tesa" and is_equal_approx(tesa_vehicle.image_scale,1.30) and tesa_vehicle.base_speed==130.0 and tesa_vehicle.roof_collision.shape.size.is_equal_approx(Vector2(208.0,8.0)) and tesa_vehicle.impact_hitbox.attack_definition.reach.x>compact_auto_reach,"Tesa uses the shared interactive roof, slowdown and traffic damage contract")
-	var traffic_bus_assets: Array = traffic_director.VEHICLE_CONFIGS.filter(func(config: Dictionary): return String(config.asset).contains("bus") or config.asset==&"tesa").map(func(config: Dictionary): return config.asset)
-	check(traffic_bus_assets==[&"exprebus",&"tesa"] and not traffic_bus_assets.has(&"bus1"),"Ruta 38 traffic preserves only Exprebus and Tesa bus assets")
+	var tesa_vehicle = traffic_director.spawn_set_piece(&"smoke_tesa_reset",&"tesa",player.position.x,1)
+	check(tesa_vehicle != null and tesa_vehicle.asset_id==&"tesa" and is_equal_approx(tesa_vehicle.image_scale,0.922) and tesa_vehicle.base_speed==130.0 and tesa_vehicle.roof_collision.shape.size.is_equal_approx(Vector2(216.1168,8.0)),"Tesa uses the shared interactive roof, slowdown and traffic damage contract")
+	var traffic_bus_assets: Array = traffic_director.SET_PIECE_CONFIGS.keys()
+	check(traffic_bus_assets.size()==2 and traffic_bus_assets.has(&"exprebus") and traffic_bus_assets.has(&"tesa"),"Ruta 38 mobile set pieces preserve only Expresbus and Tesa")
 	traffic_director.reset_runtime_state(true)
 	await frames(2)
 	check(traffic_director.get_active_vehicle_count()==0 and traffic_director.sequence_index==0 and is_equal_approx(traffic_director.spawn_remaining,traffic_director.initial_spawn_delay),"Traffic reset is empty and deterministic")
 	var mobile_roof_vehicle = VEHICLE_SCENE.instantiate()
 	mobile_roof_vehicle.configure(&"auto1",0.84,0,1,160.0)
-	mobile_roof_vehicle.position = Vector2(2350.0,GameConfig.LANES[0])
+	mobile_roof_vehicle.position = Vector2(3500.0,GameConfig.LANES[0])
 	mobile_roof_vehicle.active = false
 	route.get_node("Vehicles").add_child(mobile_roof_vehicle)
 	await frames(2)
 	player.lane_index = 0
 	player.hurtbox.lane_index = 0
-	player.collision_mask = 1 << 0
+	player.collision_mask = GameConfig.PLAYER_WORLD_MASK
 	player.hurtbox.set_receiving_enabled(false)
 	player.position = Vector2(mobile_roof_vehicle.position.x,mobile_roof_vehicle.get_roof_world_y()+32.0)
 	player.velocity = Vector2(0.0,-500.0)
@@ -537,15 +582,14 @@ func run_tests() -> void:
 	mobile_roof_vehicle.request_despawn()
 	mobile_roof_vehicle.queue_free()
 	await frames(2)
-	traffic_director.sequence_index = 0
-	var reset_vehicle = traffic_director.spawn_now(2500.0)
-	check(reset_vehicle != null and reset_vehicle.current_speed==reset_vehicle.base_speed and reset_vehicle.get_speed_ratio()==1.0,"Fresh traffic after reset has no stale slowdown state")
+	var reset_vehicle = traffic_director.spawn_set_piece(&"smoke_fresh",&"exprebus",2500.0,-1)
+	check(reset_vehicle != null and reset_vehicle.current_speed==reset_vehicle.base_speed and reset_vehicle.get_speed_ratio()==1.0,"Fresh set-piece traffic after reset has no stale slowdown state")
 	traffic_director.reset_runtime_state(true)
 	await frames(2)
 	player.position = traffic_player_position
 	player.lane_index = traffic_player_lane
 	player.hurtbox.lane_index = traffic_player_lane
-	player.collision_mask = 1 << traffic_player_lane
+	player.collision_mask = GameConfig.PLAYER_WORLD_MASK
 	player.health_component.restore_full(true)
 	var has_keyboard_selection := false
 	var has_gamepad_selection := false
@@ -568,26 +612,27 @@ func run_tests() -> void:
 	check(game_session.resolve_character_definition(game_session.selected_character).character_id==&"san_martin","Invalid selected identifier resolves to San Martin fallback")
 	game_session.set_selected_character(&"san_martin")
 	var encounter_director = route.encounter_director
-	var lane_readability = route.get_node("LaneReadability")
-	check(lane_readability != null and lane_readability.has_method("_draw") and lane_readability.z_index==1,"Route includes a presentation-only lane readability overlay behind gameplay actors")
+	check(route.get_node_or_null("LaneReadability")==null,"Retired lane readability overlay is absent from the linear route")
 	var registered_encounters: Array[StringName] = encounter_director.get_registered_encounter_ids()
-	check(registered_encounters.size()==8 and registered_encounters[0]==&"route_wave_01" and registered_encounters.has(&"route_drone_01") and registered_encounters.has(&"route_drone_02") and registered_encounters.has(&"route_drone_03") and registered_encounters[-1]==&"route_wave_06" and not encounter_director.has_encounter(&"route_miniboss_grandote"),"Route registers its three-step Drone progression alongside the ground encounters")
+	check(registered_encounters.size()==13 and registered_encounters[0]==&"route_wave_01" and registered_encounters.has(&"route_drone_01") and registered_encounters.has(&"route_drone_02") and not registered_encounters.has(&"route_drone_03") and registered_encounters[-1]==&"route_wave_06" and not encounter_director.has_encounter(&"route_miniboss_grandote"),"Route registers the isolated Drone tutorial and one later five-Drone wave")
 	var encounter_source := FileAccess.get_file_as_string("res://scripts/core/route_38.gd")
 	check("data.waves" not in encounter_source and "activated_waves" not in encounter_source,"Route delegates wave activation state to EncounterDirector")
 	var started_encounters: Array[StringName] = []
 	var completed_encounters: Array[StringName] = []
 	encounter_director.encounter_started.connect(func(encounter_id: StringName): started_encounters.append(encounter_id))
 	encounter_director.encounter_completed.connect(func(encounter_id: StringName): completed_encounters.append(encounter_id))
-	encounter_director.update_activation(899.0)
+	encounter_director.update_activation(449.0)
 	check(not encounter_director.is_encounter_activated(&"route_wave_01"),"Encounter remains dormant before its activation condition")
-	encounter_director.update_activation(900.0)
+	encounter_director.update_activation(450.0)
+	check(encounter_director.get_active_enemy_count(&"route_wave_01")==1,"First wave enters one enemy at a time")
+	encounter_director.advance_spawns(1.81)
 	var first_encounter_enemies: Array[Node] = encounter_director.get_active_enemies(&"route_wave_01")
 	for encounter_enemy in first_encounter_enemies:
 		encounter_enemy.set_physics_process(false)
-	check(started_encounters==[&"route_wave_01"] and first_encounter_enemies.size()==2,"Encounter activates once and creates its configured enemies")
-	encounter_director.update_activation(900.0)
-	check(not encounter_director.activate_encounter(&"route_wave_01",900.0) and encounter_director.get_active_enemy_count(&"route_wave_01")==2 and started_encounters.size()==1,"An active encounter cannot be activated or spawned twice")
-	check(first_encounter_enemies[0].lane_index==0 and first_encounter_enemies[1].lane_index==1 and first_encounter_enemies.all(func(active_enemy): return active_enemy.archetype=="hipster"),"Encounter applies configured spawn types and lanes")
+	check(started_encounters==[&"route_wave_01"] and first_encounter_enemies.size()==4,"Encounter activates once and creates its denser configured group")
+	encounter_director.update_activation(450.0)
+	check(not encounter_director.activate_encounter(&"route_wave_01",900.0) and encounter_director.get_active_enemy_count(&"route_wave_01")==4 and started_encounters.size()==1,"An active encounter cannot be activated or spawned twice")
+	check(first_encounter_enemies.all(func(active_enemy): return active_enemy.lane_index==0 and active_enemy.archetype=="hipster"),"Encounter applies configured spawn types on the single combat plane")
 	check(encounter_director.activate_encounter(&"route_wave_04",4700.0),"An independent encounter can activate while another remains active")
 	var mixed_encounter_enemies: Array[Node] = encounter_director.get_active_enemies(&"route_wave_04")
 	for encounter_enemy in mixed_encounter_enemies:
@@ -596,13 +641,14 @@ func run_tests() -> void:
 	for encounter_enemy in mixed_encounter_enemies:
 		mixed_types.append(encounter_enemy.archetype)
 	mixed_types.sort()
-	check(mixed_types==["agente","grandote"] and mixed_encounter_enemies[0].lane_index!=mixed_encounter_enemies[1].lane_index,"Mixed encounter creates data-driven melee and ranged enemies on configured lanes")
+	check(mixed_types==["agente","agente","grandote","hipster","hipster"] and mixed_encounter_enemies.all(func(active_enemy): return active_enemy.lane_index==0),"Mixed encounter creates its denser data-driven melee and ranged group on one plane")
 	var encounter_score_before: int = player.score
 	first_encounter_enemies[0].take_damage(999,&"player")
 	first_encounter_enemies[0].take_damage(999,&"player")
-	check(encounter_director.get_active_enemy_count(&"route_wave_01")==1 and player.score==encounter_score_before+75,"Defeating one tracked enemy updates the live count and awards its reward once")
-	check(encounter_director.get_active_enemy_count(&"route_wave_04")==2 and not encounter_director.is_encounter_completed(&"route_wave_04"),"Independent encounter counts do not interfere")
-	first_encounter_enemies[1].queue_free()
+	check(encounter_director.get_active_enemy_count(&"route_wave_01")==3 and player.score==encounter_score_before+75,"Defeating one tracked enemy updates the live count and awards its reward once")
+	check(encounter_director.get_active_enemy_count(&"route_wave_04")==5 and not encounter_director.is_encounter_completed(&"route_wave_04"),"Independent encounter counts do not interfere")
+	for remaining_enemy in first_encounter_enemies.slice(1):
+		remaining_enemy.queue_free()
 	await frames(2)
 	check(encounter_director.is_encounter_completed(&"route_wave_01") and encounter_director.get_active_enemy_count(&"route_wave_01")==0,"Encounter completes when no configured enemies remain")
 	check(completed_encounters.count(&"route_wave_01")==1 and encounter_director.get_active_enemies(&"route_wave_01").is_empty(),"Completion emits once and releases eliminated enemy references")
@@ -624,7 +670,7 @@ func run_tests() -> void:
 		encounter_enemy.set_physics_process(false)
 		reset_mixed_signature.append("%s:%d" % [encounter_enemy.archetype,encounter_enemy.lane_index])
 	reset_mixed_signature.sort()
-	check(reset_mixed_signature==first_mixed_signature and reset_mixed_enemies.size()==2,"Reset recreates the same encounter composition")
+	check(reset_mixed_signature==first_mixed_signature and reset_mixed_enemies.size()==5,"Reset recreates the same encounter composition")
 	encounter_director.reset_runtime_state(true)
 	await frames(2)
 	check(encounter_director.activate_encounter(&"route_drone_01",4100.0),"First Drone encounter activates independently before the Grandote zone")
@@ -639,7 +685,7 @@ func run_tests() -> void:
 	check(drone.ai_state==drone.AIState.ENTRY and drone.position.x<drone_entry_x and is_equal_approx(drone.flight_anchor_y,GameConfig.LANES[0]-drone.flight_height),"Drone enters horizontally while retaining its configured aerial height")
 	drone.position.x = player.position.x+drone.definition.preferred_distance
 	drone._process_entry(0.01)
-	check(drone.ai_state==drone.AIState.IDLE and drone.visual.animation==&"idle","Drone finishes entry in its reusable idle state")
+	check(drone.ai_state==drone.AIState.IDLE and drone.visual.animation==&"idle" and is_equal_approx(drone.cooldown_remaining,1.0),"Drone finishes entry with one readable second before its reusable aim state")
 	var initial_reticle_radius: float = drone.aim_reticle.current_radius
 	check(drone._begin_aim() and drone.ai_state==drone.AIState.AIM and drone.visual.animation==&"aim" and drone.aim_reticle.active,"Drone aim state exposes a visible world-space red reticle")
 	var player_before_drone_lock: Vector2 = player.position
@@ -658,7 +704,7 @@ func run_tests() -> void:
 	var drone_bolt = route.get_node("Projectiles").get_child(-1)
 	drone_bolt.set_physics_process(false)
 	check(drone.ai_state==drone.AIState.FIRE and drone.visual.animation==&"fire" and not drone.aim_reticle.active and drone.shots_emitted==1 and route.get_node("Projectiles").get_child_count()==drone_projectile_count_before+1,"Drone fires once at full charge and immediately clears its reticle")
-	check(drone_bolt.kind==&"drone_bolt" and drone_bolt.damage==1 and drone_bolt.speed==320.0 and drone_bolt.definition.lifetime==3.0,"Drone red bolt uses its one-damage ProjectileDefinition values")
+	check(drone_bolt.kind==&"drone_bolt" and drone_bolt.damage==1 and drone_bolt.speed==175.0 and drone_bolt.definition.lifetime==3.0,"Drone red bolt uses its slower one-damage ProjectileDefinition values")
 	var locked_bolt_direction: Vector2 = drone_bolt.travel_direction
 	var locked_bolt_rotation: float = drone_bolt.visual.rotation
 	var bolt_start: Vector2 = drone_bolt.position
@@ -670,7 +716,7 @@ func run_tests() -> void:
 	check(absf(bolt_displacement.normalized().cross(locked_bolt_direction))<0.0001 and drone_bolt.travel_direction.is_equal_approx(locked_bolt_direction),"Drone bolt travels straight toward the locked position and is not homing")
 	check(is_equal_approx(bolt_displacement.length(),drone_bolt.speed*0.05) and is_equal_approx(drone_bolt.visual.rotation,locked_bolt_rotation),"Drone bolt preserves speed and stable one-time visual orientation")
 	drone._process_fire(drone.definition.projectile_release_duration)
-	check(drone.ai_state==drone.AIState.COOLDOWN and is_equal_approx(drone.cooldown_remaining,2.0),"Drone enters its two-second cooldown after the fire pose")
+	check(drone.ai_state==drone.AIState.COOLDOWN and is_equal_approx(drone.cooldown_remaining,2.8),"Drone enters its 2.8-second cooldown after the fire pose")
 	drone._process_cooldown(drone.definition.attack_cooldown)
 	check(drone.ai_state==drone.AIState.IDLE,"Drone returns from cooldown to idle")
 	var vertical_shot = PROJECTILE_SCENE.instantiate()
@@ -689,6 +735,7 @@ func run_tests() -> void:
 	drone.health_component.set_invulnerability(0.0)
 	check(diagonal_shot._try_hurtbox(drone.hurtbox) and drone.health==1,"Drone Hurtbox receives a diagonal Naranjazo through the shared projectile contract")
 	var drone_shots_before_death: int = drone.shots_emitted
+	encounter_director.advance_spawns(drone.definition.attack_cooldown)
 	check(drone._begin_aim() and drone.aim_reticle.active,"Drone can begin another telegraph after cooldown")
 	drone.health_component.set_invulnerability(0.0)
 	drone.take_damage(99,&"player")
@@ -699,45 +746,46 @@ func run_tests() -> void:
 	diagonal_shot.queue_free()
 	encounter_director.reset_runtime_state(true)
 	await frames(2)
-	check(encounter_director.activate_encounter(&"route_drone_02",5400.0),"Second Drone encounter activates after the first wave is completed")
+	check(encounter_director.activate_encounter(&"route_drone_02",6100.0),"Five-Drone wave activates later at X=6100")
 	var second_drone_enemies: Array[Node] = encounter_director.get_active_enemies(&"route_drone_02")
-	check(second_drone_enemies.size()==2 and second_drone_enemies.all(func(enemy: Node): return enemy.get("archetype")=="drone") and second_drone_enemies[0].lane_index!=second_drone_enemies[1].lane_index,"Second Drone encounter creates exactly two aerial enemies on separate lanes")
+	check(second_drone_enemies.size()==5 and second_drone_enemies.all(func(actor): return actor.archetype=="drone" and actor.wave_formation and actor.formation_size==5),"Later encounter contains exactly five phase-offset aerial actors and no ground companion")
 	for second_drone in second_drone_enemies:
 		second_drone.set_physics_process(false)
 		second_drone.take_damage(999,&"player")
-	check(encounter_director.is_encounter_completed(&"route_drone_02") and encounter_director.get_active_enemies(&"route_drone_02").is_empty(),"Completing the two-Drone wave leaves no tracked aerial actors")
-	check(encounter_director.activate_encounter(&"route_drone_03",6100.0),"Third Drone encounter activates after the completed two-Drone wave")
-	var mixed_drone_enemies: Array[Node] = encounter_director.get_active_enemies(&"route_drone_03")
-	var mixed_drone_types: Array[String] = []
-	for mixed_drone_enemy in mixed_drone_enemies:
-		mixed_drone_enemy.set_physics_process(false)
-		mixed_drone_types.append(mixed_drone_enemy.archetype)
-	mixed_drone_types.sort()
-	check(mixed_drone_enemies.size()==2 and mixed_drone_types==["agente","drone"],"Third Drone encounter creates exactly one Drone and one Agente")
-	for mixed_drone_enemy in mixed_drone_enemies:
-		mixed_drone_enemy.take_damage(999,&"player")
-	check(encounter_director.is_encounter_completed(&"route_drone_03") and encounter_director.get_active_enemies(&"route_drone_03").is_empty(),"Mixed Drone encounter completes cleanly without orphaned actors")
+	check(encounter_director.is_encounter_completed(&"route_drone_02") and encounter_director.get_active_enemies(&"route_drone_02").is_empty(),"Completing the five-Drone wave leaves no tracked aerial actors")
 	encounter_director.reset_runtime_state(true)
 	await frames(2)
 	var grandote_frames: SpriteFrames = load("res://assets/animations/grandote.tres")
-	var slam_textures := ["res://assets/grandote_golpe_suelo1.png","res://assets/grandote_golpe_suelo2.png","res://assets/grandote_golpe_suelo3.png"]
-	check(grandote_frames.has_animation(&"grandote_ground_slam") and grandote_frames.get_frame_count(&"grandote_ground_slam")==3,"Grandote ground slam has exactly three frames")
-	check(range(3).all(func(frame: int): return grandote_frames.get_frame_texture(&"grandote_ground_slam",frame).resource_path==slam_textures[frame]),"Ground slam loads golpe_suelo1, golpe_suelo2 and golpe_suelo3 in order")
+	check(grandote_frames.get_frame_count(&"grandote_idle")==1 and grandote_frames.get_frame_count(&"grandote_run")==8 and grandote_frames.get_frame_count(&"grandote_punch")==7 and grandote_frames.get_frame_count(&"grandote_ground_slam")==13,"Grandote exposes every canonical Idle, Run, Punch and Ground Slam frame")
+	check(range(13).all(func(frame: int): return grandote_frames.get_frame_texture(&"grandote_ground_slam",frame).resource_path=="res://assets/grandote_smash%d.png" % (frame+1)),"Ground slam uses all thirteen current smash resources in numeric order")
 	var elite = route.spawn_enemy("grandote",player.position.x+240.0,player.lane_index)
 	elite.set_physics_process(false)
 	await frames(2)
-	check(elite.is_in_group("elite_enemy") and not elite.is_in_group("miniboss") and elite.health==10 and elite.definition.reward_points==300,"El Grandote spawns as a normal tracked elite with normal health and reward")
+	check(elite.is_in_group("elite_enemy") and not elite.is_in_group("miniboss") and elite.health==6 and elite.definition.reward_points==300,"El Grandote spawns as a normal tracked elite with six-hit health and preserved reward")
+	var elite_body_shape: RectangleShape2D = elite.get_node("CollisionShape2D").shape
+	var elite_run_bounds: Rect2 = CollisionFactory.opaque_bounds(elite.visual.sprite_frames.get_frame_texture(&"grandote_run",0))
+	var elite_run_feet: float = elite.visual.position.y+(elite_run_bounds.end.y-150.0+elite.visual.offset.y)*elite.visual.scale.y
+	check(is_equal_approx(elite.definition.visual_scale,0.372) and absf(elite_run_feet)<1.0 and is_equal_approx(elite_body_shape.size.y,elite_run_bounds.size.y*0.372*0.9) and elite.hurtbox.collision_shape.shape.size.is_equal_approx(elite_body_shape.size),"Grandote Run feet, body and Hurtbox follow the reduced visual scale")
+	elite.visual.play(&"grandote_idle")
+	elite._refresh_visual_frame_offset()
+	var elite_idle_bounds: Rect2 = CollisionFactory.opaque_bounds(elite.visual.sprite_frames.get_frame_texture(&"grandote_idle",0))
+	var elite_idle_feet: float = elite.visual.position.y+(elite_idle_bounds.end.y-150.0+elite.visual.offset.y)*elite.visual.scale.y
+	check(absf(elite_idle_feet)<1.0,"Grandote Idle keeps its feet on the same ground anchor")
+	elite.visual.play(elite.definition.run_animation)
+	elite._refresh_visual_frame_offset()
+	var elite_punch_shape: RectangleShape2D = elite.melee_hitbox.collision_shape.shape
+	check(elite_punch_shape.size.is_equal_approx(Vector2(36,32)) and elite.melee_hitbox.collision_shape.position.is_equal_approx(Vector2(-26,-60)) and elite.definition.preferred_distance==46.0 and elite.definition.attack_range==54.0 and elite.definition.detection_range==8000.0,"Grandote punch geometry and AI distances stay synchronized without changing detection")
 	check(not hud.boss_bar.visible and not hud.boss_name.visible and traffic_director.enabled and scene.camera_follow_min_x==400.0,"Spawning El Grandote does not activate boss HUD, arena lock or traffic suppression")
 	var waves_before: int = route.get_node("Projectiles").get_child_count()
-	check(elite._begin_ground_slam() and elite.ai_state==elite.AIState.TELEGRAPH and elite.visual.frame==0 and elite.visual.position.is_equal_approx(elite.definition.visual_offset+Vector2(0,2)),"Medium-range ground slam begins with a grounded frame 1 and a 0.24 s telegraph")
+	check(elite._begin_ground_slam() and elite.ai_state==elite.AIState.TELEGRAPH and elite.visual.frame==0 and elite.visual.offset==Vector2.ZERO,"Medium-range ground slam begins with canonical frame 1 and a 0.24 s telegraph")
 	check(not elite._begin_ground_slam() and elite.ground_waves_emitted==0,"No second attack can begin during the ground-slam telegraph")
 	elite._advance_attack_state(elite.GRANDOTE_SLAM_DEFINITION.startup_duration+0.01)
-	check(elite.ai_state==elite.AIState.ATTACK and elite.visual.frame==1 and elite.visual.position.is_equal_approx(elite.definition.visual_offset+Vector2(0,8)) and elite.ground_waves_emitted==0,"Ground-slam frame 2 uses its grounded visual offset and does not emit early")
+	check(elite.ai_state==elite.AIState.ATTACK and elite.visual.frame==9 and elite.visual.offset==Vector2(1.5,25) and elite.ground_waves_emitted==0,"Ground-slam telegraph traverses pre-impact frames and does not emit early")
 	elite._advance_attack_state(elite.GRANDOTE_SLAM_DEFINITION.active_duration+0.01)
 	var spawned_waves: Array[Node] = route.get_node("Projectiles").get_children().filter(func(child: Node): return child is GrandoteGroundWave)
 	var wave: GrandoteGroundWave = spawned_waves[0]
 	wave.set_physics_process(false)
-	check(elite.ai_state==elite.AIState.RECOVERY and elite.visual.frame==2 and elite.visual.position.is_equal_approx(elite.definition.visual_offset+Vector2(0,28)) and elite.ground_waves_emitted==1 and route.get_node("Projectiles").get_child_count()==waves_before+1,"Wave emits once exactly when the grounded visible impact frame 3 appears")
+	check(elite.ai_state==elite.AIState.RECOVERY and elite.visual.frame==10 and elite.visual.offset==Vector2(-1,24) and elite.ground_waves_emitted==1 and route.get_node("Projectiles").get_child_count()==waves_before+1,"Wave emits once exactly when canonical impact frame 11 appears")
 	check(wave.attack_definition.damage==1 and wave.speed==300.0 and wave.lifetime==1.4 and wave.max_distance==420.0,"Ground wave uses its explicit damage, speed, lifetime and distance limits")
 	var wave_start: Vector2 = wave.position
 	wave._physics_process(0.1)
@@ -748,7 +796,7 @@ func run_tests() -> void:
 	player.position.y = GameConfig.LANES[player.lane_index]
 	check(wave.can_hit_body(player),"A grounded player in the same lane is a valid wave target")
 	wave.lane_index = 1-player.lane_index
-	check(not wave.can_hit_body(player),"Ground wave cannot hit across lanes")
+	check(wave.can_hit_body(player),"Legacy lane metadata does not filter a grounded wave hit")
 	wave.queue_free()
 	player.position = player_position_before_wave
 	elite._advance_attack_state(elite.GRANDOTE_SLAM_DEFINITION.recovery_duration+0.01)
@@ -769,7 +817,7 @@ func run_tests() -> void:
 	for heavy_enemy in elite_wave_enemies:
 		heavy_enemy.set_physics_process(false)
 		heavy_enemy.take_damage(999,&"player")
-	check(elite_wave_enemies.size()==2 and encounter_director.is_encounter_completed(&"route_wave_06") and player.score==elite_reward_start+600,"EncounterDirector counts Grandotes as normal enemies and completes their wave once")
+	check(elite_wave_enemies.size()==6 and encounter_director.is_encounter_completed(&"route_wave_06") and player.score==elite_reward_start+900,"Final escalation counts one Grandote and five minor enemies once")
 	check(not scene.demo_closing and scene.current_state==GAME_SESSION.DemoState.GAMEPLAY and not hud.boss_bar.visible,"Grandote defeat does not trigger RESULT, ending dialogue or boss HUD")
 	check(traffic_director.enabled and scene.camera_follow_min_x==400.0 and scene.camera_follow_max_x==GameConfig.WORLD_WIDTH-400.0,"Grandote defeat leaves traffic and normal camera framing intact")
 	encounter_director.reset_runtime_state(true)
@@ -777,7 +825,13 @@ func run_tests() -> void:
 	player.score = encounter_score_before
 	player.status_changed.emit()
 	var checkpoint = route.get_node("Checkpoint")
-	check(checkpoint.checkpoint_id==&"route_midpoint" and checkpoint.global_position+checkpoint.respawn_offset==Vector2(3600,370),"Route has one movable checkpoint with a stable id and provisional respawn position")
+	check(route.checkpoint_records.size()==2 and checkpoint.checkpoint_id==&"route_midpoint" and checkpoint.global_position+checkpoint.respawn_offset==Vector2(3600,370),"Route has two data-driven safe checkpoints plus the start baseline")
+	checkpoint.is_activated = false
+	checkpoint.set_deferred("monitoring",true) # Isolate the explicit snapshot probe from earlier traversal.
+	game_session.active_checkpoint = &""
+	game_session.checkpoint_completed_encounters.clear()
+	game_session.checkpoint_collected_pickups.clear()
+	game_session.checkpoint_player_state.clear()
 	check(encounter_director.activate_encounter(&"route_wave_01",900.0),"Pre-checkpoint encounter activates for restoration validation")
 	var checkpoint_completed_enemies: Array[Node] = encounter_director.get_active_enemies(&"route_wave_01")
 	for checkpoint_enemy in checkpoint_completed_enemies:
@@ -804,14 +858,14 @@ func run_tests() -> void:
 	interrupted_encounter_enemies[0].take_damage(999,&"player")
 	var post_checkpoint_pickup = route.add_pickup("empanada","empanada",7950,0,0.14,-1.0,&"checkpoint_pickup_after")
 	post_checkpoint_pickup._on_body_entered(player)
-	check(traffic_director.spawn_now(4700.0)!=null and traffic_director.get_active_vehicle_count()==1,"Post-checkpoint traffic can be active before respawn")
+	check(traffic_director.spawn_set_piece(&"checkpoint_exprebus",&"exprebus",5500.0,-1)!=null and traffic_director.get_active_vehicle_count()==1,"A designed bus encounter can be active before respawn")
 	player.combo_component.register_hit(&"checkpoint_combo")
 	player.shot_cooldown = 0.0
 	check(player.start_tucumanazo() and player.tucumanazo_counter.current_uses==2,"Player consumes one Tucumanazo after the checkpoint before respawn")
-	player.position = Vector2(5000,415)
-	player.lane_index = 1
-	player.hurtbox.lane_index = 1
-	player.collision_mask = 1 << 1
+	player.position = Vector2(5000,GameConfig.GROUND_Y)
+	player.lane_index = 0
+	player.hurtbox.lane_index = 0
+	player.collision_mask = GameConfig.PLAYER_WORLD_MASK
 	player.invulnerability = 0.0
 	player.health = 1
 	var lives_before_respawn: int = player.lives
@@ -822,7 +876,7 @@ func run_tests() -> void:
 	var remaining_encounter_enemies: Array[Node] = encounter_director.get_active_enemies(&"route_wave_04")
 	player.take_damage(1,"enemy")
 	check(player.lives==lives_before_respawn-1 and player.health==player.max_health and player.state!=player.State.DEATH,"Local respawn consumes exactly one life and restores health")
-	check(player.position==Vector2(4840,415) and player.lane_index==1 and player.velocity==Vector2.ZERO and 5000.0-player.position.x==160.0,"Local respawn uses the first safe point 160 px behind death and preserves the safe lane")
+	check(player.position==Vector2(5000,GameConfig.GROUND_Y) and player.lane_index==0 and player.velocity==Vector2.ZERO,"Without recent safe history the death position itself is reused when safe")
 	check(player.combo_component.current_combo==0 and player.tucumanazo_counter.current_uses==int(local_state_before_respawn.tucumanazos) and not player.special_active and not player.tucumanazo_hitbox.active,"Local respawn clears temporary combat state without rolling back consumed Tucumanazos")
 	check(player.character_definition.character_id==game_session.selected_character,"Respawn preserves selected character")
 	check(traffic_director.get_active_vehicle_count()==traffic_before_respawn.size() and traffic_before_respawn.all(func(vehicle: Node): return is_instance_valid(vehicle) and vehicle.is_inside_tree()),"Local respawn preserves active traffic without duplicating or resetting its sequence")
@@ -836,14 +890,11 @@ func run_tests() -> void:
 	check(player.health==health_after_respawn,"Player invulnerability prevents immediate duplicate damage")
 	var vehicle_safety_probe: Node = traffic_before_respawn[0]
 	var vehicle_probe_position: Vector2 = vehicle_safety_probe.position
-	var vehicle_probe_lane: int = vehicle_safety_probe.lane_index
-	vehicle_safety_probe.position = Vector2(4840,GameConfig.LANES[1])
-	vehicle_safety_probe.lane_index = 1
-	var vehicle_safe_respawn: Dictionary = route.find_local_respawn(Vector2(5000,415),1)
-	check(bool(vehicle_safe_respawn.found) and (int(vehicle_safe_respawn.lane_index)!=1 or absf(float(vehicle_safe_respawn.position.x)-vehicle_safety_probe.position.x)>route.LOCAL_RESPAWN_VEHICLE_CLEARANCE) and is_equal_approx(float(vehicle_safe_respawn.position.y),GameConfig.LANES[int(vehicle_safe_respawn.lane_index)]),"Local search avoids vehicle impact/roof space and always chooses fixed lane ground")
+	vehicle_safety_probe.position = Vector2(4840,GameConfig.GROUND_Y)
+	var vehicle_safe_respawn: Dictionary = route.find_local_respawn(Vector2(5000,GameConfig.GROUND_Y),0)
+	check(bool(vehicle_safe_respawn.found) and int(vehicle_safe_respawn.lane_index)==0 and absf(float(vehicle_safe_respawn.position.x)-vehicle_safety_probe.position.x)>route.LOCAL_RESPAWN_VEHICLE_CLEARANCE and is_equal_approx(float(vehicle_safe_respawn.position.y),GameConfig.GROUND_Y),"Local search avoids vehicle impact/roof space on fixed ground")
 	vehicle_safety_probe.position = vehicle_probe_position
-	vehicle_safety_probe.lane_index = vehicle_probe_lane
-	var local_probe: Dictionary = route.find_local_respawn(Vector2(5000,415),1)
+	var local_probe: Dictionary = route.find_local_respawn(Vector2(5000,GameConfig.GROUND_Y),0)
 	var hostile_probe = PROJECTILE_SCENE.instantiate()
 	hostile_probe.kind = &"bullet"
 	hostile_probe.team = &"enemy"
@@ -863,17 +914,17 @@ func run_tests() -> void:
 		for blocker_x in [5840.0,5880.0,5800.0,5780.0]:
 			var blocker = route.spawn_enemy("agente",blocker_x,blocker_lane)
 			blocker.set_physics_process(false)
-	player.position = Vector2(6000,GameConfig.LANES[1])
-	player.lane_index = 1
-	player.hurtbox.lane_index = 1
-	player.collision_mask = 1 << 1
+	player.position = Vector2(6000,GameConfig.GROUND_Y)
+	player.lane_index = 0
+	player.hurtbox.lane_index = 0
+	player.collision_mask = GameConfig.PLAYER_WORLD_MASK
 	player.invulnerability = 0.0
 	player.health = 1
 	var lives_before_fallback: int = player.lives
 	player.take_damage(1,"enemy")
-	check(player.lives==lives_before_fallback-1 and player.position==game_session.respawn_position and player.lane_index==0,"Checkpoint remains the fallback when every local candidate in both lanes is unsafe")
-	check(player.score==checkpoint_score and player.coins==checkpoint_coins and player.tucumanazo_counter.current_uses==3 and pre_checkpoint_pickup.used and not post_checkpoint_pickup.used,"Checkpoint fallback retains the previous snapshot restoration contract")
-	check(encounter_director.is_encounter_completed(&"route_wave_01") and not encounter_director.is_encounter_activated(&"route_wave_04") and traffic_director.get_active_vehicle_count()==0,"Checkpoint fallback resets interrupted encounters and traffic without duplicates")
+	check(player.lives==lives_before_fallback-1 and absf(player.position.x-6000.0)<=256.0 and player.position!=game_session.respawn_position and player.lane_index==0,"Nearby enemy blockers never force a one-life checkpoint rollback")
+	check(player.score==local_score_before_respawn and player.coins==local_coins_before_respawn and player.tucumanazo_counter.current_uses==int(local_state_before_respawn.tucumanazos) and pre_checkpoint_pickup.used and post_checkpoint_pickup.used,"One-life recovery preserves current resources and consumed pickups")
+	check(encounter_director.is_encounter_completed(&"route_wave_01") and encounter_director.is_encounter_activated(&"route_wave_04") and traffic_director.get_active_vehicle_count()==traffic_before_respawn.size(),"One-life recovery preserves encounters and traffic without duplicates")
 	player.tucumanazo_counter.reset_full()
 	var empty_checkpoint_ids: Array[StringName] = []
 	route.restore_checkpoint_state(empty_checkpoint_ids,empty_checkpoint_ids)
@@ -918,12 +969,15 @@ func run_tests() -> void:
 	player.hit_time = 0.0
 	player.invulnerability = 100.0
 	var initial_x: float = player.position.x
+	var coins_before_walk: int = player.coins
+	var score_before_walk: int = player.score
+	route.add_pickup("empanada","empanada",initial_x+100.0,0,0.14,GameConfig.GROUND_Y,&"single_plane_walk_empanada")
 	Input.action_press("move_right")
 	await frames(60)
 	Input.action_release("move_right")
 	check(absf(player.position.x-initial_x-230.0)<8.0,"230 px/s movement through fixed physics")
-	check(player.coins==1 and player.score==25,"Empanada collision updates coins and score")
-	check(game_session.coins==1 and game_session.score==25,"GameSession mirrors current progress")
+	check(player.coins>=coins_before_walk+1 and player.score>=score_before_walk+25,"Empanada collision updates coins and score")
+	check(game_session.coins==player.coins and game_session.score==player.score,"GameSession mirrors current progress")
 	player.position = Vector2(520,370)
 	player.velocity = Vector2.ZERO
 	var route_orange_tree = route.get_node("Objects").get_children().filter(func(item: Node): return item.get("pickup_id")==&"orange_tree_520_0")[0]
@@ -932,7 +986,7 @@ func run_tests() -> void:
 	check(player.oranges_unlocked and not player.collection_active,"Tree collision unlocks oranges after completing its collection animation")
 	var enemy = route.spawn_enemy("hipster",640,0)
 	await frames(2)
-	check(enemy.health_component.get_script()==player.health_component.get_script() and enemy.max_health==3,"Enemy uses the same HealthComponent with archetype health")
+	check(enemy.health_component.get_script()==player.health_component.get_script() and enemy.max_health==2,"Enemy uses the same HealthComponent with rebalanced Hipster health")
 	check(enemy.definition==load("res://data/enemies/hipster.tres") and enemy.health==enemy.definition.max_health and enemy.visual.sprite_frames==enemy.definition.sprite_frames,"Enemy instance applies health and visuals from EnemyDefinition")
 	check(enemy.hurtbox.combat_owner==enemy and enemy.hurtbox.health_component==enemy.health_component and enemy.hurtbox.team==&"enemy","Enemy exposes the same Hurtbox contract")
 	player.throw_projectile("orange")
@@ -960,7 +1014,7 @@ func run_tests() -> void:
 	shooting_probe.shot_cooldown = 0.0
 	shooting_probe.throw_projectile("orange",Vector2.DOWN)
 	check(aimed_shots.size()==4 and shooting_probe.oranges_unlocked,"Aimed Naranjazos remain unlimited after oranges are unlocked")
-	check(aimed_shots[3][2].is_equal_approx(Vector2.DOWN) and is_equal_approx(aimed_shots[3][0].y,GameConfig.LANES[0]-18.0),"Grounded downward fire uses a valid downward vector and starts safely above the lane floor")
+	check(aimed_shots[3][2].is_equal_approx(Vector2.DOWN) and is_equal_approx(aimed_shots[3][0].y,GameConfig.LANES[0]-24.0),"Grounded downward fire uses a valid downward vector and starts safely above the lane floor")
 	shooting_probe.queue_free()
 	var left_bullet = PROJECTILE_SCENE.instantiate()
 	left_bullet.kind = &"bullet"
@@ -1009,7 +1063,7 @@ func run_tests() -> void:
 	check(is_equal_approx(aimed_displacement.length(),aimed_stone.speed*0.02),"Diagonal projectile preserves the ProjectileDefinition speed magnitude")
 	check(absf(aimed_displacement.normalized().cross(aimed_direction))<0.0001 and aimed_stone.travel_direction.is_equal_approx(aimed_direction),"Aimed projectile follows a straight trajectory and never changes direction")
 	check(is_equal_approx(aimed_rotation,aimed_direction.angle()) and is_equal_approx(aimed_stone.visual.rotation,aimed_rotation),"Player projectile visual is oriented once and remains stable")
-	check(aimed_stone.lane_index==1 and aimed_stone.collision_mask==(GameConfig.ENEMY_LAYER | (1 << 1)),"Multidirectional projectile preserves its assigned lane collision mask")
+	check(aimed_stone.lane_index==1 and aimed_stone.collision_mask==(GameConfig.ENEMY_LAYER | GameConfig.WORLD_LAYER),"Multidirectional projectile uses enemy and world collision on the single plane")
 	aimed_stone.queue_free()
 	left_bullet.queue_free()
 	right_bullet.queue_free()
@@ -1022,7 +1076,7 @@ func run_tests() -> void:
 	check(second_orange.visual.sprite_frames==orange_projectile.visual.sprite_frames,"Naranjazo instances reuse preconfigured SpriteFrames")
 	second_orange.queue_free()
 	await frames(22)
-	check(enemy.health==2,"Orange hits enemy via real collision")
+	check(enemy.health==1,"Orange hits enemy via real collision")
 	check(player.combo_component.current_combo==1 and hud.combo.visible and hud.combo.text=="COMBO x1","Valid Naranjazo increments combo and updates HUD")
 	check(player.tucumanazo_counter.current_uses==5 and hud.special_status.text=="TUCUMANAZO x5","Valid Naranjazo and combo do not recharge or alter Tucumanazo stock")
 	var score_before_enemy_defeat: int = player.score
@@ -1060,49 +1114,112 @@ func run_tests() -> void:
 	player.combo_component.combo_changed.emit(combo_before_lane_probe)
 	melee_phase_probe.queue_free()
 	await frames(2)
+	var hipster_phase_probe = route.spawn_enemy("hipster",player.position.x+300.0,player.lane_index)
+	hipster_phase_probe.set_physics_process(false)
+	await frames(2)
+	hipster_phase_probe.contact.set_deferred("monitoring",false)
+	var hipster_shots: Array = []
+	hipster_phase_probe.shot_requested.connect(func(_origin: Vector2,_lane: int,_direction: int,kind: String,_shot_team: String): hipster_shots.append(kind))
+	# Legacy projectile probes must first traverse the new non-offensive entry/reaction.
+	hipster_phase_probe._advance_ranged_lifecycle(hipster_phase_probe.definition.entry_duration,-300.0)
+	hipster_phase_probe._advance_ranged_lifecycle(hipster_phase_probe._state_remaining,-300.0)
+	hipster_phase_probe._begin_attack()
+	hipster_phase_probe._advance_attack_state(hipster_phase_probe.definition.telegraph_duration)
+	var hipster_coffee_projectile = route.get_node("Projectiles").get_child(-1)
+	check(hipster_shots==["hipster_coffee"] and hipster_coffee_projectile.kind==&"hipster_coffee" and hipster_coffee_projectile.speed==115.0 and hipster_coffee_projectile.visual.sprite_frames.get_frame_texture(&"fly",0).resource_path=="res://assets/cofee.png","Scooter Hipster spawns one slower readable coffee projectile and never a bottle")
+	var hipster_projectile_id: int = hipster_coffee_projectile.get_instance_id()
+	check(hipster_coffee_projectile.damage==1 and hipster_coffee_projectile.visual.scale==Vector2(0.15,0.15) and hipster_coffee_projectile.collision_shape.shape.size.is_equal_approx(Vector2(15.12,17.415)) and hipster_coffee_projectile.definition.rotation_speed_degrees==0.0,"Hipster coffee uses its smaller proportional visual and collider without rotation")
+	hipster_coffee_projectile.position = Vector2(1000,-1000)
+	hipster_coffee_projectile.travel_direction = Vector2(-1,-1).normalized()
+	hipster_coffee_projectile._physics_process(0.12)
+	check(is_equal_approx(hipster_coffee_projectile.visual.rotation,deg_to_rad(-22.0)),"Hipster coffee stays upright on diagonal flight")
+	hipster_phase_probe._advance_attack_state(0.84)
+	check(hipster_shots.size()==1,"Second coffee waits its interval")
+	hipster_phase_probe.facing *= -1
+	hipster_phase_probe._advance_attack_state(0.02)
+	check(hipster_shots==["hipster_coffee","hipster_coffee"],"Hipster emits exactly two coffees")
+	var second_coffee = route.get_node("Projectiles").get_child(-1)
+	check(second_coffee.direction==hipster_phase_probe._locked_attack_direction and second_coffee.position.distance_to(hipster_coffee_projectile.position)>20.0,"Coffee burst locks direction and does not overlap")
+	hipster_phase_probe._advance_attack_state(1.0)
+	hipster_phase_probe._advance_attack_state(1.0)
+	check(hipster_shots.size()==2 and hipster_phase_probe.attack_cooldown==4.5,"Coffee burst has a post-recovery 4.5-second cooldown without continuous spam")
+	second_coffee.queue_free()
+	hipster_coffee_projectile.remaining_life = 0.001
+	hipster_coffee_projectile._physics_process(0.002)
+	hipster_phase_probe.queue_free()
+	await frames(2)
+	check(not is_instance_id_valid(hipster_projectile_id),"Slower Hipster coffee expires without an orphan node")
 	var ranged_phase_probe = route.spawn_enemy("agente",player.position.x+300.0,player.lane_index)
 	ranged_phase_probe.set_physics_process(false)
 	await frames(2)
 	ranged_phase_probe.contact.set_deferred("monitoring",false)
+	var projectiles_before_burst: Array[Node] = route.get_node("Projectiles").get_children()
 	var ranged_shots: Array = []
 	ranged_phase_probe.shot_requested.connect(func(_origin: Vector2,lane: int,_direction: int,kind: String,shot_team: String): ranged_shots.append([lane,kind,shot_team]))
+	ranged_phase_probe._advance_ranged_lifecycle(ranged_phase_probe.definition.entry_duration,-300.0)
+	ranged_phase_probe._advance_ranged_lifecycle(ranged_phase_probe._state_remaining,-300.0)
 	ranged_phase_probe._begin_attack()
 	check(ranged_phase_probe.ai_state==ranged_phase_probe.AIState.TELEGRAPH,"Ranged enemy telegraphs before firing")
 	ranged_phase_probe._advance_attack_state(ranged_phase_probe.definition.telegraph_duration)
-	check(ranged_phase_probe.ai_state==ranged_phase_probe.AIState.ATTACK and ranged_shots.size()==1 and ranged_shots[0]==[player.lane_index,"bullet","enemy"],"Ranged attack emits its data-defined projectile with faction and lane")
-	ranged_phase_probe._advance_attack_state(ranged_phase_probe.definition.get_active_duration())
+	check(ranged_phase_probe.ai_state==ranged_phase_probe.AIState.ATTACK and ranged_shots.size()==1 and ranged_shots[0]==[player.lane_index,"agent_orb","enemy"],"Ranged attack emits one independent Agent orb with faction and lane")
+	ranged_phase_probe._advance_attack_state(ranged_phase_probe.AGENT_BURST_INTERVAL*0.5)
+	check(ranged_shots.size()==1,"Agente does not duplicate its orb during the attack pose")
+	ranged_phase_probe._advance_attack_state(ranged_phase_probe.AGENT_BURST_INTERVAL*0.5+0.001)
+	check(ranged_shots.size()==1,"Agente remains at one orb after the legacy burst interval")
+	ranged_phase_probe._advance_attack_state(ranged_phase_probe.AGENT_BURST_INTERVAL)
+	check(ranged_shots.size()==1 and ranged_shots[0]==[player.lane_index,"agent_orb","enemy"],"Agente emits exactly one straight orb per action")
+	var burst_projectiles: Array[Node] = route.get_node("Projectiles").get_children().filter(func(child: Node): return child not in projectiles_before_burst)
+	var burst_serials: Dictionary = {}
+	for burst_projectile in burst_projectiles:
+		burst_serials[burst_projectile.impact_serial] = true
+	check(burst_projectiles.size()==1 and burst_serials.size()==1,"Agent action creates one unique projectile node without duplicate births")
+	var consumed_burst_time: float = ranged_phase_probe.AGENT_BURST_INTERVAL*2.0+0.001
+	ranged_phase_probe._advance_attack_state(ranged_phase_probe.definition.get_active_duration()-consumed_burst_time)
 	ranged_phase_probe._advance_attack_state(ranged_phase_probe.definition.recovery_duration)
-	check(ranged_phase_probe.ai_state==ranged_phase_probe.AIState.CHASE and ranged_shots.size()==1,"Ranged attack recovers without firing duplicate projectiles")
+	check(ranged_phase_probe.ai_state==ranged_phase_probe.AIState.REPOSITION and ranged_shots.size()==1 and ranged_phase_probe.attack_cooldown==3.2,"Ranged action recovers into reposition without extra orbs and uses its longer cooldown")
+	for burst_projectile in burst_projectiles:
+		burst_projectile.queue_free()
 	ranged_phase_probe.queue_free()
 	await frames(2)
+	var orphaned_burst_projectile := false
+	for active_projectile in route.get_node("Projectiles").get_children():
+		if active_projectile.impact_serial in burst_serials:
+			orphaned_burst_projectile = true
+	check(not orphaned_burst_projectile,"Burst cleanup leaves no orphan projectile nodes")
 	check(load("res://data/attacks/cabezazo.tres") != null and player.visual.sprite_frames.has_animation(&"Headbutt"),"Legacy Cabezazo data and Headbutt art remain available as non-runtime references")
 	check(player.tucumanazo_counter.current_uses==5 and hud.special_status.text=="TUCUMANAZO x5","Player begins gameplay with five Tucumanazos and an explicit HUD counter")
 	var uses_before_combo: int = player.tucumanazo_counter.current_uses
 	check(player.combo_component.register_hit(&"counter_independence") and player.tucumanazo_counter.current_uses==uses_before_combo,"Combo hits no longer charge Tucumanazo")
 	player.combo_component.reset()
-	var special_enemy_right = route.spawn_enemy("grandote",player.position.x+80.0,player.lane_index)
-	var special_enemy_left = route.spawn_enemy("grandote",player.position.x-80.0,player.lane_index)
-	var special_enemy_other_lane = route.spawn_enemy("grandote",player.position.x,1-player.lane_index)
-	for special_enemy in [special_enemy_right,special_enemy_left,special_enemy_other_lane]:
-		special_enemy.set_physics_process(false)
 	await frames(2)
 	var health_before_special: int = player.health
 	player.shot_cooldown = 0.0
+	player.hit_time = 0.0
 	var wave_activations_before: int = player.tucumanazo_wave_visual.activation_count
 	check(player.start_tucumanazo() and player.special_active and player.special_phase==player.SpecialPhase.STARTUP,"Available stock activates Tucumanazo startup")
 	check(player.tucumanazo_counter.current_uses==4 and hud.special_status.text=="TUCUMANAZO x4" and "¡VAMO' URA!" in hud.notice.text,"A valid Tucumanazo consumes exactly one use and updates HUD")
 	check(player.visual.animation==player.character_definition.headbutt_animation and player.visual.animation==&"Headbutt","Tucumanazo reuses the existing Headbutt animation")
 	check(not player.start_tucumanazo() and player.tucumanazo_counter.current_uses==4,"Overlapping activation cannot consume a second use")
-	await frames(10)
+	# Final-only targets enter after the new Rush, retaining the original AoE assertions.
+	for super_frame in range(70):
+		if player.special_phase == player.SpecialPhase.FINISH:
+			break
+		await frames(1)
+	var special_enemy_right = route.spawn_enemy("grandote",player.position.x+80.0,player.lane_index)
+	var special_enemy_left = route.spawn_enemy("grandote",player.position.x-80.0,player.lane_index)
+	var special_enemy_other_lane = route.spawn_enemy("grandote",player.position.x,1-player.lane_index)
+	for special_enemy in [special_enemy_right,special_enemy_left,special_enemy_other_lane]:
+		special_enemy.set_physics_process(false)
+	await frames(14)
 	check(player.tucumanazo_wave_visual.activation_count==wave_activations_before+1 and player.tucumanazo_wave_visual.active,"The radial wave visual is generated once with the active phase")
-	check(special_enemy_right.health==5 and special_enemy_left.health==5,"Tucumanazo damages each valid nearby enemy once")
-	check(special_enemy_other_lane.health==10 and player.health==health_before_special,"Tucumanazo rejects another lane and its owning player")
+	check(special_enemy_right.health==1 and special_enemy_left.health==1,"Tucumanazo damages each valid nearby enemy once")
+	check(special_enemy_other_lane.health==1 and player.health==health_before_special,"Tucumanazo ignores legacy lane metadata while rejecting its owning player")
 	check(player.tucumanazo_counter.current_uses==4 and player.combo_component.current_combo==0,"Tucumanazo impacts do not refill stock or combo")
 	check(player._special_hit_stop_used and scene.shake_remaining>0.0,"Tucumanazo triggers hit-stop and screen shake on impact")
 	await create_timer(0.12,true,false,true).timeout
 	await frames(50)
 	check(not player.special_active and player.special_phase==player.SpecialPhase.READY and not player.tucumanazo_hitbox.active and is_equal_approx(Engine.time_scale,1.0),"Tucumanazo ends cleanly and restores normal time")
-	check(special_enemy_right.health==5 and special_enemy_left.health==5,"Tucumanazo does not duplicate impacts during one activation")
+	check(special_enemy_right.health==1 and special_enemy_left.health==1,"Tucumanazo does not duplicate impacts during one activation")
 	for special_enemy in [special_enemy_right,special_enemy_left,special_enemy_other_lane]:
 		special_enemy.queue_free()
 	await frames(2)
@@ -1115,7 +1232,7 @@ func run_tests() -> void:
 	await create_timer(0.15,true,false,true).timeout
 	check(player.special_active and player.special_phase==special_phase_before_pause and is_equal_approx(player.special_phase_remaining,special_time_before_pause) and player.tucumanazo_counter.current_uses==3,"Pause freezes Tucumanazo timing without duplicating consumption")
 	scene.resume_game()
-	await frames(45)
+	await frames(100)
 	check(not player.special_active and not player.tucumanazo_hitbox.active,"Tucumanazo resumes and finishes after pause")
 	player.shot_cooldown = 0.0
 	player.invulnerability = 0.0
@@ -1144,23 +1261,28 @@ func run_tests() -> void:
 	swept_stone.set_physics_process(false)
 	await frames(1)
 	swept_stone._physics_process(0.25)
-	check(sweep_enemy.health==7 and swept_stone.spent,"Fast Cascotazo sweep reaches Hurtbox without tunneling")
+	check(sweep_enemy.health==3 and swept_stone.spent,"Fast Cascotazo sweep reaches Hurtbox without tunneling")
 	var friendly_projectile = PROJECTILE_SCENE.instantiate()
 	friendly_projectile.kind = &"bottle"
 	friendly_projectile.team = &"enemy"
 	route.get_node("Projectiles").add_child(friendly_projectile)
 	friendly_projectile.set_physics_process(false)
-	check(not friendly_projectile._try_hurtbox(sweep_enemy.hurtbox) and sweep_enemy.health==7 and not friendly_projectile.spent,"Enemy projectile ignores an allied Hurtbox")
+	check(not friendly_projectile._try_hurtbox(sweep_enemy.hurtbox) and sweep_enemy.health==3 and not friendly_projectile.spent,"Enemy projectile ignores an allied Hurtbox")
 	friendly_projectile.queue_free()
 	sweep_enemy.queue_free()
 	await frames(2)
 	var other = route.spawn_enemy("agente",640,1)
 	await frames(2)
-	check(other.max_health==5,"Different enemy health values remain configured")
+	check(other.max_health==3,"Different rebalanced enemy health values remain configured")
 	var other_health: int = other.health
-	scene._spawn_projectile(Vector2(580,375),0,1,"stone","player")
-	await frames(18)
-	check(other.health==other_health and player.combo_component.current_combo==0 and player.tucumanazo_counter.current_uses==0,"Projectile on another lane adds no damage, combo or Tucumanazo stock")
+	var legacy_lane_stone = PROJECTILE_SCENE.instantiate()
+	legacy_lane_stone.kind = &"stone"
+	legacy_lane_stone.team = &"player"
+	legacy_lane_stone.lane_index = 1
+	route.get_node("Projectiles").add_child(legacy_lane_stone)
+	legacy_lane_stone.set_physics_process(false)
+	check(legacy_lane_stone._try_hurtbox(other.hurtbox) and other.health<other_health,"Legacy projectile lane metadata no longer prevents a physical single-plane hit")
+	legacy_lane_stone.queue_free()
 	for body in get_nodes_in_group("enemies"):
 		body.queue_free()
 	await frames(2)
@@ -1168,92 +1290,46 @@ func run_tests() -> void:
 	player.velocity = Vector2.ZERO
 	await frames(3)
 	player.begin_lane_change(1)
-	await frames(1)
-	check(lane_readability.feedback_remaining>0.0 and is_equal_approx(lane_readability.feedback_position.y,GameConfig.LANES[1]),"Lane change triggers a brief diegetic destination-plane feedback without changing Player state")
-	await frames(18)
-	check(player.lane_index==1 and absf(player.position.y-415.0)<1.0,"Lane transition reaches physical lower floor")
-	await frames(4)
-	check(is_zero_approx(lane_readability.feedback_remaining),"Lane-change visual feedback expires after its short presentation window")
-	check(player.is_on_floor(),"Lower lane supported without viewport clamp")
-	player.begin_lane_change(0)
-	await frames(18)
+	await frames(2)
+	check(player.lane_index==0 and not player.changing_lane and is_equal_approx(player.position.y,GameConfig.GROUND_Y),"Legacy lane-change API is inert and preserves the single combat plane")
+	check(player.is_on_floor(),"Single combat ground supports Player without viewport clamp")
 	Input.action_press("jump")
 	await frames(8)
 	Input.action_release("jump")
 	check(player.get_height()>30.0,"Jump raises physical player")
 	await frames(60)
-	check(player.is_on_floor() and player.get_height()<1.0,"Jump returns to lane")
-	player.position = Vector2(1900,200)
+	check(player.is_on_floor() and player.get_height()<1.0,"Jump returns to the main ground")
+	player.position = Vector2(2300,200)
 	player.velocity = Vector2.ZERO
 	await frames(50)
 	check(player.is_on_floor() and player.get_height()>30.0,"Player lands on generated vehicle roof")
 	var platform = get_nodes_in_group("platforms")[0]
 	check(platform.get_node("CollisionShape2D").one_way_collision,"Vehicle has one-way roof shape")
-	var route_platforms: Array[Node] = get_nodes_in_group("platforms")
+	var route_platforms: Array[Node] = get_nodes_in_group("stationary_vehicles")
 	var auto_platform: Node = route_platforms.filter(func(item: Node): return item.get("asset")=="auto1")[0]
-	var lemon_platform: Node = route_platforms.filter(func(item: Node): return item.get("asset")=="camion_limones")[0]
-	check(is_equal_approx(auto_platform.image_scale,0.84) and auto_platform.get_node("CollisionShape2D").shape.size.is_equal_approx(Vector2(124.32,8.0)) and auto_platform.get_node("CollisionShape2D").one_way_collision,"Auto1 platform uses the reduced scale and its recalculated one-way roof collider")
-	check(is_equal_approx(lemon_platform.image_scale,1.25) and lemon_platform.get_node("CollisionShape2D").shape.size.is_equal_approx(Vector2(190.0,8.0)) and lemon_platform.get_node("CollisionShape2D").one_way_collision,"Lemon truck platform uses the larger scale and its recalculated one-way roof collider")
+	check(route_platforms.size()==9 and route_platforms.all(func(item: Node): return item.collision_layer==GameConfig.PLAYER_PLATFORM_LAYER and not item.has_node("ImpactHitbox")),"Nine ordinary route vehicles use the dedicated non-damaging Player platform layer")
+	check(is_equal_approx(auto_platform.image_scale,0.777) and auto_platform.get_node("CollisionShape2D").shape.size.is_equal_approx(Vector2(113.1312,8.0)) and auto_platform.get_node("CollisionShape2D").one_way_collision,"Auto1 platform uses the reduced scale and its recalculated one-way roof collider")
 	var generic_platforms: Array[Node] = get_nodes_in_group("generic_platforms")
-	check(generic_platforms.size()==2 and generic_platforms.all(func(item: Node): return item is StaticBody2D and item.roof_collision.one_way_collision and item.roof_collision.shape.size.y==8.0),"Route adds exactly two generic StaticBody2D platforms with roof-only one-way collision")
-	var kiosk_platform: Node = generic_platforms.filter(func(item: Node): return item.name=="KioskPlatformPOC")[0]
-	var bus_stop_platform: Node = generic_platforms.filter(func(item: Node): return item.name=="BusStopPlatformPOC")[0]
-	check(kiosk_platform.platform_texture.resource_path=="res://assets/kiosco_coca.png" and is_equal_approx(kiosk_platform.image_scale,0.72) and kiosk_platform.roof_width==112.0 and kiosk_platform.roof_vertical_offset==-95.0,"Kiosk POC exposes its arbitrary texture, scale, useful width and roof offset")
-	check(bus_stop_platform.platform_texture.resource_path=="res://assets/parada_colectivo.png" and is_equal_approx(bus_stop_platform.image_scale,0.62) and bus_stop_platform.roof_width==94.0 and bus_stop_platform.roof_vertical_offset==-108.0,"Bus-stop POC exposes an independent texture and calibrated roof parameters")
-	for generic_platform in [kiosk_platform,bus_stop_platform]:
-		player.lane_index = generic_platform.lane_index
-		player.hurtbox.lane_index = generic_platform.lane_index
-		player.collision_mask = 1 << generic_platform.lane_index
-		player.position = Vector2(generic_platform.position.x,generic_platform.get_roof_world_y()-70.0)
-		player.velocity = Vector2.ZERO
-		await frames(55)
-		check(player.is_on_floor() and absf(player.position.y-generic_platform.get_roof_world_y())<2.0,"Player lands and remains on generic roof: "+generic_platform.name)
-	var pass_through_roof_y: float = kiosk_platform.get_roof_world_y()
-	player.position = Vector2(kiosk_platform.position.x,pass_through_roof_y+34.0)
-	player.velocity = Vector2(0.0,-500.0)
-	await frames(8)
-	check(player.position.y<pass_through_roof_y-4.0,"Player passes through a generic platform from below")
-	player.lane_index = 1
-	player.hurtbox.lane_index = 1
-	player.collision_mask = 1 << 1
-	player.position = Vector2(kiosk_platform.position.x,200.0)
-	player.velocity = Vector2.ZERO
-	await frames(60)
-	check(player.is_on_floor() and absf(player.position.y-GameConfig.LANES[1])<2.0,"Opposite lane falls to its own ground and is not blocked by the generic roof")
-	player.position = Vector2(kiosk_platform.position.x,GameConfig.LANES[1])
-	player.velocity = Vector2.ZERO
-	player.begin_lane_change(0)
-	await frames(18)
-	check(player.lane_index==0 and absf(player.position.y-GameConfig.LANES[0])<1.0,"Lane change beside a generic structure remains functional")
-	var roof_projectile = PROJECTILE_SCENE.instantiate()
-	roof_projectile.kind = &"orange"
-	roof_projectile.team = &"player"
-	roof_projectile.lane_index = kiosk_platform.lane_index
-	roof_projectile.travel_direction = Vector2.DOWN
-	roof_projectile.position = Vector2(kiosk_platform.position.x,kiosk_platform.get_roof_world_y()-60.0)
-	route.get_node("Projectiles").add_child(roof_projectile)
-	roof_projectile.set_physics_process(false)
-	roof_projectile._physics_process(0.2)
-	check(roof_projectile.spent,"Naranjazo impacts the visible roof surface in the matching lane")
-	var other_lane_projectile = PROJECTILE_SCENE.instantiate()
-	other_lane_projectile.kind = &"stone"
-	other_lane_projectile.team = &"player"
-	other_lane_projectile.lane_index = 1
-	other_lane_projectile.travel_direction = Vector2.DOWN
-	other_lane_projectile.position = Vector2(kiosk_platform.position.x,kiosk_platform.get_roof_world_y()-60.0)
-	route.get_node("Projectiles").add_child(other_lane_projectile)
-	other_lane_projectile.set_physics_process(false)
-	other_lane_projectile._physics_process(0.2)
-	check(not other_lane_projectile.spent,"Projectile from the opposite lane ignores the generic roof")
-	other_lane_projectile.queue_free()
-	for kind: String in ["orange","stone","bottle","coffee","bullet"]:
+	check(generic_platforms.size()==1 and generic_platforms[0].name=="RoadsideBusStop" and generic_platforms[0].position.y==350.0,"Only the roadside bus stop remains as a decorative one-way platform outside active asphalt")
+	var lifetime_probe_ids: Array[int] = []
+	for kind: String in ["orange","stone","bottle","coffee","hipster_coffee","bullet","agent_orb"]:
 		scene._spawn_projectile(Vector2(2200,250),0,1,kind,"player")
 		var projectile = route.get_node("Projectiles").get_child(-1)
+		lifetime_probe_ids.append(projectile.get_instance_id())
 		check(projectile is Area2D and projectile.has_node("CollisionShape2D"),"Projectile shape: "+kind)
-	await frames(240)
-	check(route.get_node("Projectiles").get_child_count()==0,"All expired projectiles removed after their preserved useful travel lifetime")
+	await frames(250)
+	check(lifetime_probe_ids.all(func(instance_id: int): return not is_instance_id_valid(instance_id)),"Every lifetime probe expires even while denser encounters keep firing")
 	player.position = Vector2(2500,370)
 	player.velocity = Vector2.ZERO
+	player.set_physics_process(false)
+	# Collection timing is an isolated fixture, not a survival encounter. Its former
+	# timing relied on live enemies missing this stationary Player during these frames.
+	var collection_enemy_states: Array[Dictionary] = []
+	for collection_enemy in route.get_node("Enemies").get_children():
+		collection_enemy_states.append({"actor":collection_enemy,"processing":collection_enemy.is_physics_processing()})
+		collection_enemy.set_physics_process(false)
+	var collection_receiving_before: bool = player.hurtbox.receiving_enabled
+	player.hurtbox.set_receiving_enabled(false)
 	player.stones = 0
 	player.oranges_unlocked = false
 	var orange_pickup = route.add_pickup("orange_tree","arbol_naranjas",2500,0,0.85,370.0,&"animated_orange_test")
@@ -1264,7 +1340,10 @@ func run_tests() -> void:
 	check(not player.oranges_unlocked and orange_pickup.interaction_active and not orange_pickup.used,"Orange remains reserved but unrewarded at interaction start")
 	var collection_start_x: float = player.position.x
 	var collection_start_lane: int = player.lane_index
-	var projectiles_before_collection: int = route.get_node("Projectiles").get_child_count()
+	# Observe only Player fire: active enemies may legitimately emit/expire shots.
+	var collection_shots: Array[String] = []
+	var collection_shot_probe := func(_origin,_lane,_direction,kind,_team): collection_shots.append(kind)
+	player.shot_requested.connect(collection_shot_probe)
 	Input.action_press("move_right")
 	Input.action_press("jump")
 	await frames(3)
@@ -1273,32 +1352,34 @@ func run_tests() -> void:
 	player.begin_lane_change(1)
 	player.throw_projectile("orange")
 	player.tucumanazo_counter.set_uses(1)
-	check(not player.start_tucumanazo() and player.tucumanazo_counter.current_uses==1 and is_equal_approx(player.position.x,collection_start_x) and player.lane_index==collection_start_lane and not player.changing_lane and route.get_node("Projectiles").get_child_count()==projectiles_before_collection,"Collection blocks movement, jump, Tucumanazo consumption and projectiles")
-	await frames(19)
+	check(not player.start_tucumanazo() and player.tucumanazo_counter.current_uses==1 and is_equal_approx(player.position.x,collection_start_x) and player.lane_index==collection_start_lane and not player.changing_lane and collection_shots.is_empty(),"Collection blocks movement, jump, Tucumanazo consumption and Player projectiles")
+	player.shot_requested.disconnect(collection_shot_probe)
+	player._update_collection(0.399)
 	check(not player.oranges_unlocked and not orange_pickup.used,"Orange is not granted before the explicit fifth-frame reward point")
 	var collection_time_before_pause: float = player.collection_remaining
 	scene.pause_game()
 	await create_timer(0.1,true,false,true).timeout
 	check(player.collection_active and is_equal_approx(player.collection_remaining,collection_time_before_pause) and not player.oranges_unlocked,"Pause freezes collection without granting or corrupting it")
 	scene.resume_game()
-	await frames(5)
+	player._update_collection(0.002)
 	check(player.oranges_unlocked and orange_pickup.used and orange_pickup.get_node("Visual").visible and orange_pickup.get_node("Visual").modulate!=Color.WHITE and orange_pickup.get_orange_halo_strength()<0.04,"Orange is granted once at 0.4 seconds and its tree keeps the existing collected treatment while fading its halo")
 	var collected_ids_after_orange: int = route.get_collected_pickup_ids().count(&"animated_orange_test")
 	orange_pickup._on_body_entered(player)
 	check(player.oranges_unlocked and route.get_collected_pickup_ids().count(&"animated_orange_test")==collected_ids_after_orange,"Persistent contact cannot grant the orange pickup twice")
-	await frames(7)
+	player._update_collection(0.2)
 	check(not player.collection_active and player.state==player.State.IDLE and player.controls_enabled and player.visual.animation==player.character_definition.idle_animation and is_equal_approx(player.visual.scale.x,player.character_visual_scale),"Player returns cleanly to Idle with controls and normal visual scale after orange collection")
 	var stone_pickup = route.add_pickup("stone_pile","montaña_cascote",2500,0,0.65,370.0,&"animated_stone_test")
 	stone_pickup._on_body_entered(player)
 	check(player.collection_active and player.visual.animation==player.character_definition.idle_animation and player.stones==0 and is_equal_approx(player.visual.scale.x,player.character_visual_scale),"Stone pile uses the normal-scale Idle presentation without immediate ammo")
-	await frames(23)
+	player._update_collection(0.399)
 	check(player.stones==0 and not stone_pickup.used,"Stone reward waits until the fifth-frame reward point")
-	await frames(2)
+	player._update_collection(0.002)
 	check(player.stones==20 and stone_pickup.used and not stone_pickup.get_node("Visual").visible,"Stone pile grants exactly 20 once and becomes dormant and invisible")
 	stone_pickup._on_body_entered(player)
 	check(player.stones==20,"Persistent contact cannot duplicate stone ammo")
-	await frames(7)
+	player._update_collection(0.2)
 	check(not player.collection_active and player.controls_enabled and is_equal_approx(player.visual.scale.x,player.character_visual_scale),"Player recovers controls and normal visual scale after stone collection")
+	player.set_physics_process(true)
 	var interrupted_pickup = route.add_pickup("stone_pile","montaña_cascote",2550,0,0.65,370.0,&"interrupted_stone_test")
 	interrupted_pickup._on_body_entered(player)
 	player.invulnerability = 0.0
@@ -1306,97 +1387,74 @@ func run_tests() -> void:
 	player.take_damage(1,"enemy")
 	check(not player.collection_active and not interrupted_pickup.used and player.stones==20,"Damage before the reward point cancels collection without losing or duplicating its reward")
 	interrupted_pickup.queue_free()
+	player.hurtbox.set_receiving_enabled(collection_receiving_before)
+	for collection_enemy_state in collection_enemy_states:
+		if is_instance_valid(collection_enemy_state.actor):
+			collection_enemy_state.actor.set_physics_process(collection_enemy_state.processing)
 	paused = true
 	check(not route.can_process(),"Physics world pauses")
 	check(scene.get_node("Interface/AssetGallery").can_process(),"Gallery stays interactive during pause")
 	paused = false
 	var gallery = scene.get_node("Interface/AssetGallery")
-	for index in range(100):
+	for index in range(gallery.images.size()):
 		gallery.show_image(index)
 	for index in range(5):
 		gallery.show_actor(index)
 	check(gallery.preview.texture!=null,"All gallery resources browse correctly")
 	check(route.current_location(0)=="Famaillá" and route.current_location(7000)=="Río Seco","Route begins in Famailla and ends in Rio Seco")
 	var route_achilatas: Array[Node] = route.get_node("Objects").get_children().filter(func(item: Node): return item.get("kind")=="achilata")
-	check(route_achilatas.size()==6 and route_achilatas.all(func(item: Node): return is_equal_approx(item.image_scale,0.18) and item.get_node("Visual").scale==Vector2(0.18,0.18)),"Achilata uses the reduced 0.18 runtime scale without changing its pickup count")
+	check(route_achilatas.is_empty(),"Achilata remains implemented but does not spawn while heat is suspended")
 	player.set_physics_process(false)
 	for rate: int in [30,60,120]:
 		player.position = Vector2(3400,370)
-		player.heat = 0.0
+		player.heat = 100.0
+		player.heat_damage_time = 1.99
+		var before_heat_health: int = player.health
 		for step in range(rate):
 			player._physics_process(1.0/float(rate))
-		check(absf(player.heat-2.1)<0.001,"Heat is time-based at "+str(rate)+" FPS")
-	player.heat = 39.0
+		check(player.heat==0.0 and player.health==before_heat_health,"Suspended heat stays zero without damage at %d FPS" % rate)
 	player._emit_hud_status()
-	check(not hud.heat_sun.visible and not hud.heat_shimmer.visible and not hud.heat_alert.visible,"Heat feedback remains hidden below 40")
-	player.heat = 40.0
-	player._emit_hud_status()
-	var heat_sun_scale_40: float = hud.heat_sun.scale.x
-	var heat_sun_alpha_40: float = hud.heat_sun.modulate.a
-	check(hud.heat_sun.visible and hud.heat_sun.material is ShaderMaterial and not hud.heat_shimmer.visible and not hud.heat_alert.visible,"A small background-masked sun appears at the 40 heat threshold")
-	player.heat = 60.0
-	player._emit_hud_status()
-	var heat_sun_scale_60: float = hud.heat_sun.scale.x
-	var heat_shimmer_alpha_60: float = hud.heat_shimmer.modulate.a
-	check(hud.heat_sun.visible and hud.heat_shimmer.visible and heat_sun_scale_60>heat_sun_scale_40 and hud.heat_sun.modulate.a>heat_sun_alpha_40,"Sun size and intensity progress and subtle shimmer appears at 60 heat")
-	player.heat = 75.0
-	player._emit_hud_status()
-	check(hud.heat_alert.visible and hud.heat_alert.text=="¡TE ESTÁS INSOLANDO!","Red heat warning appears at 75")
-	player.heat = 90.0
-	player._emit_hud_status()
-	check(hud.heat_sun.scale.x>heat_sun_scale_60 and hud.heat_shimmer.modulate.a>heat_shimmer_alpha_60 and hud.heat_alert.modulate.a>0.9,"Sun, warning and shimmer intensify at 90 heat")
-	player.heat = 74.0
-	player._emit_hud_status()
-	check(not hud.heat_alert.visible and hud.heat_sun.visible and hud.heat_shimmer.visible,"Heat warning disappears again below 75 without hiding lower-tier feedback")
-	player.heat = 90.0
-	player._emit_hud_status()
-	scene.pause_game()
-	check(hud.heat_sun.visible and hud.heat_alert.visible and not hud.heat_shimmer.visible,"Pause freezes stable heat indicators and hides moving shimmer")
-	scene.resume_game()
-	check(hud.heat_shimmer.visible,"Resume restores shimmer for the current heat value")
-	player.heat = 80.0
-	var health_before_achilata: int = player.health
+	check(not hud.heat_sun.visible and not hud.heat_alert.visible and not hud.heat_shimmer.visible and "SOL" not in hud.location.text,"Suspended heat has no HUD, alert or shimmer")
+	var achilata_score: int = player.score
+	var achilata_health: int = player.health
 	player.collect("achilata")
-	check(player.heat==30.0 and player.health==health_before_achilata and not hud.heat_sun.visible and not hud.heat_shimmer.visible and not hud.heat_alert.visible,"Achilata cools exactly 50 and immediately clears heat feedback without changing healing rules")
-	player.position = Vector2(3400,370)
-	player.controls_enabled = true
-	player.health = player.max_health
-	player.invulnerability = 0.0
-	player.heat = 100.0
-	player.heat_damage_time = 1.99
-	player._emit_hud_status()
-	var health_before_heat_damage: int = player.health
-	player._physics_process(0.02)
-	check(player.heat==100.0 and player.health==health_before_heat_damage-1,"Maximum heat preserves the existing one-damage interval behavior")
-	var respawn_heat_state: Dictionary = player.get_respawn_state()
-	respawn_heat_state["heat"] = 35.0
-	player.respawn_at(Vector2(3400,370),respawn_heat_state)
-	check(player.heat==35.0 and not hud.heat_sun.visible and not hud.heat_shimmer.visible and not hud.heat_alert.visible,"Respawn restores heat and leaves no stale visual feedback")
+	check(player.score==achilata_score+100 and player.heat==0.0 and player.health==achilata_health,"Achilata keeps 100 points without heat or healing effects")
+	var saved_heat: Dictionary = player.get_respawn_state()
+	saved_heat.heat = 90.0
+	player.respawn_at(Vector2(3400,370),saved_heat)
+	check(player.heat==0.0,"Legacy saved heat is inactive on respawn")
+
 	player.set_physics_process(true)
 
 	var boss_data: Dictionary = route.data.boss
 	var coffee_definition = load("res://data/projectiles/coffee.tres")
 	check(is_equal_approx(float(boss_data.trigger_x),7425.0) and is_equal_approx(float(boss_data.x),7600.0),"Palermitano final encounter uses the approved trigger and spawn positions")
-	check(coffee_definition.damage==1 and coffee_definition.speed==360.0 and coffee_definition.rotation_speed_degrees==0.0,"Boss coffee keeps one damage and stable non-spinning projectile presentation")
+	check(coffee_definition.damage==1 and coffee_definition.speed==300.0 and coffee_definition.rotation_speed_degrees==0.0,"Boss coffee keeps one damage and a readable stable non-spinning projectile presentation")
 	check(not scene.demo_closing and scene.current_state==GAME_SESSION.DemoState.GAMEPLAY and not scene.get_node("Interface/HUD/Results").visible,"Boss data inspection does not alter the active gameplay flow")
 	game_session.selected_character = &"san_martin"
 	game_session.set_checkpoint(&"temporary_test_checkpoint")
 	scene.restart_game()
-	await frames(4)
-	var restarted_scene = current_scene
+	var restarted_scene = await wait_for_reloaded_scene(scene,"Full restart")
+	if restarted_scene == null:
+		print(JSON.stringify({"checks":checks,"passed":false,"errors":failures}))
+		quit(1)
+		return
 	check(restarted_scene != scene and restarted_scene.current_state==GAME_SESSION.DemoState.CHARACTER_SELECT,"Restart returns to character selection")
 	check(game_session.selected_character==&"san_martin","Restart preserves selected character")
 	check(game_session.score==0 and game_session.coins==0 and game_session.active_checkpoint==&"" and game_session.respawn_position==Vector2(80,370),"Restart clears checkpoint progress and creates a new start baseline")
 	var restarted_select = restarted_scene.get_node("Interface/CharacterSelect")
 	check(restarted_scene.get_node("Route38/EncounterDirector").get_completed_encounter_ids().is_empty(),"Full restart creates a clean deterministic EncounterDirector state")
-	check(restarted_scene.get_node("Route38/Environment").find_children("*","Sprite2D",true,false).size()==19,"Full restart recreates exactly one current environmental composition without duplicated decoration")
+	check(restarted_scene.get_node("Route38/Environment").find_children("*","Sprite2D",true,false).size()==11,"Full restart recreates exactly one segmented environmental composition without duplicated decoration")
 	check(restarted_scene.get_node("Route38/TrafficDirector").get_active_vehicle_count()==0,"Full restart creates no stale traffic instances")
 	check(audio_manager.current_music_state==audio_manager.MUSIC_SILENT and audio_manager.music_player.stream==null and audio_manager.voices.all(func(voice: AudioStreamPlayer): return voice.stream==null),"Full restart leaves music and SFX playback clean")
 	check(restarted_select.get_selected_definition().character_id==&"san_martin" and restarted_select.confirm_selected(),"Restarted selection keeps the previous character as default")
 	check(restarted_scene.current_state==GAME_SESSION.DemoState.INTRO and restarted_scene.get_node("IntroFamailla").active,"Restarted selection starts a fresh intro")
 	restarted_scene.restart_game()
-	await frames(4)
-	var intro_restart_scene = current_scene
+	var intro_restart_scene = await wait_for_reloaded_scene(restarted_scene,"Restart during INTRO")
+	if intro_restart_scene == null:
+		print(JSON.stringify({"checks":checks,"passed":false,"errors":failures}))
+		quit(1)
+		return
 	check(intro_restart_scene != restarted_scene and intro_restart_scene.current_state==GAME_SESSION.DemoState.CHARACTER_SELECT,"Restart during INTRO returns to clean character selection")
 	check(not intro_restart_scene.get_node("IntroFamailla").active and not intro_restart_scene.get_node("Interface/DialogueBox").active,"Restart removes active cinematic and dialogue state")
 	var intro_restart_select = intro_restart_scene.get_node("Interface/CharacterSelect")
@@ -1430,14 +1488,17 @@ func run_tests() -> void:
 		reusable_grandote.set_physics_process(false)
 		reusable_grandote.take_damage(999,&"player")
 	await frames(3)
-	check(reusable_grandotes.size()==2 and elite_flow_encounters.is_encounter_completed(&"route_wave_06") and elite_flow_player.score==elite_flow_reward_start+600,"Reusable Grandotes grant only normal rewards and complete their wave")
+	check(reusable_grandotes.size()==6 and elite_flow_encounters.is_encounter_completed(&"route_wave_06") and elite_flow_player.score==elite_flow_reward_start+900,"Reusable final escalation grants only normal rewards and completes its wave")
 	check(closing_started[0]==0 and closing_finished[0]==0 and not elite_flow_scene.demo_closing and not elite_flow_route.demo_closing,"Grandote defeat never starts the old demo-closing contract")
 	check(elite_flow_scene.current_state==GAME_SESSION.DemoState.GAMEPLAY and not paused and not elite_flow_hud.get_node("Results").visible,"Grandote defeat leaves the session in GAMEPLAY without RESULT")
 	check(not elite_flow_dialogue.active and not elite_flow_hud.boss_bar.visible and not elite_flow_hud.boss_name.visible,"Grandote defeat starts no ending dialogue or boss HUD")
 	check(elite_flow_route.is_physics_processing()==false and elite_flow_traffic.enabled and elite_flow_player.controls_enabled and elite_flow_player.hurtbox.receiving_enabled,"Grandote completion leaves traffic and player systems enabled")
 	elite_flow_scene.restart_game()
-	await frames(4)
-	var elite_restarted_scene = current_scene
+	var elite_restarted_scene = await wait_for_reloaded_scene(elite_flow_scene,"Restart after elite wave")
+	if elite_restarted_scene == null:
+		print(JSON.stringify({"checks":checks,"passed":false,"errors":failures}))
+		quit(1)
+		return
 	check(elite_restarted_scene != elite_flow_scene and elite_restarted_scene.current_state==GAME_SESSION.DemoState.CHARACTER_SELECT,"Restart after an elite wave returns to clean character selection")
 	check(game_session.score==0 and game_session.coins==0 and game_session.active_checkpoint==&"" and game_session.checkpoint_completed_encounters.is_empty(),"Restart after an elite wave clears session and encounter progress")
 	check(elite_restarted_scene.get_node("Route38/EncounterDirector").get_completed_encounter_ids().is_empty() and elite_restarted_scene.get_node("Route38/Enemies").get_children().filter(func(enemy: Node): return enemy.is_in_group("miniboss")).is_empty(),"Restart leaves no completed encounter or miniboss actor")
@@ -1462,7 +1523,7 @@ func run_tests() -> void:
 	boss_flow_route._physics_process(0.0)
 	var palermitano = boss_flow_route.boss
 	check(is_instance_valid(palermitano) and palermitano is PalermitanoBoss and palermitano.position.x==7600.0 and palermitano.health==90,"Final zone spawns one specialized 90-health Palermitano at x=7600")
-	check(palermitano.coffee_telegraph==0.30 and palermitano.coffee_shot_interval==0.16 and palermitano.coffee_recovery==0.55 and palermitano.coffee_cooldown==1.80 and palermitano.summon_cooldown==5.0 and palermitano.chain_cooldown==1.35,"Palermitano pattern timings and cooldowns remain explicit and configurable")
+	check(palermitano.intro_duration==1.0 and palermitano.decision_delay==0.25 and palermitano.coffee_telegraph==0.55 and palermitano.coffee_shot_interval==0.28 and palermitano.coffee_recovery==0.80 and palermitano.coffee_cooldown==2.80 and palermitano.summon_cooldown==7.0 and palermitano.chain_cooldown==2.40,"Palermitano entrance, pattern timings and cooldowns remain explicit and configurable")
 	check(boss_flow_route.boss_active and boss_flow_hud.boss_bar.visible and boss_flow_hud.boss_name.text=="EL PALERMITANO" and not boss_flow_traffic.enabled,"Boss activation enables its arena, named HUD and traffic lock")
 	check(elite_restarted_scene.camera_follow_min_x==7400.0 and elite_restarted_scene.camera_follow_max_x==7550.0,"Final arena constrains camera progression only during the boss encounter")
 	palermitano.set_physics_process(false)
@@ -1479,10 +1540,14 @@ func run_tests() -> void:
 	check(palermitano.coffee_projectiles_emitted==3 and coffee_directions.size()==3 and boss_flow_route.get_node("Projectiles").get_child_count()==3,"Triple coffee emits exactly three separated projectiles once")
 	check(coffee_directions.all(func(direction: Vector2): return is_equal_approx(direction.length(),1.0)) and coffee_directions[0]!=coffee_directions[1] and coffee_directions[1]!=coffee_directions[2],"Triple coffee uses normalized vector trajectories with a small readable spread")
 	var coffee_projectile = boss_flow_route.get_node("Projectiles").get_child(0)
+	check(coffee_projectile.kind==&"coffee" and coffee_projectile.speed==300.0,"Palermitano live triple coffee retains an independent readable speed after Hipster resource separation")
 	var coffee_travel_direction: Vector2 = coffee_projectile.travel_direction
 	var coffee_visual_rotation: float = coffee_projectile.visual.rotation
 	coffee_projectile._physics_process(0.02)
 	check(coffee_projectile.travel_direction==coffee_travel_direction and coffee_projectile.visual.rotation==coffee_visual_rotation,"Coffee is non-homing and keeps one stable orientation during straight travel")
+	for boss_projectile in boss_flow_route.get_node("Projectiles").get_children():
+		boss_projectile.queue_free()
+	await frames(1)
 	palermitano.boss_state = palermitano.BossState.DECIDE
 	palermitano._summon_cooldown_remaining = 0.0
 	boss_flow_player.position = Vector2(7350.0,GameConfig.LANES[palermitano.lane_index])
@@ -1490,8 +1555,16 @@ func run_tests() -> void:
 	palermitano._process_telegraph(palermitano.summon_telegraph)
 	var summon_count_after_first: int = palermitano.get_live_summon_count()
 	palermitano._emit_summons_once()
-	check(summon_count_after_first==2 and palermitano.get_live_summon_count()==2 and palermitano.summon_requests_emitted==1 and palermitano._summon_cooldown_remaining==5.0,"Summon creates at most two normal Agentes, starts cooldown and cannot emit twice in one activation")
+	check(summon_count_after_first==1 and palermitano.get_live_summon_count()==1 and palermitano.summon_requests_emitted==1 and palermitano._summon_cooldown_remaining==7.0,"First summon introduces one normal Agente, starts cooldown and cannot emit twice in one activation")
 	palermitano.boss_state = palermitano.BossState.DECIDE
+	palermitano.current_pattern = palermitano.Pattern.NONE
+	palermitano.last_pattern = palermitano.Pattern.TRIPLE_COFFEE
+	palermitano._summon_cooldown_remaining = 0.0
+	check(palermitano.begin_pattern(palermitano.Pattern.SUMMON_AGENTS),"A later telegraphed summon may introduce the second Agent")
+	palermitano._process_telegraph(palermitano.summon_telegraph)
+	check(palermitano.get_live_summon_count()==2 and palermitano.summon_requests_emitted==2,"Second summon reaches but never exceeds the two-Agent cap")
+	palermitano.boss_state = palermitano.BossState.DECIDE
+	palermitano.current_pattern = palermitano.Pattern.NONE
 	palermitano._summon_cooldown_remaining = 0.0
 	check(not palermitano.begin_pattern(palermitano.Pattern.SUMMON_AGENTS),"Palermitano cannot summon while two summoned Agentes remain alive")
 	var boss_health_before_respawn: int = palermitano.health
@@ -1512,6 +1585,9 @@ func run_tests() -> void:
 	check(boss_flow_route.boss==palermitano and palermitano.health==boss_health_before_respawn and boss_flow_route.boss_active and boss_flow_hud.boss_bar.visible,"Boss local respawn preserves the same Palermitano instance, HP, arena and HUD")
 	check(palermitano.get_live_summon_count()==boss_summons_before_respawn.size(),"Boss local respawn preserves the summon count without duplication (%d -> %d)" % [boss_summons_before_respawn.size(),palermitano.get_live_summon_count()])
 	check(boss_summons_before_respawn.all(func(summon: Node): return is_instance_valid(summon) and summon.is_inside_tree()),"Boss local respawn preserves every existing summon instance")
+	for pending_boss_projectile in boss_flow_route.get_node("Projectiles").get_children():
+		pending_boss_projectile.queue_free()
+	await frames(1)
 	palermitano.boss_state = palermitano.BossState.DECIDE
 	palermitano._chain_cooldown_remaining = 0.0
 	boss_flow_player.position = Vector2(palermitano.position.x-100.0,GameConfig.LANES[palermitano.lane_index])
@@ -1541,16 +1617,28 @@ func run_tests() -> void:
 	await frames(2)
 	check(elite_restarted_scene.current_state==GAME_SESSION.DemoState.RESULT and boss_closing_finished[0]==1 and boss_flow_hud.get_node("Results").visible,"Palermitano ending reaches RESULT exactly once")
 	elite_restarted_scene.restart_game()
-	await frames(4)
-	var boss_restarted_scene = current_scene
+	var boss_restarted_scene = await wait_for_reloaded_scene(elite_restarted_scene,"Restart after Palermitano")
+	if boss_restarted_scene == null:
+		print(JSON.stringify({"checks":checks,"passed":false,"errors":failures}))
+		quit(1)
+		return
 	check(boss_restarted_scene.current_state==GAME_SESSION.DemoState.CHARACTER_SELECT and boss_restarted_scene.get_node("Route38/Enemies").get_child_count()==0 and boss_restarted_scene.get_node("Route38/Projectiles").get_child_count()==0,"Restart after Palermitano leaves no boss, summon or projectile nodes")
 	boss_restarted_scene.queue_free()
 	await frames(2)
 	var special_death_player = load("res://scenes/actors/player.tscn").instantiate()
+	# Super is ground-only: the isolated death probe needs a real floor.
+	var special_probe_floor := StaticBody2D.new()
+	special_probe_floor.position = Vector2(80,376)
+	special_probe_floor.collision_layer = GameConfig.WORLD_LAYER
+	var special_floor_shape := CollisionShape2D.new()
+	special_floor_shape.shape = RectangleShape2D.new()
+	special_floor_shape.shape.size = Vector2(400,12)
+	special_probe_floor.add_child(special_floor_shape)
+	root.add_child(special_probe_floor)
 	root.add_child(special_death_player)
-	await frames(2)
 	special_death_player.controls_enabled = true
 	special_death_player.position = Vector2(80,370)
+	await frames(3)
 	special_death_player.health = 1
 	special_death_player.lives = 1
 	special_death_player.shot_cooldown = 0.0
@@ -1558,6 +1646,7 @@ func run_tests() -> void:
 	special_death_player.take_damage(1,"enemy")
 	check(special_death_player.state==special_death_player.State.DEATH and not special_death_player.special_active and not special_death_player.tucumanazo_hitbox.active and special_death_player.tucumanazo_counter.current_uses==4,"Death cancels Tucumanazo without duplicating or refunding its consumption")
 	special_death_player.queue_free()
+	special_probe_floor.queue_free()
 	await frames(2)
 	var collection_death_player = load("res://scenes/actors/player.tscn").instantiate()
 	root.add_child(collection_death_player)
@@ -1585,6 +1674,7 @@ func run_tests() -> void:
 	death_scene.get_node("Interface/CharacterSelect").confirm_selected()
 	death_scene.get_node("IntroFamailla").skip()
 	var dying_player = death_scene.get_node("Route38/Player")
+	await frames(3)
 	dying_player.combo_component.register_hit(&"death_reset_test")
 	dying_player.health = 1
 	dying_player.lives = 1
@@ -1601,6 +1691,39 @@ func run_tests() -> void:
 	await create_timer(0.3).timeout
 	death_scene.queue_free()
 	await frames(3)
+	var rebalance_scene = load("res://scenes/main.tscn").instantiate()
+	root.add_child(rebalance_scene)
+	current_scene = rebalance_scene
+	await frames(3)
+	rebalance_scene.get_node("Interface/CharacterSelect").confirm_selected()
+	rebalance_scene.get_node("IntroFamailla").skip()
+	var rebalance_results: Array = await preload("res://tests/rebalance_checks.gd").run(self,rebalance_scene)
+	for rebalance_result in rebalance_results:
+		check(rebalance_result.ok,rebalance_result.message)
+	rebalance_scene.queue_free()
+	await frames(3)
+	for bus_death_phase in ["","warning","entry","crossing","final_life","restart"]:
+		var bus_scene = load("res://scenes/main.tscn").instantiate()
+		root.add_child(bus_scene)
+		current_scene = bus_scene
+		await frames(3)
+		bus_scene.get_node("Interface/CharacterSelect").confirm_selected()
+		bus_scene.get_node("IntroFamailla").skip()
+		var bus_prerequisites: Array[StringName] = [&"route_wave_01",&"route_wave_02"]
+		if bus_death_phase == "":
+			for pacing_result in await preload("res://tests/arcade_pacing_checks.gd").run(self,bus_scene):
+				check(pacing_result.ok,pacing_result.message)
+		bus_scene.get_node("Route38/EncounterDirector").restore_completed_encounters(bus_prerequisites)
+		var bus_results: Array = await preload("res://tests/expresbus_checks.gd").run(self,bus_scene,bus_death_phase)
+		for bus_result in bus_results:
+			check(bus_result.ok,bus_result.message+" ["+bus_death_phase+"]")
+		if is_instance_valid(bus_scene):
+			bus_scene.queue_free()
+		else:
+			current_scene.queue_free()
+		await frames(3)
+	root.get_node("AudioManager").stop_all()
+	await create_timer(0.3).timeout
 	var result: Dictionary = {"passed":failures.is_empty(),"checks":checks,"errors":failures,"engine":Engine.get_version_info().string}
 	var output := FileAccess.open("res://validation/godot_test_results.json",FileAccess.WRITE)
 	output.store_string(JSON.stringify(result,"  ")+"\n")

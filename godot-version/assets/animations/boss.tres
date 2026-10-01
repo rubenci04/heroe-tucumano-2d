@@ -1,45 +1,59 @@
-[gd_resource type="SpriteFrames" load_steps=12 format=3]
+[gd_resource type="SpriteFrames" load_steps=37 format=3]
 
-[ext_resource type="Texture2D" path="res://assets/final_boss_run1.png" id="1"]
-[ext_resource type="Texture2D" path="res://assets/final_boss_run2.png" id="2"]
-[ext_resource type="Texture2D" path="res://assets/final_boss_run3.png" id="3"]
-[ext_resource type="Texture2D" path="res://assets/final_boss_salto1.png" id="4"]
-[ext_resource type="Texture2D" path="res://assets/final_boss_salto2.png" id="5"]
-[ext_resource type="Texture2D" path="res://assets/final_boss_punch1.png" id="6"]
-[ext_resource type="Texture2D" path="res://assets/final_boss_punch2.png" id="7"]
-[ext_resource type="Texture2D" path="res://assets/final_boss_joke1.png" id="8"]
-[ext_resource type="Texture2D" path="res://assets/final_boss_joke2.png" id="9"]
-[ext_resource type="Texture2D" path="res://assets/final_boss_cofee1.png" id="10"]
-[ext_resource type="Texture2D" path="res://assets/final_boss_cofee2.png" id="11"]
+[ext_resource type="Texture2D" path="res://assets/final_boss_idle.png" id="i"]
+[ext_resource type="Texture2D" path="res://assets/final_boss_run1.png" id="r1"]
+[ext_resource type="Texture2D" path="res://assets/final_boss_run2.png" id="r2"]
+[ext_resource type="Texture2D" path="res://assets/final_boss_run3.png" id="r3"]
+[ext_resource type="Texture2D" path="res://assets/final_boss_run4.png" id="r4"]
+[ext_resource type="Texture2D" path="res://assets/final_boss_run5.png" id="r5"]
+[ext_resource type="Texture2D" path="res://assets/final_boss_run6.png" id="r6"]
+[ext_resource type="Texture2D" path="res://assets/final_boss_run7.png" id="r7"]
+[ext_resource type="Texture2D" path="res://assets/final_punch1.png" id="p1"]
+[ext_resource type="Texture2D" path="res://assets/final_punch2.png" id="p2"]
+[ext_resource type="Texture2D" path="res://assets/final_punch3.png" id="p3"]
+[ext_resource type="Texture2D" path="res://assets/final_punch4.png" id="p4"]
+[ext_resource type="Texture2D" path="res://assets/final_punch5.png" id="p5"]
+[ext_resource type="Texture2D" path="res://assets/final_punch6.png" id="p6"]
+[ext_resource type="Texture2D" path="res://assets/final_punch7.png" id="p7"]
+[ext_resource type="Texture2D" path="res://assets/final_punch8.png" id="p8"]
+[ext_resource type="Texture2D" path="res://assets/final_punch9.png" id="p9"]
+[ext_resource type="Texture2D" path="res://assets/final_punch10.png" id="p10"]
+[ext_resource type="Texture2D" path="res://assets/final_boss_cofee1.png" id="c1"]
+[ext_resource type="Texture2D" path="res://assets/final_boss_cofee2.png" id="c2"]
+[ext_resource type="Texture2D" path="res://assets/final_boss_cofee3.png" id="c3"]
+[ext_resource type="Texture2D" path="res://assets/final_boss_cofee4.png" id="c4"]
+[ext_resource type="Texture2D" path="res://assets/final_boss_cofee5.png" id="c5"]
+[ext_resource type="Texture2D" path="res://assets/final_boss_cofee6.png" id="c6"]
+[ext_resource type="Texture2D" path="res://assets/final_boss_joke1.png" id="j1"]
+[ext_resource type="Texture2D" path="res://assets/final_boss_joke2.png" id="j2"]
+[ext_resource type="Texture2D" path="res://assets/final_boss_joke3.png" id="j3"]
+[ext_resource type="Texture2D" path="res://assets/final_boss_joke4.png" id="j4"]
+[ext_resource type="Texture2D" path="res://assets/final_boss_joke5.png" id="j5"]
+[ext_resource type="Texture2D" path="res://assets/final_boss_joke6.png" id="j6"]
+[ext_resource type="Texture2D" path="res://assets/final_boss_joke7.png" id="j7"]
+[ext_resource type="Texture2D" path="res://assets/final_boss_joke9.png" id="j9"]
+[ext_resource type="Texture2D" path="res://assets/final_orden_ataque1.png" id="o1"]
+[ext_resource type="Texture2D" path="res://assets/final_orden_ataque2.png" id="o2"]
+[ext_resource type="Texture2D" path="res://assets/final_orden_ataque3.png" id="o3"]
+[ext_resource type="Texture2D" path="res://assets/final_orden_ataque4.png" id="o4"]
 
 [resource]
 animations = [{
-"frames": [{"duration": 1.0, "texture": ExtResource("1")}, {"duration": 1.0, "texture": ExtResource("2")}, {"duration": 1.0, "texture": ExtResource("3")}],
-"loop": true,
-"name": &"boss_run",
-"speed": 10.0
-},
-{
-"frames": [{"duration": 1.0, "texture": ExtResource("4")}, {"duration": 1.0, "texture": ExtResource("5")}],
-"loop": false,
-"name": &"boss_salto",
-"speed": 6.0
-},
-{
-"frames": [{"duration": 1.0, "texture": ExtResource("6")}, {"duration": 1.0, "texture": ExtResource("7")}],
-"loop": false,
-"name": &"boss_punch",
-"speed": 8.0
-},
-{
-"frames": [{"duration": 1.0, "texture": ExtResource("8")}, {"duration": 1.0, "texture": ExtResource("9")}],
-"loop": true,
-"name": &"boss_joke",
-"speed": 4.0
-},
-{
-"frames": [{"duration": 1.0, "texture": ExtResource("10")}, {"duration": 1.0, "texture": ExtResource("11")}],
-"loop": false,
-"name": &"boss_cofee",
-"speed": 9.0
+"frames": [{"duration": 1.0, "texture": ExtResource("i")}],
+"loop": true, "name": &"boss_idle", "speed": 1.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("r1")}, {"duration": 1.0, "texture": ExtResource("r2")}, {"duration": 1.0, "texture": ExtResource("r3")}, {"duration": 1.0, "texture": ExtResource("r4")}, {"duration": 1.0, "texture": ExtResource("r5")}, {"duration": 1.0, "texture": ExtResource("r6")}, {"duration": 1.0, "texture": ExtResource("r7")}],
+"loop": true, "name": &"boss_run", "speed": 12.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("p1")}, {"duration": 1.0, "texture": ExtResource("p2")}, {"duration": 1.0, "texture": ExtResource("p3")}, {"duration": 1.0, "texture": ExtResource("p4")}, {"duration": 1.0, "texture": ExtResource("p5")}, {"duration": 1.0, "texture": ExtResource("p6")}, {"duration": 1.0, "texture": ExtResource("p7")}, {"duration": 1.0, "texture": ExtResource("p8")}, {"duration": 1.0, "texture": ExtResource("p9")}, {"duration": 1.0, "texture": ExtResource("p10")}],
+"loop": false, "name": &"boss_punch", "speed": 15.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("c1")}, {"duration": 1.0, "texture": ExtResource("c2")}, {"duration": 1.0, "texture": ExtResource("c3")}, {"duration": 1.0, "texture": ExtResource("c4")}, {"duration": 1.0, "texture": ExtResource("c5")}, {"duration": 1.0, "texture": ExtResource("c6")}],
+"loop": false, "name": &"boss_cofee", "speed": 12.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("j1")}, {"duration": 1.0, "texture": ExtResource("j2")}, {"duration": 1.0, "texture": ExtResource("j3")}, {"duration": 1.0, "texture": ExtResource("j4")}, {"duration": 1.0, "texture": ExtResource("j5")}, {"duration": 1.0, "texture": ExtResource("j6")}, {"duration": 1.0, "texture": ExtResource("j7")}, {"duration": 1.0, "texture": ExtResource("j9")}],
+"loop": true, "name": &"boss_joke", "speed": 10.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("o1")}, {"duration": 1.0, "texture": ExtResource("o2")}, {"duration": 1.0, "texture": ExtResource("o3")}, {"duration": 1.0, "texture": ExtResource("o4")}],
+"loop": false, "name": &"boss_order", "speed": 8.0
 }]

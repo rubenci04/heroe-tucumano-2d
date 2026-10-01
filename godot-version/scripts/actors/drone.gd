@@ -16,6 +16,7 @@ enum AIState { ENTRY, IDLE, AIM, FIRE, COOLDOWN, DEAD }
 @export var bob_amplitude: float = 5.0
 @export var bob_speed: float = 2.2
 @export_range(0.0,5.0,0.01) var aim_tracking_duration: float = 0.70
+@export_range(0.0,3.0,0.05) var entry_read_delay: float = 1.0
 
 var team: StringName = &"enemy"
 var archetype: String = "drone"
@@ -36,6 +37,10 @@ var shots_emitted: int = 0
 var _shot_emitted_this_attack: bool = false
 var _elapsed: float = 0.0
 var _defeat_emitted: bool = false
+var formation_index: int = 0
+var formation_size: int = 1
+var formation_phase: float = 0.0
+var wave_formation: bool = false
 
 @onready var health_component: HEALTH_COMPONENT = $HealthComponent
 @onready var hurtbox: HURTBOX = $Hurtbox
@@ -80,15 +85,19 @@ func _ready() -> void:
 	aim_reticle.clear()
 	add_to_group("enemies")
 	add_to_group("aerial_enemy")
-	z_index = int(GameConfig.LANES[lane_index])+35
+	lane_index = 0
+	hurtbox.lane_index = 0
+	z_index = 35
 
 
 func _physics_process(delta: float) -> void:
 	if not active:
 		return
 	_elapsed += delta
-	position.y = flight_anchor_y+sin(_elapsed*bob_speed)*bob_amplitude
+	var vertical_amplitude := 18.0 if wave_formation else bob_amplitude
+	position.y = flight_anchor_y+sin(_elapsed*bob_speed+formation_phase)*vertical_amplitude
 	if not is_instance_valid(target) or target.state == target.State.DEATH:
+		_release_attack_token()
 		aim_reticle.clear()
 		ai_state = AIState.IDLE
 		visual.play(definition.run_animation)
@@ -114,12 +123,13 @@ func _process_entry(delta: float) -> void:
 	if absf(position.x-destination_x) <= 1.0:
 		patrol_center_x = position.x
 		ai_state = AIState.IDLE
-		cooldown_remaining = 0.35
+		cooldown_remaining = entry_read_delay
 
 
 func _process_idle(delta: float) -> void:
 	cooldown_remaining = maxf(0.0,cooldown_remaining-delta)
-	var patrol_target := patrol_center_x+sin(_elapsed*0.7)*45.0
+	var patrol_amplitude := 95.0 if wave_formation else 45.0
+	var patrol_target := patrol_center_x+sin(_elapsed*0.7+formation_phase)*patrol_amplitude
 	position.x = move_toward(position.x,patrol_target,definition.move_speed*0.35*delta)
 	visual.flip_h = target.position.x > position.x
 	if cooldown_remaining <= 0.0 and global_position.distance_to(target.global_position) <= definition.detection_range:
@@ -128,6 +138,8 @@ func _process_idle(delta: float) -> void:
 
 func _begin_aim() -> bool:
 	if not active or not is_instance_valid(target) or ai_state == AIState.DEAD:
+		return false
+	if has_meta("attack_coordinator") and not get_meta("attack_coordinator").request_attack(self):
 		return false
 	ai_state = AIState.AIM
 	state_remaining = definition.telegraph_duration
@@ -170,6 +182,7 @@ func _process_fire(delta: float) -> void:
 func _process_cooldown(delta: float) -> void:
 	cooldown_remaining = maxf(0.0,cooldown_remaining-delta)
 	if cooldown_remaining <= 0.0:
+		_release_attack_token()
 		ai_state = AIState.IDLE
 
 
@@ -197,6 +210,7 @@ func has_dangerous_aim_near(point: Vector2,radius: float) -> bool:
 func cancel_dangerous_aim_near(point: Vector2,radius: float) -> bool:
 	if not has_dangerous_aim_near(point,radius):
 		return false
+	_release_attack_token()
 	aim_reticle.clear()
 	aim_target_locked = false
 	_shot_emitted_this_attack = false
@@ -221,6 +235,7 @@ func _on_health_damaged(_amount: int,_current_health: int,_source) -> void:
 
 
 func _on_health_depleted() -> void:
+	_release_attack_token()
 	if _defeat_emitted:
 		return
 	_defeat_emitted = true
@@ -236,4 +251,9 @@ func _on_health_depleted() -> void:
 
 
 func _exit_tree() -> void:
+	_release_attack_token()
 	aim_reticle.clear()
+
+func _release_attack_token() -> void:
+	if has_meta("attack_coordinator") and is_instance_valid(get_meta("attack_coordinator")):
+		get_meta("attack_coordinator").release_attack(self)

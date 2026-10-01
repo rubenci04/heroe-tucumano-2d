@@ -21,10 +21,12 @@ const GRANDOTE_GROUND_WAVE = preload("res://scenes/actors/grandote_ground_wave.t
 const PICKUP = preload("res://scenes/actors/pickup.tscn")
 const PLATFORM = preload("res://scenes/actors/platform.tscn")
 const GENERIC_PLATFORM = preload("res://scenes/actors/generic_platform.tscn")
-const BUS_STOP_TEXTURE = preload("res://assets/parada_colectivo.png")
-const KIOSK_TEXTURE = preload("res://assets/kiosco_coca.png")
 const ENCOUNTER_DIRECTOR = preload("res://scripts/level/encounter_director.gd")
 const TRAFFIC_DIRECTOR = preload("res://scripts/level/traffic_director.gd")
+const CHECKPOINT_SCENE = preload("res://scenes/level/checkpoint.tscn")
+var checkpoint_records: Array = []
+var last_safe_position := Vector2(80.0,370.0)
+const SAFE_POSITION_MAX_AGE_DISTANCE := 96.0
 var data: Dictionary
 var collected_pickup_ids: Dictionary = {}
 var boss: CharacterBody2D
@@ -44,7 +46,19 @@ const LOCAL_RESPAWN_ENEMY_CLEARANCE := 110.0
 const LOCAL_RESPAWN_VEHICLE_CLEARANCE := 90.0
 const LOCAL_RESPAWN_PROJECTILE_CLEARANCE := 150.0
 const LOCAL_RESPAWN_CLEANUP_RADIUS := 180.0
+const STATIONARY_VEHICLES: Array[Dictionary] = [
+	{"asset":"auto1","x":700.0,"scale":0.777},
+	{"asset":"camioneta1","x":1500.0,"scale":0.633},
+	{"asset":"auto3","x":2300.0,"scale":0.827},
+	{"asset":"auto3","x":3100.0,"scale":0.827},
+	{"asset":"camioneta2","x":3900.0,"scale":0.574},
+	{"asset":"camion_limones","x":4650.0,"scale":0.612},
+	{"asset":"auto2","x":5450.0,"scale":0.729},
+	{"asset":"camioneta3","x":6200.0,"scale":0.550},
+	{"asset":"camioneta4","x":6900.0,"scale":0.609}
+]
 var _last_location: String = ""
+var _drone_wave_spawn_index := 0
 @onready var player: CharacterBody2D = $Player
 @onready var encounter_director: ENCOUNTER_DIRECTOR = $EncounterDirector
 @onready var traffic_director: TRAFFIC_DIRECTOR = $TrafficDirector
@@ -57,54 +71,81 @@ func _ready() -> void:
 		push_error("Route38 no pudo configurar el tráfico")
 	traffic_director.vehicle_warning.connect(_on_vehicle_warning)
 	$Checkpoint.activated.connect(checkpoint_activated.emit)
-	for lane in range(2):
-		var ground := StaticBody2D.new()
-		ground.name = "GroundLane"+str(lane)
-		ground.position = Vector2(4000,GameConfig.LANES[lane]+6.0)
-		ground.collision_layer = 1 << lane
-		ground.collision_mask = 0
-		$Terrain.add_child(ground)
-		CollisionFactory.add_floor(ground,Vector2(8400,12))
-	for item: Array in [["auto1",1900,0.84],["camion_limones",3100,1.25],["auto2",5000,1.10],["auto3",6700,0.95]]:
-		var platform = PLATFORM.instantiate()
-		platform.asset = item[0]
-		platform.image_scale = item[2]
-		platform.lane_index = 0
-		platform.position = Vector2(item[1],359)
-		$Terrain.add_child(platform)
-	$Environment/RouteProps/BusStop01.visible = false
-	add_generic_platform("KioskPlatformPOC",KIOSK_TEXTURE,1650.0,0,0.72,112.0,-95.0)
-	add_generic_platform("BusStopPlatformPOC",BUS_STOP_TEXTURE,2100.0,0,0.62,94.0,-108.0)
+	_configure_checkpoints()
+	var ground := StaticBody2D.new()
+	ground.name = "MainGround"
+	ground.position = Vector2(4000,GameConfig.GROUND_Y+6.0)
+	ground.collision_layer = GameConfig.WORLD_LAYER
+	ground.collision_mask = 0
+	$Terrain.add_child(ground)
+	CollisionFactory.add_floor(ground,Vector2(8400,12))
+	var stationary_by_x: Dictionary = {}
+	for item: Dictionary in STATIONARY_VEHICLES:
+		stationary_by_x[int(item.x)] = _add_stationary_vehicle(item.asset,item.x,item.scale)
+	var bus_stop := add_generic_platform("RoadsideBusStop",load("res://assets/parada_colectivo2.png"),2700.0,0,0.50,110.0,-78.0,true)
+	bus_stop.position.y = 350.0
+	bus_stop.z_index = 9
 	add_pickup("orange_tree","arbol_naranjas",520,0,0.85,345)
 	for x in [1250,4450]:
-		add_pickup("stone_pile","montaña_cascote",x,0,0.65)
-	for x in [2800,6200]:
-		add_pickup("sanguche","sanguche",x,1,0.25)
+		add_pickup("stone_pile","montaña_cascote",x,0,0.32)
+	add_pickup("sanguche","sanguche",2750,0,0.25,_platform_roof_y(bus_stop)-8.0,&"sanguche_bus_stop")
+	for x in [2800]:
+		add_pickup("sanguche","sanguche",x,0,0.25)
+	add_pickup("sanguche","sanguche",6200,0,0.25,_platform_roof_y(stationary_by_x[6200])-8.0,&"sanguche_6200_0")
 	var index: int = 0
-	for x in [240,750,1350,2000,2700,3400,4100,4900,5600,6300,7000,7500]:
-		add_pickup("empanada","empanada",x,index%2,0.14)
+	for x in [240,2700,3400,7500]:
+		add_pickup("empanada","empanada",x,0,0.14)
 		index += 1
-	index = 0
-	for x in [3200,3600,4300,5400,6500,7200]:
-		add_pickup("achilata","achilata",x,index%2,0.18)
-		index += 1
+	for roof_reward: Dictionary in [
+		{"x":700,"legacy_x":750},{"x":1500,"legacy_x":1350},{"x":2300,"legacy_x":2000},
+		{"x":3900,"legacy_x":4100},{"x":4650,"legacy_x":4900},{"x":5450,"legacy_x":5600},
+		{"x":6900,"legacy_x":7000}
+	]:
+		var platform: StaticBody2D = stationary_by_x[int(roof_reward.x)]
+		add_pickup("empanada","empanada",float(roof_reward.x),0,0.14,_platform_roof_y(platform)-8.0,StringName("empanada_%d_0" % int(roof_reward.legacy_x)))
+	for pickup in $Objects.get_children():
+		var rewards := {6200:&"route_drone_02"}
+		if rewards.has(int(pickup.position.x)):
+			pickup.set_meta("reward_after",rewards[int(pickup.position.x)])
+			pickup.visible = false
+			pickup.set_deferred("monitoring",false)
 
 func _physics_process(delta: float) -> void:
 	if demo_closing or not is_instance_valid(player) or not player.controls_enabled:
 		return
-	encounter_director.update_activation(player.position.x)
+	$ExpresbusSetPiece.advance(delta,self)
+	$TesaSetPiece.advance(delta,self)
+	var camera := get_viewport().get_camera_2d()
+	encounter_director.update_safety(player.position.x,camera.get_screen_center_position().x if camera else player.position.x,get_viewport_rect().size.x)
+	if not _is_bus_set_piece_running():
+		encounter_director.advance_spawns(delta,player.position.x)
+		encounter_director.update_activation(player.position.x)
 	traffic_director.update_traffic(delta,player.position.x)
+	_refresh_protected_rewards()
 	if miniboss_active:
 		player.position.x = clampf(player.position.x,MINIBOSS_ARENA_BOUNDS.x,MINIBOSS_ARENA_BOUNDS.y)
 	if boss_active:
 		player.position.x = clampf(player.position.x,BOSS_ARENA_BOUNDS.x,BOSS_ARENA_BOUNDS.y)
+	update_last_safe_position()
+	_update_checkpoints()
 	var next_location := current_location(player.position.x)
 	if next_location != _last_location:
 		_last_location = next_location
 		location_changed.emit(_last_location)
 	if not boss_started and player.position.x >= float(data.boss.trigger_x) \
-			and encounter_director.is_encounter_completed(&"route_wave_06"):
+			and encounter_director.is_encounter_completed(&"route_wave_06") and not encounter_director.is_resting():
 		spawn_palermitano(float(data.boss.x),1)
+
+func _refresh_protected_rewards() -> void:
+	for pickup in $Objects.get_children():
+		if not pickup.has_meta("reward_after"):
+			continue
+		var safe: bool = not pickup.used and encounter_director.is_encounter_completed(pickup.get_meta("reward_after"))
+		for enemy in $Enemies.get_children():
+			if enemy.get("active")==true and absf(enemy.position.x-pickup.position.x)<500.0:
+				safe = false
+		pickup.visible = safe
+		pickup.set_deferred("monitoring",safe)
 
 func current_location(x: float) -> String:
 	var result: String = data.locations[0].name
@@ -127,18 +168,33 @@ func add_generic_platform(
 	var platform = GENERIC_PLATFORM.instantiate()
 	platform.name = platform_name
 	platform.configure(texture,visual_scale,lane,useful_roof_width,roof_offset,roof_enabled)
-	platform.position = Vector2(x,GameConfig.LANES[lane])
+	platform.position = Vector2(x,GameConfig.GROUND_Y)
 	$Terrain.add_child(platform)
 	return platform
+
+func _add_stationary_vehicle(asset_id: String,x: float,visual_scale: float) -> StaticBody2D:
+	var platform = PLATFORM.instantiate()
+	platform.name = "Stationary_%s_%d" % [asset_id,int(x)]
+	platform.asset = asset_id
+	platform.image_scale = visual_scale
+	platform.lane_index = 0
+	platform.position = Vector2(x,GameConfig.GROUND_Y)
+	$Terrain.add_child(platform)
+	return platform
+
+func _platform_roof_y(platform: StaticBody2D) -> float:
+	var collision: CollisionShape2D = platform.get_node("CollisionShape2D") if platform.has_node("CollisionShape2D") else platform.get_node("RoofCollision")
+	var shape := collision.shape as RectangleShape2D
+	return platform.global_position.y+collision.position.y-shape.size.y*0.5
 
 func spawn_enemy(archetype: String,x: float,lane: int) -> CharacterBody2D:
 	if demo_closing:
 		return null
 	var enemy = ENEMY.instantiate()
 	enemy.archetype = archetype
-	enemy.lane_index = lane
+	enemy.lane_index = 0
 	enemy.target = player
-	enemy.position = Vector2(x,GameConfig.LANES[lane])
+	enemy.position = Vector2(x,GameConfig.GROUND_Y)
 	enemy.shot_requested.connect(shot_requested.emit)
 	enemy.ground_wave_requested.connect(_spawn_grandote_ground_wave)
 	enemy.defeated.connect(_on_enemy_defeated)
@@ -148,18 +204,26 @@ func spawn_enemy(archetype: String,x: float,lane: int) -> CharacterBody2D:
 
 
 func spawn_encounter_actor(archetype: String,x: float,lane: int) -> Node2D:
+	if archetype == "drone_wave":
+		var formation_index := _drone_wave_spawn_index%5
+		_drone_wave_spawn_index += 1
+		return spawn_drone(x,lane,formation_index,5)
 	if archetype == "drone":
 		return spawn_drone(x,lane)
 	return spawn_enemy(archetype,x,lane)
 
 
-func spawn_drone(x: float,lane: int) -> Node2D:
+func spawn_drone(x: float,lane: int,formation_index: int = 0,formation_size: int = 1) -> Node2D:
 	if demo_closing:
 		return null
 	var drone = DRONE.instantiate()
-	drone.lane_index = lane
+	drone.formation_index = formation_index
+	drone.formation_size = formation_size
+	drone.formation_phase = TAU*float(formation_index)/float(maxi(1,formation_size))
+	drone.wave_formation = formation_size>1
+	drone.lane_index = 0
 	drone.target = player
-	drone.position = Vector2(x,GameConfig.LANES[lane]-drone.flight_height)
+	drone.position = Vector2(x,GameConfig.GROUND_Y-drone.flight_height)
 	drone.shot_requested.connect(aimed_shot_requested.emit)
 	drone.defeated.connect(_on_enemy_defeated)
 	$Enemies.add_child(drone)
@@ -173,10 +237,10 @@ func spawn_palermitano(x: float,lane: int) -> CharacterBody2D:
 	boss_active = true
 	_boss_feedback_active = true
 	boss = PALERMITANO_BOSS.instantiate()
-	boss.lane_index = lane
+	boss.lane_index = 0
 	boss.target = player
 	boss.arena_bounds = BOSS_ARENA_BOUNDS
-	boss.position = Vector2(x,GameConfig.LANES[lane])
+	boss.position = Vector2(x,GameConfig.GROUND_Y)
 	boss.aimed_shot_requested.connect(aimed_shot_requested.emit)
 	boss.summon_requested.connect(_on_boss_summon_requested)
 	boss.screen_shake_requested.connect(screen_shake_requested.emit)
@@ -195,9 +259,8 @@ func _on_boss_summon_requested(count: int,preferred_lane: int) -> void:
 		return
 	var available := maxi(0,boss.max_live_summons-boss.get_live_summon_count())
 	for index in range(mini(count,available)):
-		var lane := preferred_lane if index == 0 else 1-preferred_lane
 		var offset := -220.0 if index == 0 else 220.0
-		var summon := spawn_enemy("agente",clampf(boss.position.x+offset,BOSS_ARENA_BOUNDS.x+80.0,BOSS_ARENA_BOUNDS.y-80.0),lane)
+		var summon := spawn_enemy("agente",clampf(boss.position.x+offset,BOSS_ARENA_BOUNDS.x+80.0,BOSS_ARENA_BOUNDS.y-80.0),0)
 		if is_instance_valid(summon):
 			boss.register_summon(summon)
 
@@ -228,8 +291,8 @@ func _clear_boss_feedback() -> void:
 
 func _spawn_grandote_ground_wave(origin: Vector2,lane: int,direction: int) -> Area2D:
 	var wave = GRANDOTE_GROUND_WAVE.instantiate()
-	wave.position = Vector2(origin.x,GameConfig.LANES[lane])
-	wave.lane_index = lane
+	wave.position = Vector2(origin.x,GameConfig.GROUND_Y)
+	wave.lane_index = 0
 	wave.direction = direction
 	$Projectiles.add_child(wave)
 	return wave
@@ -238,9 +301,9 @@ func _spawn_miniboss_grandote(x: float,lane: int) -> CharacterBody2D:
 	if is_instance_valid(miniboss):
 		return miniboss
 	miniboss = MINIBOSS_GRANDOTE.instantiate()
-	miniboss.lane_index = lane
+	miniboss.lane_index = 0
 	miniboss.target = player
-	miniboss.position = Vector2(x,GameConfig.LANES[lane])
+	miniboss.position = Vector2(x,GameConfig.GROUND_Y)
 	miniboss.arena_bounds = MINIBOSS_ARENA_BOUNDS
 	miniboss.defeated.connect(_on_miniboss_defeated)
 	miniboss.screen_shake_requested.connect(screen_shake_requested.emit)
@@ -305,12 +368,32 @@ func add_pickup(kind: String,asset: String,x: float,lane: int,image_scale: float
 	pickup.kind = kind
 	pickup.asset = asset
 	pickup.image_scale = image_scale
-	pickup.lane_index = lane
+	pickup.lane_index = 0
 	pickup.pickup_id = pickup_id if not pickup_id.is_empty() else StringName("%s_%d_%d" % [kind,int(x),lane])
-	pickup.position = Vector2(x,GameConfig.LANES[lane] if ground_y < 0.0 else ground_y)
+	pickup.position = Vector2(x,GameConfig.GROUND_Y if ground_y < 0.0 else ground_y)
 	pickup.collected_with_id.connect(_on_pickup)
 	$Objects.add_child(pickup)
 	return pickup
+
+func attach_vehicle_pickup(vehicle: Node2D,kind: StringName,asset: StringName,image_scale: float,pickup_id: StringName) -> Area2D:
+	var pickup = PICKUP.instantiate()
+	pickup.kind = String(kind)
+	pickup.asset = String(asset)
+	pickup.image_scale = image_scale
+	pickup.lane_index = 0
+	pickup.pickup_id = pickup_id
+	pickup.position = Vector2(0.0,vehicle.get_roof_world_y()-vehicle.global_position.y-8.0)
+	pickup.collected_with_id.connect(_on_pickup)
+	vehicle.add_child(pickup)
+	pickup.set_collected_state(collected_pickup_ids.has(pickup_id))
+	return pickup
+
+func _is_bus_set_piece_running() -> bool:
+	return $ExpresbusSetPiece.is_running() or $TesaSetPiece.is_running()
+
+func finish_bus_set_pieces(reason: String) -> void:
+	$ExpresbusSetPiece.finish(reason)
+	$TesaSetPiece.finish(reason)
 
 func _on_pickup(pickup_id: StringName,kind: String) -> void:
 	collected_pickup_ids[pickup_id] = true
@@ -330,38 +413,122 @@ func get_collected_pickup_ids() -> Array[StringName]:
 	return result
 
 
+func _configure_checkpoints() -> void:
+	checkpoint_records = JSON.parse_string(FileAccess.get_file_as_string("res://data/checkpoints/route_38.json")).checkpoints
+	for index in range(checkpoint_records.size()):
+		var record: Dictionary = checkpoint_records[index]
+		var checkpoint = $Checkpoint if index == 0 else CHECKPOINT_SCENE.instantiate()
+		if index > 0:
+			checkpoint.name = "Checkpoint_%s" % record.id
+			add_child(checkpoint)
+			checkpoint.activated.connect(checkpoint_activated.emit)
+		checkpoint.checkpoint_id = StringName(record.id)
+		checkpoint.position = Vector2(float(record.x),GameConfig.GROUND_Y+22.5)
+		checkpoint.activation_guard = _checkpoint_is_safe.bind(record)
+		record["node"] = checkpoint
+
+
+func _checkpoint_is_safe(record: Dictionary) -> bool:
+	if not player.controls_enabled or player.state == player.State.DEATH or not player.is_on_floor() \
+			or absf(player.position.y-GameConfig.GROUND_Y)>2.0 or _is_bus_set_piece_running():
+		return false
+	if not encounter_director._pending.is_empty():
+		return false
+	for enemy in $Enemies.get_children():
+		if enemy.get("active") == true:
+			return false
+	for encounter_id in record.required_encounters:
+		if not encounter_director.is_encounter_completed(StringName(encounter_id)):
+			return false
+	if get_node(String(record.after_set_piece)).phase != ExpresbusSetPiece.Phase.FINISHED:
+		return false
+	return is_local_respawn_safe(Vector2(float(record.x),GameConfig.GROUND_Y),0) and is_local_respawn_safe(player.position,0)
+
+
+func _update_checkpoints() -> void:
+	for record: Dictionary in checkpoint_records:
+		if player.position.x >= float(record.x) and not record.node.is_activated and _checkpoint_is_safe(record):
+			record.node.activate_for(player)
+
+
+func capture_checkpoint_level_state() -> Dictionary:
+	var events: Dictionary = {}
+	for event in [$ExpresbusSetPiece,$TesaSetPiece]:
+		events[String(event.name)] = {"consumed":event.phase != event.Phase.READY,"spawn_count":event.spawn_count}
+	return {"events":events,"location":current_location(player.position.x)}
+
+
+func get_checkpoint_completed_encounters(respawn_x: float) -> Array[StringName]:
+	var result: Array[StringName] = []
+	# Delayed activation must not skip sections beyond the checkpoint's respawn point.
+	for encounter: Dictionary in data.encounters:
+		var encounter_id := StringName(encounter.id)
+		if float(encounter.activation.value) <= respawn_x and encounter_director.is_encounter_completed(encounter_id):
+			result.append(encounter_id)
+	return result
+
+
+func restore_checkpoint_level_state(snapshot: Dictionary,respawn_x: float) -> void:
+	for event in [$ExpresbusSetPiece,$TesaSetPiece]:
+		var saved: Dictionary = snapshot.get("events",{}).get(String(event.name),{})
+		if bool(saved.get("consumed",false)) or event.trigger_x < respawn_x:
+			event.phase = event.Phase.FINISHED
+			event.spawn_count = int(saved.get("spawn_count",0))
+			event.finish_reason = "checkpoint_restore"
+	for record: Dictionary in checkpoint_records:
+		if float(record.x) <= respawn_x:
+			record.node.is_activated = true
+			record.node.set_deferred("monitoring",false)
+	last_safe_position = Vector2(respawn_x,GameConfig.GROUND_Y)
+	_last_location = current_location(respawn_x)
+	location_changed.emit(_last_location)
+
+
+func update_last_safe_position() -> void:
+	if player.state != player.State.DEATH and player.health > 0 and player.is_on_floor() \
+			and is_local_respawn_safe(player.position,0):
+		last_safe_position = player.position
+
+
 func find_local_respawn(death_position: Vector2,preferred_lane: int) -> Dictionary:
-	var lane_order: Array[int] = [clampi(preferred_lane,0,GameConfig.LANES.size()-1)]
-	for lane in range(GameConfig.LANES.size()):
-		if not lane_order.has(lane):
-			lane_order.append(lane)
 	var bounds := Vector2(LOCAL_RESPAWN_EDGE_PADDING,GameConfig.WORLD_WIDTH-LOCAL_RESPAWN_EDGE_PADDING)
 	if boss_active:
 		bounds = Vector2(BOSS_ARENA_BOUNDS.x+LOCAL_RESPAWN_ARENA_PADDING,BOSS_ARENA_BOUNDS.y-LOCAL_RESPAWN_ARENA_PADDING)
 	elif miniboss_active:
 		bounds = Vector2(MINIBOSS_ARENA_BOUNDS.x+LOCAL_RESPAWN_ARENA_PADDING,MINIBOSS_ARENA_BOUNDS.y-LOCAL_RESPAWN_ARENA_PADDING)
-	var tested_positions: Dictionary = {}
-	for lane in lane_order:
-		for distance in LOCAL_RESPAWN_DISTANCES:
-			var candidate := Vector2(clampf(death_position.x-distance,bounds.x,bounds.y),GameConfig.LANES[lane])
-			var candidate_key := "%d:%d" % [lane,int(candidate.x)]
-			if tested_positions.has(candidate_key):
+	if absf(last_safe_position.x-death_position.x) <= SAFE_POSITION_MAX_AGE_DISTANCE and is_local_respawn_safe(last_safe_position,0):
+		return {"found":true,"position":last_safe_position,"lane_index":0,"used_fallback":false}
+	# Prefer the death position, then the closest safe point on either side. Never rewind progress.
+	for distance in range(0,257,16):
+		for side in [-1.0,1.0]:
+			var candidate := Vector2(clampf(death_position.x+distance*side,bounds.x,bounds.y),GameConfig.GROUND_Y)
+			if candidate.x < death_position.x-SAFE_POSITION_MAX_AGE_DISTANCE:
 				continue
-			tested_positions[candidate_key] = true
-			if is_local_respawn_safe(candidate,lane):
-				return {"found":true,"position":candidate,"lane_index":lane,"used_fallback":false}
-	return {"found":false,"position":Vector2.ZERO,"lane_index":lane_order[0],"used_fallback":true}
+			if is_local_respawn_safe(candidate,0):
+				return {"found":true,"position":candidate,"lane_index":0,"used_fallback":false}
+	return {"found":false,"position":Vector2.ZERO,"lane_index":0,"used_fallback":true}
 
 
 func is_local_respawn_safe(candidate: Vector2,lane: int) -> bool:
-	if lane < 0 or lane >= GameConfig.LANES.size() or not is_equal_approx(candidate.y,GameConfig.LANES[lane]):
+	if not is_equal_approx(candidate.y,GameConfig.GROUND_Y):
 		return false
 	if candidate.x < LOCAL_RESPAWN_EDGE_PADDING or candidate.x > GameConfig.WORLD_WIDTH-LOCAL_RESPAWN_EDGE_PADDING:
 		return false
 	if boss_active and (candidate.x < BOSS_ARENA_BOUNDS.x+LOCAL_RESPAWN_ARENA_PADDING or candidate.x > BOSS_ARENA_BOUNDS.y-LOCAL_RESPAWN_ARENA_PADDING):
 		return false
+	var player_shape: RectangleShape2D = player.hurtbox.collision_shape.shape
+	var player_rect := Rect2(candidate+player.hurtbox.collision_shape.position-player_shape.size*0.5,player_shape.size).grow(8.0)
+	for platform in $Terrain.get_children():
+		if not platform.is_in_group("stationary_vehicles"):
+			continue
+		var visual: AnimatedSprite2D = platform.get_node("Visual")
+		var texture := visual.sprite_frames.get_frame_texture(visual.animation,visual.frame)
+		var bounds := CollisionFactory.opaque_bounds(texture)
+		bounds.position -= texture.get_size()*0.5
+		if player_rect.intersects(visual.global_transform*bounds):
+			return false
 	for vehicle in traffic_director.get_active_vehicles():
-		if not is_instance_valid(vehicle) or int(vehicle.get("lane_index")) != lane:
+		if not is_instance_valid(vehicle):
 			continue
 		var half_width := LOCAL_RESPAWN_VEHICLE_CLEARANCE
 		var impact_hitbox := vehicle.get_node_or_null("ImpactHitbox")
@@ -370,11 +537,12 @@ func is_local_respawn_safe(candidate: Vector2,lane: int) -> bool:
 		if absf(vehicle.global_position.x-candidate.x) <= half_width:
 			return false
 	for enemy in $Enemies.get_children():
-		if not is_instance_valid(enemy) or enemy.get("lane_index") == null or int(enemy.get("lane_index")) != lane:
+		if not is_instance_valid(enemy):
 			continue
 		if enemy.get("active") != null and not bool(enemy.get("active")):
 			continue
-		if absf(enemy.global_position.x-candidate.x) <= LOCAL_RESPAWN_ENEMY_CLEARANCE:
+		var enemy_shape := enemy.get_node_or_null("Hurtbox/CollisionShape2D") as CollisionShape2D
+		if enemy_shape != null and enemy_shape.shape is RectangleShape2D and player_rect.intersects(Rect2(enemy_shape.global_position-enemy_shape.shape.size*0.5,enemy_shape.shape.size)):
 			return false
 		if enemy.has_method("has_dangerous_aim_near") and enemy.has_dangerous_aim_near(candidate,LOCAL_RESPAWN_PROJECTILE_CLEARANCE):
 			return false
@@ -403,16 +571,14 @@ func prepare_local_respawn_safety(respawn_position: Vector2,lane: int) -> Dictio
 
 
 func _is_hostile_projectile_near(projectile: Node,candidate: Vector2,lane: int,radius: float) -> bool:
-	if not is_instance_valid(projectile) or projectile.get("team") == null or StringName(projectile.get("team")) == &"player":
-		return false
-	if projectile.get("lane_index") == null or int(projectile.get("lane_index")) != lane:
+	if not is_instance_valid(projectile) or projectile.is_queued_for_deletion() or projectile.get("spent") == true or projectile.get("team") == null or StringName(projectile.get("team")) == &"player":
 		return false
 	return projectile.global_position.distance_to(candidate) <= radius
 
 
 func _is_active_hitbox_near(hitbox: Node,candidate: Vector2,lane: int) -> bool:
 	if hitbox.get("active") == null or not bool(hitbox.get("active")) or hitbox.get("team") == null \
-			or StringName(hitbox.get("team")) == &"player" or int(hitbox.get("lane_index")) != lane:
+			or StringName(hitbox.get("team")) == &"player":
 		return false
 	var shape_node := hitbox.get_node_or_null("CollisionShape2D") as CollisionShape2D
 	if shape_node == null or shape_node.shape == null or shape_node.disabled:
@@ -427,6 +593,7 @@ func _is_active_hitbox_near(hitbox: Node,candidate: Vector2,lane: int) -> bool:
 
 
 func restore_checkpoint_state(completed_encounters: Array[StringName],collected_pickups: Array[StringName]) -> void:
+	finish_bus_set_pieces("checkpoint_restore")
 	demo_closing = false
 	set_physics_process(true)
 	_clear_boss_feedback()
@@ -448,3 +615,4 @@ func restore_checkpoint_state(completed_encounters: Array[StringName],collected_
 	for pickup in $Objects.get_children():
 		if pickup.has_method("set_collected_state"):
 			pickup.set_collected_state(collected_pickup_ids.has(pickup.pickup_id))
+	_refresh_protected_rewards()

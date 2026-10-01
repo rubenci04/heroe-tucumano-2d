@@ -1,0 +1,14 @@
+{
+  "checks": 19,
+  "drone_attack_cap": 1,
+  "drone_wave_cap": 2,
+  "errors": [],
+  "hostile_cap": 3,
+  "hp": {
+    "agent": 3,
+    "drone": 3,
+    "grandote": 6,
+    "hipster": 2
+  },
+  "passed": true
+}

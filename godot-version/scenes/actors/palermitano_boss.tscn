@@ -8,7 +8,7 @@
 [ext_resource type="Resource" path="res://data/attacks/palermitano_chain.tres" id="6"]
 
 [sub_resource type="RectangleShape2D" id="BodyShape"]
-size = Vector2(70, 122)
+size = Vector2(48, 92)
 
 [node name="PalermitanoBoss" type="CharacterBody2D"]
 script = ExtResource("1")
@@ -21,12 +21,12 @@ chain_definition = ExtResource("6")
 [node name="ChainHitbox" parent="." instance=ExtResource("4")]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(0, -61)
+position = Vector2(0, -46)
 shape = SubResource("BodyShape")
 
 [node name="Visual" type="AnimatedSprite2D" parent="."]
-position = Vector2(0, -78)
-scale = Vector2(0.78, 0.78)
+position = Vector2(0, -60.9)
+scale = Vector2(0.42, 0.42)
 texture_filter = 1
 sprite_frames = ExtResource("5")
 animation = &"boss_run"

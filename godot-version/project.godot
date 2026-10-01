@@ -29,12 +29,13 @@ window/stretch/mode="canvas_items"
 
 [layer_names]
 
-2d_physics/layer_1="Carril superior"
-2d_physics/layer_2="Carril inferior"
+2d_physics/layer_1="Mundo y plataformas"
+2d_physics/layer_2="Carril legacy (sin uso)"
 2d_physics/layer_3="Jugador"
 2d_physics/layer_4="Enemigos"
 2d_physics/layer_5="Objetos"
 2d_physics/layer_6="Proyectiles"
+2d_physics/layer_7="Plataformas Player"
 
 [rendering]
 

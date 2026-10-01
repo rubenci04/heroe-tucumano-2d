@@ -1,0 +1,45 @@
+[gd_scene format=3]
+
+[node name="PauseMenu" type="Control"]
+process_mode = 3
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Shade" type="ColorRect" parent="."]
+layout_mode = 0
+offset_right = 800.0
+offset_bottom = 450.0
+color = Color(0.03,0.03,0.03,0.85)
+
+[node name="Options" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 230.0
+offset_top = 140.0
+offset_right = 570.0
+offset_bottom = 310.0
+theme_override_constants/separation = 18
+
+[node name="Title" type="Label" parent="Options"]
+layout_mode = 2
+text = "PAUSA"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 28
+
+[node name="Continue" type="Button" parent="Options"]
+layout_mode = 2
+text = "CONTINUAR"
+
+[node name="RestartCheckpoint" type="Button" parent="Options"]
+layout_mode = 2
+text = "REINICIAR DESDE CHECKPOINT"
+
+[node name="ConfirmRestart" type="ConfirmationDialog" parent="."]
+title = "Reiniciar desde checkpoint"
+dialog_text = "Se perderá el progreso posterior al último checkpoint."
+ok_button_text = "REINICIAR"
+cancel_button_text = "CANCELAR"

@@ -23,6 +23,8 @@ var camera_follow_min_x: float = 400.0
 var camera_follow_max_x: float = GameConfig.WORLD_WIDTH-400.0
 var demo_closing: bool = false
 var demo_closing_complete: bool = false
+var game_over: bool = false
+var local_respawn_pending: bool = false
 const LOCAL_RESPAWN_INVULNERABILITY := 1.25
 
 @onready var game_session: Node = get_node("/root/GameSession")
@@ -34,6 +36,7 @@ const LOCAL_RESPAWN_INVULNERABILITY := 1.25
 @onready var character_select: Control = $Interface/CharacterSelect
 @onready var dialogue: Control = $Interface/DialogueBox
 @onready var intro: Node2D = $IntroFamailla
+@onready var pause_menu: Control = $Interface/PauseMenu
 
 func _ready() -> void:
 	INPUT_SETUP.configure()
@@ -63,10 +66,16 @@ func _ready() -> void:
 	character_select.character_confirmed.connect(_on_character_confirmed)
 	character_select.cancelled.connect(_on_character_selection_cancelled)
 	intro.completed.connect(_on_intro_completed)
+	pause_menu.get_node("Options/Continue").pressed.connect(resume_game.bind(true))
+	pause_menu.get_node("Options/RestartCheckpoint").pressed.connect(func(): pause_menu.get_node("ConfirmRestart").popup_centered())
+	pause_menu.get_node("ConfirmRestart").confirmed.connect(restart_from_checkpoint)
 	_restore_player_progress()
 	camera.position = Vector2(400,225)
 	camera.reset_smoothing()
-	start_new_game()
+	if game_session.pending_checkpoint_restore:
+		_restore_checkpoint_run()
+	else:
+		start_new_game()
 
 func _process(delta: float) -> void:
 	if current_state != GAME_SESSION.DemoState.GAMEPLAY:
@@ -160,7 +169,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if current_state == GAME_SESSION.DemoState.RESULT:
 		if event.is_action_pressed("restart"):
-			restart_game()
+			if game_over:
+				restart_from_checkpoint()
+			else:
+				restart_game()
 		elif event.is_action_pressed("select_cancel") or event.is_action_pressed("pause"):
 			exit_demo()
 		return
@@ -178,11 +190,15 @@ func _unhandled_input(event: InputEvent) -> void:
 			_close_gallery()
 		elif not finished:
 			if current_state == GAME_SESSION.DemoState.PAUSED:
-				resume_game()
+				resume_game(true)
 			else:
 				pause_game()
+		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("restart") and not gallery.visible:
-		restart_game()
+		if current_state == GAME_SESSION.DemoState.PAUSED and state_before_pause == GAME_SESSION.DemoState.GAMEPLAY:
+			restart_from_checkpoint()
+		else:
+			restart_game()
 
 func change_state(next_state: int, force_apply: bool = false) -> void:
 	if next_state not in GAME_SESSION.DemoState.values():
@@ -200,8 +216,13 @@ func change_state(next_state: int, force_apply: bool = false) -> void:
 	game_session.set_demo_state(current_state)
 	AudioManager.set_gameplay_paused(current_state == GAME_SESSION.DemoState.PAUSED)
 	finished = current_state == GAME_SESSION.DemoState.RESULT
+	pause_menu.visible = current_state == GAME_SESSION.DemoState.PAUSED and state_before_pause == GAME_SESSION.DemoState.GAMEPLAY and not gallery.visible
+	if pause_menu.visible:
+		pause_menu.get_node("Options/Continue").grab_focus()
+	else:
+		pause_menu.get_node("ConfirmRestart").hide()
 	var gameplay_active := current_state == GAME_SESSION.DemoState.GAMEPLAY
-	player.controls_enabled = gameplay_active
+	player.controls_enabled = gameplay_active and not local_respawn_pending
 	if gameplay_active and dialogue.active:
 		player.controls_enabled = false
 	if not gameplay_active:
@@ -231,10 +252,17 @@ func pause_game() -> void:
 	state_before_pause = current_state
 	change_state(GAME_SESSION.DemoState.PAUSED)
 
-func resume_game() -> void:
+func resume_game(suppress_input_edge: bool = false) -> void:
 	if current_state != GAME_SESSION.DemoState.PAUSED:
 		return
 	change_state(state_before_pause)
+	if suppress_input_edge and current_state == GAME_SESSION.DemoState.GAMEPLAY:
+		# Let the UI input edge expire before gameplay reads jump/fire again.
+		player.controls_enabled = false
+		await get_tree().physics_frame
+		await get_tree().physics_frame
+		if current_state == GAME_SESSION.DemoState.GAMEPLAY and not dialogue.active and not local_respawn_pending:
+			player.controls_enabled = true
 
 func restart_game() -> void:
 	intro.cancel(false)
@@ -243,6 +271,32 @@ func restart_game() -> void:
 	game_session.begin_new_run(true)
 	get_tree().paused = false
 	get_tree().reload_current_scene()
+
+
+func restart_from_checkpoint() -> void:
+	intro.cancel(false)
+	dialogue.cancel(false)
+	AudioManager.reset_for_restart()
+	game_session.pending_checkpoint_restore = true
+	get_tree().paused = false
+	get_tree().reload_current_scene()
+
+
+func _restore_checkpoint_run() -> void:
+	game_session.pending_checkpoint_restore = false
+	player.apply_character_definition(game_session.resolve_character_definition(game_session.selected_character))
+	game_session.set_progress(game_session.checkpoint_score,game_session.checkpoint_coins)
+	route.restore_checkpoint_state(game_session.checkpoint_completed_encounters,game_session.checkpoint_collected_pickups)
+	route.restore_checkpoint_level_state(game_session.checkpoint_level_state,game_session.respawn_position.x)
+	player.lives = player.character_definition.starting_lives
+	player.respawn_at(game_session.respawn_position,game_session.checkpoint_player_state,LOCAL_RESPAWN_INVULNERABILITY)
+	character_select.hide()
+	hud.get_node("Results").hide()
+	change_state(GAME_SESSION.DemoState.GAMEPLAY,true)
+	AudioManager.request_music(AudioManager.MUSIC_GAMEPLAY)
+	_sync_session_from_player()
+	camera.position.x = clampf(player.position.x,camera_follow_min_x,camera_follow_max_x)
+	camera.reset_smoothing()
 
 
 func exit_demo(quit_tree: bool = true) -> bool:
@@ -312,7 +366,7 @@ func _spawn_projectile(origin: Vector2,lane: int,direction: Variant,kind: String
 		return
 	var projectile = PROJECTILE_SCENE.instantiate()
 	projectile.position = origin
-	projectile.lane_index = lane
+	projectile.lane_index = 0
 	if direction is Vector2:
 		projectile.travel_direction = direction
 	else:
@@ -321,44 +375,59 @@ func _spawn_projectile(origin: Vector2,lane: int,direction: Variant,kind: String
 	projectile.team = team
 	if team == "player":
 		projectile.impact_confirmed.connect(player.register_valid_hit)
-	projectile.z_index = int(GameConfig.LANES[lane])+1
+	projectile.z_index = 20
 	route.get_node("Projectiles").add_child(projectile)
 
 func _on_player_died() -> void:
+	route.finish_bus_set_pieces("player_death")
 	finished = true
+	game_over = true
 	player.controls_enabled = false
 	_sync_session_from_player()
 	await get_tree().create_timer(0.55).timeout
-	hud.show_result("¡TE LIQUIDARON EN LA RUTA!","Puntaje: %d · Monedas: %d\nR para reintentar" % [player.score,player.coins])
+	hud.show_result("¡TE LIQUIDARON EN LA RUTA!","Puntaje: %d · Monedas: %d\nR: reiniciar desde último checkpoint" % [player.score,player.coins])
 	change_state(GAME_SESSION.DemoState.RESULT)
 
 
 func _on_checkpoint_activated(checkpoint_id: StringName,respawn_position: Vector2) -> void:
+	if game_session.has_active_checkpoint() and respawn_position.x <= game_session.respawn_position.x:
+		return
 	_sync_session_from_player()
 	game_session.set_checkpoint(
 		checkpoint_id,
 		respawn_position,
-		route.encounter_director.get_completed_encounter_ids(),
+		route.get_checkpoint_completed_encounters(respawn_position.x),
 		route.get_collected_pickup_ids(),
-		player.get_respawn_state()
+		player.get_respawn_state(),
+		route.capture_checkpoint_level_state(),
+		route.current_location(respawn_position.x)
 	)
 
 
 func _on_player_respawn_requested() -> void:
+	local_respawn_pending = true
+	route.finish_bus_set_pieces("player_death")
 	var death_position: Vector2 = player.position
 	var current_player_state: Dictionary = player.get_respawn_state()
 	var local_respawn: Dictionary = route.find_local_respawn(death_position,player.lane_index)
+	if not bool(local_respawn.found):
+		route.prepare_local_respawn_safety(death_position,0)
+		local_respawn = route.find_local_respawn(death_position,0)
+	# A saturated spawn zone waits for a nearby safe opening instead of rolling back progress.
+	while not bool(local_respawn.found):
+		player.controls_enabled = false
+		player.velocity = Vector2.ZERO
+		player.hurtbox.set_receiving_enabled(false)
+		await get_tree().create_timer(0.1,false).timeout
+		local_respawn = route.find_local_respawn(death_position,0)
 	if bool(local_respawn.found):
 		var respawn_position: Vector2 = local_respawn.position
 		var respawn_lane: int = int(local_respawn.lane_index)
 		route.prepare_local_respawn_safety(respawn_position,respawn_lane)
 		player.respawn_at(respawn_position,current_player_state,LOCAL_RESPAWN_INVULNERABILITY)
-	else:
-		route.restore_checkpoint_state(
-			game_session.checkpoint_completed_encounters,
-			game_session.checkpoint_collected_pickups
-		)
-		player.respawn_at(game_session.respawn_position,game_session.checkpoint_player_state,LOCAL_RESPAWN_INVULNERABILITY)
+		local_respawn_pending = false
+		player.controls_enabled = current_state == GAME_SESSION.DemoState.GAMEPLAY
+		route.last_safe_position = respawn_position
 	_sync_session_from_player()
 	camera.position.x = clampf(player.position.x,400.0,GameConfig.WORLD_WIDTH-400.0)
 	camera.reset_smoothing()

@@ -1,0 +1,30 @@
+{
+  "achilata_runtime_count": 0,
+  "asphalt_decorative_platforms": 0,
+  "captures": [
+    {
+      "active": 4,
+      "camera_x": 1450.0,
+      "encounter": "route_wave_01",
+      "image": "res://validation/route_pacing_early.png",
+      "visible_800x450": 4,
+      "zone": "early"
+    },
+    {
+      "active": 6,
+      "camera_x": 4150.0,
+      "encounter": "route_wave_03",
+      "image": "res://validation/route_pacing_middle.png",
+      "visible_800x450": 6,
+      "zone": "middle"
+    },
+    {
+      "active": 6,
+      "camera_x": 7410.0,
+      "encounter": "route_wave_06",
+      "image": "res://validation/route_pacing_late.png",
+      "visible_800x450": 6,
+      "zone": "late"
+    }
+  ]
+}

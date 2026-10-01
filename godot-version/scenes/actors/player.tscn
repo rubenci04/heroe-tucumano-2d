@@ -20,6 +20,7 @@ script = ExtResource("8")
 [node name="TucumanazoCounterComponent" type="Node" parent="."]
 script = ExtResource("9")
 [node name="TucumanazoHitbox" parent="." instance=ExtResource("10")]
+[node name="SuperRushHitbox" parent="." instance=ExtResource("10")]
 [node name="TucumanazoWaveVisual" type="Node2D" parent="."]
 position = Vector2(0, -45)
 z_index = 2

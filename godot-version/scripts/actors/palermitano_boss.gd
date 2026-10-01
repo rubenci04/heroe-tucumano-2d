@@ -12,6 +12,7 @@ const HEALTH_COMPONENT = preload("res://scripts/components/health_component.gd")
 const HITBOX = preload("res://scripts/components/hitbox.gd")
 const HURTBOX = preload("res://scripts/components/hurtbox.gd")
 const ATTACK_DEFINITION = preload("res://scripts/data/attack_definition.gd")
+const ANIMATION_OFFSET_PROFILE = preload("res://scripts/components/animation_offset_profile.gd")
 
 enum BossState { INTRO, DECIDE, TELEGRAPH, ATTACK, RECOVERY, DEFEATED }
 enum Pattern { NONE, TRIPLE_COFFEE, SUMMON_AGENTS, CHAIN }
@@ -20,27 +21,27 @@ enum Pattern { NONE, TRIPLE_COFFEE, SUMMON_AGENTS, CHAIN }
 @export_range(1,999,1) var max_health: int = 90
 @export_range(0,99999,1) var reward_points: int = 1500
 @export var arena_bounds := Vector2(7000.0,7950.0)
-@export_range(0.01,5.0,0.01) var intro_duration: float = 0.80
-@export_range(0.01,5.0,0.01) var decision_delay: float = 0.35
+@export_range(0.01,5.0,0.01) var intro_duration: float = 1.00
+@export_range(0.01,5.0,0.01) var decision_delay: float = 0.25
 @export_range(1.0,1000.0,1.0) var lane_move_speed: float = 180.0
 
 @export_group("Triple coffee")
-@export_range(0.01,5.0,0.01) var coffee_telegraph: float = 0.30
-@export_range(0.01,1.0,0.01) var coffee_shot_interval: float = 0.16
-@export_range(0.01,5.0,0.01) var coffee_recovery: float = 0.55
-@export_range(0.01,10.0,0.01) var coffee_cooldown: float = 1.80
+@export_range(0.01,5.0,0.01) var coffee_telegraph: float = 0.55
+@export_range(0.01,1.0,0.01) var coffee_shot_interval: float = 0.28
+@export_range(0.01,5.0,0.01) var coffee_recovery: float = 0.80
+@export_range(0.01,10.0,0.01) var coffee_cooldown: float = 2.80
 @export_range(0.0,30.0,0.5) var coffee_spread_degrees: float = 7.0
 
 @export_group("Summons")
-@export_range(0.01,5.0,0.01) var summon_telegraph: float = 0.48
-@export_range(0.01,5.0,0.01) var summon_recovery: float = 0.70
-@export_range(0.01,15.0,0.01) var summon_cooldown: float = 5.00
+@export_range(0.01,5.0,0.01) var summon_telegraph: float = 0.65
+@export_range(0.01,5.0,0.01) var summon_recovery: float = 1.20
+@export_range(0.01,15.0,0.01) var summon_cooldown: float = 7.00
 @export_range(1,2,1) var max_live_summons: int = 2
 
 @export_group("Chain")
 @export var chain_definition: ATTACK_DEFINITION
 @export_range(1.0,500.0,1.0) var chain_range: float = 155.0
-@export_range(0.01,10.0,0.01) var chain_cooldown: float = 1.35
+@export_range(0.01,10.0,0.01) var chain_cooldown: float = 2.40
 
 var team: StringName = &"enemy"
 var lane_index: int = 1
@@ -66,6 +67,7 @@ var _coffee_cooldown_remaining: float = 0.0
 var _summon_cooldown_remaining: float = 0.0
 var _chain_cooldown_remaining: float = 0.0
 var _summons: Array[WeakRef] = []
+var _visual_offset_profiles: Dictionary = {}
 
 @onready var health_component: HEALTH_COMPONENT = $HealthComponent
 @onready var hurtbox: HURTBOX = $Hurtbox
@@ -90,17 +92,29 @@ func _ready() -> void:
 	health_component.depleted.connect(_on_health_depleted)
 	health_component.configure(max_health,max_health,0.12)
 	collision_layer = GameConfig.ENEMY_LAYER
-	collision_mask = 1 << lane_index
+	lane_index = 0
+	collision_mask = GameConfig.WORLD_LAYER
 	floor_snap_length = 6.0
 	hurtbox.configure(self,health_component,team,lane_index,GameConfig.ENEMY_LAYER)
 	hurtbox.copy_shape_from(body_shape)
 	chain_hitbox.configure(self,team,lane_index,chain_definition,facing,GameConfig.PLAYER_LAYER)
 	chain_hitbox.deactivate()
+	_visual_offset_profiles = ANIMATION_OFFSET_PROFILE.load_character(&"palermitano",{
+		&"boss_idle":"Idle",&"boss_run":"Run",&"boss_punch":"Punch",&"boss_cofee":"Coffee",
+		&"boss_joke":"Joke",&"boss_order":"Order Attack"
+	})
+	visual.frame_changed.connect(_refresh_visual_frame_offset)
+	visual.animation_changed.connect(_refresh_visual_frame_offset)
 	visual.play(&"boss_run")
+	_refresh_visual_frame_offset()
 	_state_remaining = intro_duration
 	_state_duration = intro_duration
 	add_to_group("enemies")
 	add_to_group("boss")
+
+
+func _refresh_visual_frame_offset() -> void:
+	ANIMATION_OFFSET_PROFILE.apply(visual,_visual_offset_profiles)
 
 
 func _physics_process(delta: float) -> void:
@@ -119,8 +133,6 @@ func _physics_process(delta: float) -> void:
 			if _state_remaining <= 0.0:
 				_enter_decide()
 		BossState.DECIDE:
-			if _align_lane(delta):
-				return
 			_tick_state(delta)
 			_apply_gravity_and_move(delta)
 			if _state_remaining <= 0.0:
@@ -141,22 +153,23 @@ func _physics_process(delta: float) -> void:
 				last_pattern = current_pattern
 				current_pattern = Pattern.NONE
 				_enter_decide()
-	z_index = int(GameConfig.LANES[lane_index])+2
+	z_index = 16
 
 
 func choose_pattern() -> Pattern:
 	if not is_instance_valid(target):
 		return Pattern.NONE
 	var distance: float = absf(target.global_position.x-global_position.x)
-	var same_lane: bool = int(target.lane_index) == lane_index
-	if same_lane and distance <= chain_range and _chain_cooldown_remaining <= 0.0 and last_pattern != Pattern.CHAIN:
+	var live_summons := get_live_summon_count()
+	var hostile_projectiles := get_live_hostile_projectile_count()
+	if distance <= chain_range and _chain_cooldown_remaining <= 0.0 and last_pattern != Pattern.CHAIN and hostile_projectiles == 0:
 		return Pattern.CHAIN
-	var can_summon: bool = get_live_summon_count() < max_live_summons and _summon_cooldown_remaining <= 0.0
+	var can_summon: bool = live_summons < max_live_summons and _summon_cooldown_remaining <= 0.0 and hostile_projectiles == 0
 	if distance <= 430.0 and can_summon and last_pattern != Pattern.SUMMON_AGENTS:
 		return Pattern.SUMMON_AGENTS
-	if _coffee_cooldown_remaining <= 0.0:
+	if live_summons == 0 and hostile_projectiles == 0 and _coffee_cooldown_remaining <= 0.0 and last_pattern != Pattern.TRIPLE_COFFEE:
 		return Pattern.TRIPLE_COFFEE
-	if can_summon:
+	if can_summon and last_pattern != Pattern.SUMMON_AGENTS:
 		return Pattern.SUMMON_AGENTS
 	return Pattern.NONE
 
@@ -165,11 +178,12 @@ func begin_pattern(pattern: Pattern) -> bool:
 	if not active or boss_state != BossState.DECIDE or pattern == Pattern.NONE or not is_instance_valid(target):
 		return false
 	var distance := absf(target.global_position.x-global_position.x)
-	if pattern == Pattern.CHAIN and (target.lane_index != lane_index or distance > chain_range or _chain_cooldown_remaining > 0.0):
+	var hostile_projectiles := get_live_hostile_projectile_count()
+	if pattern == Pattern.CHAIN and (distance > chain_range or _chain_cooldown_remaining > 0.0 or hostile_projectiles > 0):
 		return false
-	if pattern == Pattern.SUMMON_AGENTS and (get_live_summon_count() >= max_live_summons or _summon_cooldown_remaining > 0.0):
+	if pattern == Pattern.SUMMON_AGENTS and (get_live_summon_count() >= max_live_summons or _summon_cooldown_remaining > 0.0 or hostile_projectiles > 0):
 		return false
-	if pattern == Pattern.TRIPLE_COFFEE and _coffee_cooldown_remaining > 0.0:
+	if pattern == Pattern.TRIPLE_COFFEE and (_coffee_cooldown_remaining > 0.0 or get_live_summon_count() > 0 or hostile_projectiles > 0):
 		return false
 	current_pattern = pattern
 	_locked_facing = facing
@@ -228,6 +242,18 @@ func get_live_summon_count() -> int:
 		if summon == null or not is_instance_valid(summon) or not summon.is_inside_tree():
 			_summons.remove_at(index)
 	return _summons.size()
+
+
+func get_live_hostile_projectile_count() -> int:
+	var container := get_parent().get_node_or_null("../Projectiles") if get_parent() != null else null
+	if container == null:
+		return 0
+	var count := 0
+	for projectile in container.get_children():
+		if projectile.get("team") != null and StringName(projectile.get("team")) == team \
+				and (projectile.get("spent") == null or not bool(projectile.get("spent"))):
+			count += 1
+	return count
 
 
 func take_damage(amount: int, source_team: StringName = &"player") -> void:
@@ -294,7 +320,9 @@ func _emit_summons_once() -> void:
 		return
 	_summon_emitted = true
 	var available := maxi(0,max_live_summons-get_live_summon_count())
-	var requested := mini(2,available)
+	# One readable entrance per summon pattern; the second Agent can arrive only
+	# through a later, independently telegraphed pattern.
+	var requested := mini(1,available)
 	if requested > 0:
 		summon_requests_emitted += 1
 		summon_requested.emit(requested,lane_index)
@@ -309,17 +337,7 @@ func _enter_decide() -> void:
 
 
 func _align_lane(delta: float) -> bool:
-	if target.lane_index == lane_index:
-		return false
-	collision_mask = 0
-	position.y = move_toward(position.y,GameConfig.LANES[target.lane_index],lane_move_speed*delta)
-	if absf(position.y-GameConfig.LANES[target.lane_index]) <= 0.1:
-		lane_index = target.lane_index
-		position.y = GameConfig.LANES[lane_index]
-		hurtbox.lane_index = lane_index
-		chain_hitbox.lane_index = lane_index
-		collision_mask = 1 << lane_index
-	return true
+	return false
 
 
 func _apply_gravity_and_move(delta: float) -> void:

@@ -96,7 +96,9 @@ func bind_boss_health(component: Node, display_name: String = "") -> void:
 
 
 func set_location(town: String) -> void:
-	location.text = "%s  |  NARANJAS %s  ·  CASCOTES %d  ·  SOL %d%%" % [town.to_upper(),"∞" if _oranges_unlocked else "—",_stones,int(_heat)]
+	location.text = "%s  |  NARANJAS %s  ·  CASCOTES %d" % [town.to_upper(),"∞" if _oranges_unlocked else "—",_stones]
+	if GameConfig.HEAT_ENABLED:
+		location.text += "  ·  SOL %d%%" % int(_heat)
 
 
 func _on_health_changed(current_health: int,max_health: int) -> void:
@@ -143,6 +145,11 @@ func _update_status_text() -> void:
 
 
 func _update_heat_feedback() -> void:
+	if not GameConfig.HEAT_ENABLED:
+		heat_sun.hide()
+		heat_alert.hide()
+		heat_shimmer.hide()
+		return
 	var normalized_heat := clampf((_heat-40.0)/60.0,0.0,1.0)
 	heat_sun.visible = _heat >= 40.0
 	_heat_sun_base_scale = lerpf(0.42,1.0,normalized_heat)
@@ -164,6 +171,8 @@ func _update_heat_feedback() -> void:
 
 
 func _update_heat_feedback_motion() -> void:
+	if not GameConfig.HEAT_ENABLED:
+		return
 	if heat_sun.visible:
 		var sun_pulse := 1.0+sin(_heat_feedback_time*4.0)*lerpf(0.01,0.035,clampf((_heat-40.0)/60.0,0.0,1.0))
 		heat_sun.scale = Vector2.ONE*_heat_sun_base_scale*sun_pulse

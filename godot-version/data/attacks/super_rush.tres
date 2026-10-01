@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="AttackDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/attack_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+attack_id = &"super_rush"
+damage = 2
+startup_duration = 0.12
+active_duration = 0.7
+recovery_duration = 0.2
+shape_kind = 0
+reach = Vector2(44, 64)
+offset = Vector2(10, -38)

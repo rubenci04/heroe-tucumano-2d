@@ -1,0 +1,135 @@
+[
+  {
+    "asset": "ciruja_idle",
+    "ciruja_ratio": 1.0,
+    "height": 82.74,
+    "scale": 0.42,
+    "width": 40.32
+  },
+  {
+    "asset": "hipster_scooter_idle",
+    "ciruja_ratio": 1.15881073241479,
+    "height": 95.88,
+    "scale": 0.34,
+    "width": 63.92
+  },
+  {
+    "asset": "agente_idle",
+    "ciruja_ratio": 1.04858593183466,
+    "height": 86.76,
+    "scale": 0.36,
+    "width": 41.04
+  },
+  {
+    "asset": "grandote_idle",
+    "ciruja_ratio": 1.40391588107324,
+    "height": 116.16,
+    "scale": 0.44,
+    "width": 76.56
+  },
+  {
+    "asset": "final_boss_idle",
+    "ciruja_ratio": 1.21827411167513,
+    "height": 100.8,
+    "scale": 0.42,
+    "width": 68.46
+  },
+  {
+    "asset": "drone_1",
+    "ciruja_ratio": 0.57831762146483,
+    "height": 47.85,
+    "scale": 0.55,
+    "width": 77.55
+  },
+  {
+    "asset": "auto1",
+    "ciruja_ratio": 0.891950688905004,
+    "height": 73.8,
+    "scale": 0.9,
+    "width": 163.8
+  },
+  {
+    "asset": "auto2",
+    "ciruja_ratio": 1.01160261058738,
+    "height": 83.7,
+    "scale": 0.9,
+    "width": 202.5
+  },
+  {
+    "asset": "auto3",
+    "ciruja_ratio": 0.86113125453227,
+    "height": 71.25,
+    "scale": 0.95,
+    "width": 164.35
+  },
+  {
+    "asset": "camion_limones",
+    "ciruja_ratio": 1.59535895576505,
+    "height": 132.0,
+    "scale": 0.8,
+    "width": 230.4
+  },
+  {
+    "asset": "exprebus",
+    "ciruja_ratio": 1.66787527193619,
+    "height": 138.0,
+    "scale": 1.2,
+    "width": 313.2
+  },
+  {
+    "asset": "tesa",
+    "ciruja_ratio": 1.60865361372976,
+    "height": 133.1,
+    "scale": 1.1,
+    "width": 322.3
+  },
+  {
+    "asset": "kiosco_coca",
+    "ciruja_ratio": 1.14865844815083,
+    "height": 95.04,
+    "scale": 0.72,
+    "width": 135.36
+  },
+  {
+    "asset": "parada_colectivo",
+    "ciruja_ratio": 1.31133671742809,
+    "height": 108.5,
+    "scale": 0.62,
+    "width": 102.3
+  },
+  {
+    "asset": "arbol_naranjas",
+    "ciruja_ratio": 1.58206429780034,
+    "height": 130.9,
+    "scale": 0.85,
+    "width": 149.6
+  },
+  {
+    "asset": "montaña_cascote",
+    "ciruja_ratio": 0.406091370558376,
+    "height": 33.6,
+    "scale": 0.32,
+    "width": 62.4
+  },
+  {
+    "asset": "empanada",
+    "ciruja_ratio": 0.323181049069374,
+    "height": 26.74,
+    "scale": 0.14,
+    "width": 16.1
+  },
+  {
+    "asset": "sanguche",
+    "ciruja_ratio": 0.253807106598985,
+    "height": 21.0,
+    "scale": 0.25,
+    "width": 50.0
+  },
+  {
+    "asset": "achilata",
+    "ciruja_ratio": 0.400290065264685,
+    "height": 33.12,
+    "scale": 0.18,
+    "width": 23.22
+  }
+]

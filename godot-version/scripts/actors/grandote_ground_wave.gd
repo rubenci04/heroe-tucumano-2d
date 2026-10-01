@@ -24,7 +24,7 @@ func _ready() -> void:
 	_remaining_lifetime = lifetime
 	collision_layer = GameConfig.PROJECTILE_LAYER
 	collision_mask = GameConfig.PLAYER_LAYER
-	z_index = int(GameConfig.LANES[lane_index])+1
+	z_index = 11
 	body_entered.connect(_on_body_entered)
 
 
@@ -42,8 +42,6 @@ func _physics_process(delta: float) -> void:
 
 func can_hit_body(body: Node) -> bool:
 	if _spent or body == null or not body.has_method("get_height"):
-		return false
-	if body.get("lane_index") == null or int(body.get("lane_index")) != lane_index:
 		return false
 	return float(body.get_height()) < jump_clearance
 

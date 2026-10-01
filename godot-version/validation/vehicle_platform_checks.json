@@ -1,0 +1,27 @@
+{
+  "assets": [
+    "auto1",
+    "camioneta1",
+    "auto3",
+    "auto3",
+    "camioneta2",
+    "camion_limones",
+    "auto2",
+    "camioneta3",
+    "camioneta4"
+  ],
+  "checks": 11,
+  "errors": [],
+  "passed": true,
+  "positions": [
+    700,
+    1500,
+    2300,
+    3100,
+    3900,
+    4650,
+    5450,
+    6200,
+    6900
+  ]
+}

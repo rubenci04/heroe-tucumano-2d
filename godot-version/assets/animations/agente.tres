@@ -1,28 +1,46 @@
-[gd_resource type="SpriteFrames" load_steps=7 format=3]
+[gd_resource type="SpriteFrames" load_steps=22 format=3]
 
-[ext_resource type="Texture2D" path="res://assets/agente_run1.png" id="1"]
-[ext_resource type="Texture2D" path="res://assets/agente_run2.png" id="2"]
-[ext_resource type="Texture2D" path="res://assets/agente_run3.png" id="3"]
-[ext_resource type="Texture2D" path="res://assets/agente_salto.png" id="4"]
-[ext_resource type="Texture2D" path="res://assets/agente_disparo_bala1.png" id="5"]
-[ext_resource type="Texture2D" path="res://assets/agente_disparo_bala2.png" id="6"]
+[ext_resource type="Texture2D" path="res://assets/agente_idle.png" id="1_idle"]
+[ext_resource type="Texture2D" path="res://assets/agente_run0.png" id="2_run0"]
+[ext_resource type="Texture2D" path="res://assets/agente_run1.png" id="3_run1"]
+[ext_resource type="Texture2D" path="res://assets/agente_run2.png" id="4_run2"]
+[ext_resource type="Texture2D" path="res://assets/agente_run3.png" id="5_run3"]
+[ext_resource type="Texture2D" path="res://assets/agente_run4.png" id="6_run4"]
+[ext_resource type="Texture2D" path="res://assets/agente_run5.png" id="7_run5"]
+[ext_resource type="Texture2D" path="res://assets/agente_run6.png" id="8_run6"]
+[ext_resource type="Texture2D" path="res://assets/agente_run7.png" id="9_run7"]
+[ext_resource type="Texture2D" path="res://assets/agente_disparo_bala1.png" id="10_shoot1"]
+[ext_resource type="Texture2D" path="res://assets/agente_disparo_bala2.png" id="11_shoot2"]
+[ext_resource type="Texture2D" path="res://assets/agente_disparo_bala3.png" id="12_shoot3"]
+[ext_resource type="Texture2D" path="res://assets/agente_disparo_bala4.png" id="13_shoot4"]
+[ext_resource type="Texture2D" path="res://assets/agente_disparo_bala5.png" id="14_shoot5"]
+[ext_resource type="Texture2D" path="res://assets/agente_punch1.png" id="15_punch1"]
+[ext_resource type="Texture2D" path="res://assets/agente_punch2.png" id="16_punch2"]
+[ext_resource type="Texture2D" path="res://assets/agente_punch3.png" id="17_punch3"]
+[ext_resource type="Texture2D" path="res://assets/agente_punch4.png" id="18_punch4"]
+[ext_resource type="Texture2D" path="res://assets/agente_punch5.png" id="19_punch5"]
+[ext_resource type="Texture2D" path="res://assets/agente_punch6.png" id="20_punch6"]
+[ext_resource type="Texture2D" path="res://assets/agente_punch7.png" id="21_punch7"]
 
 [resource]
 animations = [{
-"frames": [{"duration": 1.0, "texture": ExtResource("1")}, {"duration": 1.0, "texture": ExtResource("2")}, {"duration": 1.0, "texture": ExtResource("3")}],
+"frames": [{"duration": 1.0, "texture": ExtResource("1_idle")}],
+"loop": true,
+"name": &"agente_idle",
+"speed": 1.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("2_run0")}, {"duration": 1.0, "texture": ExtResource("3_run1")}, {"duration": 1.0, "texture": ExtResource("4_run2")}, {"duration": 1.0, "texture": ExtResource("5_run3")}, {"duration": 1.0, "texture": ExtResource("6_run4")}, {"duration": 1.0, "texture": ExtResource("7_run5")}, {"duration": 1.0, "texture": ExtResource("8_run6")}, {"duration": 1.0, "texture": ExtResource("9_run7")}],
 "loop": true,
 "name": &"agente_run",
-"speed": 7.0
-},
-{
-"frames": [{"duration": 1.0, "texture": ExtResource("4")}],
-"loop": false,
-"name": &"agente_salto",
-"speed": 1.0
-},
-{
-"frames": [{"duration": 1.0, "texture": ExtResource("5")}, {"duration": 1.0, "texture": ExtResource("6")}],
+"speed": 12.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("10_shoot1")}, {"duration": 1.0, "texture": ExtResource("11_shoot2")}, {"duration": 1.0, "texture": ExtResource("12_shoot3")}, {"duration": 1.0, "texture": ExtResource("13_shoot4")}, {"duration": 1.0, "texture": ExtResource("14_shoot5")}],
 "loop": false,
 "name": &"agente_disparar",
-"speed": 7.0
+"speed": 15.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("15_punch1")}, {"duration": 1.0, "texture": ExtResource("16_punch2")}, {"duration": 1.0, "texture": ExtResource("17_punch3")}, {"duration": 1.0, "texture": ExtResource("18_punch4")}, {"duration": 1.0, "texture": ExtResource("19_punch5")}, {"duration": 1.0, "texture": ExtResource("20_punch6")}, {"duration": 1.0, "texture": ExtResource("21_punch7")}],
+"loop": false,
+"name": &"agente_punch",
+"speed": 14.0
 }]

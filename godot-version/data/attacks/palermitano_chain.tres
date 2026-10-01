@@ -6,9 +6,9 @@
 script = ExtResource("1")
 attack_id = &"palermitano_chain"
 damage = 2
-startup_duration = 0.34
+startup_duration = 0.48
 active_duration = 0.14
-recovery_duration = 0.52
+recovery_duration = 0.75
 shape_kind = 0
 reach = Vector2(136, 72)
 offset = Vector2(68, -44)

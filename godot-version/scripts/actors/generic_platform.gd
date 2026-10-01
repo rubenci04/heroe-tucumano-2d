@@ -23,14 +23,14 @@ func configure(
 ) -> void:
 	platform_texture = texture
 	image_scale = maxf(0.1,visual_scale)
-	lane_index = clampi(platform_lane,0,GameConfig.LANES.size()-1)
+	lane_index = 0
 	roof_width = maxf(0.0,useful_roof_width)
 	roof_vertical_offset = roof_offset
 	roof_enabled = collision_enabled
 
 
 func _ready() -> void:
-	lane_index = clampi(lane_index,0,GameConfig.LANES.size()-1)
+	lane_index = 0
 	collision_mask = 0
 	add_to_group("platforms")
 	add_to_group("generic_platforms")
@@ -42,8 +42,9 @@ func _ready() -> void:
 		return
 	visual.texture = platform_texture
 	visual.scale = Vector2.ONE*image_scale
-	visual.position.y = -platform_texture.get_height()*image_scale*0.5
 	var opaque_bounds := CollisionFactory.opaque_bounds(platform_texture)
+	# The node position is the visual ground anchor, not the texture canvas edge.
+	visual.position.y = (platform_texture.get_height()*0.5-opaque_bounds.end.y)*image_scale
 	var resolved_width := roof_width if roof_width > 0.0 else opaque_bounds.size.x*image_scale*0.8
 	var resolved_offset := roof_vertical_offset
 	if is_zero_approx(resolved_offset):
@@ -59,13 +60,17 @@ func _ready() -> void:
 	roof_collision.one_way_collision = true
 	roof_collision.one_way_collision_margin = 8.0
 	_apply_roof_state()
-	z_index = int(GameConfig.LANES[lane_index])
+	z_index = 10
 
 
 func _apply_roof_state() -> void:
-	collision_layer = (1 << lane_index) if roof_enabled else 0
+	collision_layer = GameConfig.PLAYER_PLATFORM_LAYER if roof_enabled else 0
 	roof_collision.disabled = not roof_enabled
 
 
 func get_roof_world_y() -> float:
 	return global_position.y+roof_vertical_offset-roof_thickness*0.5
+
+
+func get_ground_anchor_world_y() -> float:
+	return global_position.y

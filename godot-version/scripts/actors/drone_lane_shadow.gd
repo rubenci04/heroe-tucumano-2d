@@ -1,6 +1,6 @@
 extends Node2D
 
-## Presentation-only ground anchor: it follows the Drone's assigned physical lane.
+## Presentation-only anchor projected onto the single combat ground.
 var ground_y: float = 0.0
 
 
@@ -13,7 +13,7 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	var drone := get_parent() as Node2D
 	if drone != null:
-		ground_y = GameConfig.LANES[clampi(int(drone.get("lane_index")),0,GameConfig.LANES.size()-1)]
+		ground_y = GameConfig.GROUND_Y
 	queue_redraw()
 
 
@@ -27,4 +27,3 @@ func _draw() -> void:
 	draw_circle(Vector2.ZERO,22.0,Color(0.09,0.025,0.02,0.28),true)
 	draw_circle(Vector2.ZERO,22.0,Color(0.86,0.22,0.10,0.22),false,1.0,true)
 	draw_set_transform(Vector2.ZERO,0.0,Vector2.ONE)
-

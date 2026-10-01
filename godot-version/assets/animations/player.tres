@@ -1,135 +1,123 @@
-[gd_resource type="SpriteFrames" load_steps=37 format=3]
+[gd_resource type="SpriteFrames" format=3]
 
-[ext_resource type="Texture2D" path="res://assets/ciruja_run1.png" id="1"]
-[ext_resource type="Texture2D" path="res://assets/ciruja_run2.png" id="2"]
-[ext_resource type="Texture2D" path="res://assets/ciruja_run3.png" id="3"]
-[ext_resource type="Texture2D" path="res://assets/ciruja_idle.png" id="4"]
-[ext_resource type="Texture2D" path="res://assets/ciruja_salto.png" id="5"]
-[ext_resource type="Texture2D" path="res://assets/ciruja_disparo_naranja1.png" id="6"]
-[ext_resource type="Texture2D" path="res://assets/ciruja_disparo_naranja2.png" id="7"]
-[ext_resource type="Texture2D" path="res://assets/ciruja_disparo_cascote1.png" id="8"]
-[ext_resource type="Texture2D" path="res://assets/ciruja_disparo_cascote2.png" id="9"]
-[ext_resource type="Texture2D" path="res://assets/juntar_naranjas1.png" id="10"]
-[ext_resource type="Texture2D" path="res://assets/juntar_naranjas2.png" id="11"]
-[ext_resource type="Texture2D" path="res://assets/juntar_naranjas3.png" id="12"]
-[ext_resource type="Texture2D" path="res://assets/juntar_naranjas4.png" id="13"]
-[ext_resource type="Texture2D" path="res://assets/juntar_naranjas5.png" id="14"]
-[ext_resource type="Texture2D" path="res://assets/juntar_cascote1.png" id="15"]
-[ext_resource type="Texture2D" path="res://assets/juntar_cascote2.png" id="16"]
-[ext_resource type="Texture2D" path="res://assets/juntar_cascote3.png" id="17"]
-[ext_resource type="Texture2D" path="res://assets/juntar_cascote4.png" id="18"]
-[ext_resource type="Texture2D" path="res://assets/juntar_cascote5.png" id="19"]
-[ext_resource type="Texture2D" path="res://assets/ciruja_cabezazo0.png" id="20"]
-[ext_resource type="Texture2D" path="res://assets/ciruja_cabezazo1.png" id="21"]
-[ext_resource type="Texture2D" path="res://assets/ciruja_cabezazo2.png" id="22"]
-[ext_resource type="Texture2D" path="res://assets/ciruja_run0.png" id="23"]
-[ext_resource type="Texture2D" path="res://assets/ciruja_run4.png" id="24"]
-[ext_resource type="Texture2D" path="res://assets/ciruja_run5.png" id="25"]
-[ext_resource type="Texture2D" path="res://assets/ciruja_salto1.png" id="26"]
-[ext_resource type="Texture2D" path="res://assets/ciruja_salto2.png" id="27"]
-[ext_resource type="Texture2D" path="res://assets/ciruja_salto3.png" id="28"]
-[ext_resource type="Texture2D" path="res://assets/ciruja_salto4.png" id="29"]
-[ext_resource type="Texture2D" path="res://assets/ciruja_disparo_naranja0.png" id="30"]
-[ext_resource type="Texture2D" path="res://assets/ciruja_disparo_naranja3.png" id="31"]
-[ext_resource type="Texture2D" path="res://assets/ciruja_disparo_naranja4.png" id="32"]
-[ext_resource type="Texture2D" path="res://assets/ciruja_disparo_naranja5.png" id="33"]
-[ext_resource type="Texture2D" path="res://assets/ciruja_disparo_cascote0.png" id="34"]
-[ext_resource type="Texture2D" path="res://assets/ciruja_disparo_cascote3.png" id="35"]
-[ext_resource type="Texture2D" path="res://assets/ciruja_disparo_cascote4.png" id="36"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_idle.png" id="idle"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_run0.png" id="run0"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_run1.png" id="run1"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_run2.png" id="run2"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_run3.png" id="run3"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_run4.png" id="run4"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_run5.png" id="run5"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_run6.png" id="run6"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_salto.png" id="jump0"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_salto1.png" id="jump1"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_salto2.png" id="jump2"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_salto3.png" id="jump3"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_salto4.png" id="jump4"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_salto5.png" id="jump5"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_disparo_naranja0.png" id="orange0"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_disparo_naranja1.png" id="orange1"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_disparo_naranja2.png" id="orange2"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_disparo_naranja3.png" id="orange3"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_disparo_naranja4.png" id="orange4"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_disparo_naranja5.png" id="orange5"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_disparo_naranja6.png" id="orange6"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_disparo_cascote0.png" id="stone0"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_disparo_cascote1.png" id="stone1"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_disparo_cascote2.png" id="stone2"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_disparo_cascote3.png" id="stone3"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_disparo_cascote4.png" id="stone4"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_disparo_cascote5.png" id="stone5"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_cabezazo0.png" id="head0"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_cabezazo1.png" id="head1"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_cabezazo2.png" id="head2"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_cabezazo3.png" id="head3"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_punch0.png" id="punch0"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_punch1.png" id="punch1"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_punch2.png" id="punch2"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_punch3.png" id="punch3"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_punch4.png" id="punch4"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_punch5.png" id="punch5"]
+[ext_resource type="Texture2D" path="res://assets/ciruja_punch6.png" id="punch6"]
+[ext_resource type="Texture2D" path="res://assets/ciruja comiendo.png" id="eat"]
 
 [resource]
 animations = [{
-"frames": [{"duration": 1.0, "texture": ExtResource("1")}, {"duration": 1.0, "texture": ExtResource("2")}, {"duration": 1.0, "texture": ExtResource("3")}],
+"frames": [{"duration": 1.0, "texture": ExtResource("run0")}, {"duration": 1.0, "texture": ExtResource("run1")}, {"duration": 1.0, "texture": ExtResource("run2")}, {"duration": 1.0, "texture": ExtResource("run3")}, {"duration": 1.0, "texture": ExtResource("run4")}, {"duration": 1.0, "texture": ExtResource("run5")}, {"duration": 1.0, "texture": ExtResource("run6")}],
 "loop": true,
 "name": &"correr",
 "speed": 12.0
-},
-{
-"frames": [{"duration": 1.0, "texture": ExtResource("4")}],
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("idle")}],
 "loop": false,
 "name": &"idle",
 "speed": 1.0
-},
-{
-"frames": [{"duration": 1.0, "texture": ExtResource("5")}],
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("jump0")}, {"duration": 1.0, "texture": ExtResource("jump1")}, {"duration": 1.0, "texture": ExtResource("jump2")}, {"duration": 1.0, "texture": ExtResource("jump3")}, {"duration": 1.0, "texture": ExtResource("jump4")}, {"duration": 1.0, "texture": ExtResource("jump5")}],
 "loop": false,
 "name": &"salto",
-"speed": 1.0
-},
-{
-"frames": [{"duration": 1.0, "texture": ExtResource("6")}, {"duration": 1.0, "texture": ExtResource("7")}],
+"speed": 10.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("orange0")}, {"duration": 1.0, "texture": ExtResource("orange1")}, {"duration": 1.0, "texture": ExtResource("orange2")}, {"duration": 1.0, "texture": ExtResource("orange3")}, {"duration": 1.0, "texture": ExtResource("orange4")}, {"duration": 1.0, "texture": ExtResource("orange5")}, {"duration": 1.0, "texture": ExtResource("orange6")}],
 "loop": false,
 "name": &"disparar_naranja",
-"speed": 14.0
-},
-{
-"frames": [{"duration": 1.0, "texture": ExtResource("8")}, {"duration": 1.0, "texture": ExtResource("9")}],
+"speed": 28.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("stone0")}, {"duration": 1.0, "texture": ExtResource("stone1")}, {"duration": 1.0, "texture": ExtResource("stone2")}, {"duration": 1.0, "texture": ExtResource("stone3")}, {"duration": 1.0, "texture": ExtResource("stone4")}, {"duration": 1.0, "texture": ExtResource("stone5")}],
 "loop": false,
 "name": &"disparar_cascote",
-"speed": 14.0
-},
-{
-"frames": [{"duration": 1.0, "texture": ExtResource("10")}, {"duration": 1.0, "texture": ExtResource("11")}, {"duration": 1.0, "texture": ExtResource("12")}, {"duration": 1.0, "texture": ExtResource("13")}, {"duration": 1.0, "texture": ExtResource("14")}],
-"loop": false,
-"name": &"juntar_naranjas",
-"speed": 10.0
-},
-{
-"frames": [{"duration": 1.0, "texture": ExtResource("15")}, {"duration": 1.0, "texture": ExtResource("16")}, {"duration": 1.0, "texture": ExtResource("17")}, {"duration": 1.0, "texture": ExtResource("18")}, {"duration": 1.0, "texture": ExtResource("19")}],
-"loop": false,
-"name": &"juntar_cascotes",
-"speed": 10.0
-},
-{
-"frames": [{"duration": 1.0, "texture": ExtResource("20")}, {"duration": 1.0, "texture": ExtResource("21")}, {"duration": 1.0, "texture": ExtResource("22")}],
+"speed": 24.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("head0")}, {"duration": 1.0, "texture": ExtResource("head1")}, {"duration": 1.0, "texture": ExtResource("head2")}, {"duration": 1.0, "texture": ExtResource("head3")}],
 "loop": false,
 "name": &"cabezazo_anim",
-"speed": 12.0
-},
-{
-"frames": [{"duration": 1.0, "texture": ExtResource("4")}],
+"speed": 8.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("idle")}],
 "loop": false,
 "name": &"Idle",
 "speed": 1.0
-},
-{
-"frames": [{"duration": 1.0, "texture": ExtResource("23")}, {"duration": 1.0, "texture": ExtResource("1")}, {"duration": 1.0, "texture": ExtResource("2")}, {"duration": 1.0, "texture": ExtResource("3")}, {"duration": 1.0, "texture": ExtResource("24")}, {"duration": 1.0, "texture": ExtResource("25")}],
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("run0")}, {"duration": 1.0, "texture": ExtResource("run1")}, {"duration": 1.0, "texture": ExtResource("run2")}, {"duration": 1.0, "texture": ExtResource("run3")}, {"duration": 1.0, "texture": ExtResource("run4")}, {"duration": 1.0, "texture": ExtResource("run5")}, {"duration": 1.0, "texture": ExtResource("run6")}],
 "loop": true,
 "name": &"Run",
 "speed": 12.0
-},
-{
-"frames": [{"duration": 1.0, "texture": ExtResource("26")}, {"duration": 1.0, "texture": ExtResource("27")}, {"duration": 1.0, "texture": ExtResource("28")}, {"duration": 1.0, "texture": ExtResource("29")}],
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("jump0")}, {"duration": 1.0, "texture": ExtResource("jump1")}, {"duration": 1.0, "texture": ExtResource("jump2")}, {"duration": 1.0, "texture": ExtResource("jump3")}, {"duration": 1.0, "texture": ExtResource("jump4")}, {"duration": 1.0, "texture": ExtResource("jump5")}],
 "loop": false,
 "name": &"Jump",
-"speed": 8.0
-},
-{
-"frames": [{"duration": 1.0, "texture": ExtResource("30")}, {"duration": 1.0, "texture": ExtResource("6")}, {"duration": 1.0, "texture": ExtResource("7")}, {"duration": 1.0, "texture": ExtResource("31")}, {"duration": 1.0, "texture": ExtResource("32")}, {"duration": 1.0, "texture": ExtResource("33")}],
+"speed": 10.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("orange0")}, {"duration": 1.0, "texture": ExtResource("orange1")}, {"duration": 1.0, "texture": ExtResource("orange2")}, {"duration": 1.0, "texture": ExtResource("orange3")}, {"duration": 1.0, "texture": ExtResource("orange4")}, {"duration": 1.0, "texture": ExtResource("orange5")}, {"duration": 1.0, "texture": ExtResource("orange6")}],
 "loop": false,
 "name": &"Throw Orange",
-"speed": 24.0
-},
-{
-"frames": [{"duration": 1.0, "texture": ExtResource("34")}, {"duration": 1.0, "texture": ExtResource("8")}, {"duration": 1.0, "texture": ExtResource("9")}, {"duration": 1.0, "texture": ExtResource("35")}, {"duration": 1.0, "texture": ExtResource("36")}],
+"speed": 28.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("stone0")}, {"duration": 1.0, "texture": ExtResource("stone1")}, {"duration": 1.0, "texture": ExtResource("stone2")}, {"duration": 1.0, "texture": ExtResource("stone3")}, {"duration": 1.0, "texture": ExtResource("stone4")}, {"duration": 1.0, "texture": ExtResource("stone5")}],
 "loop": false,
 "name": &"Throw Stone",
-"speed": 20.0
-},
-{
-"frames": [{"duration": 1.0, "texture": ExtResource("20")}, {"duration": 1.0, "texture": ExtResource("21")}, {"duration": 1.0, "texture": ExtResource("22")}],
+"speed": 24.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("head0")}, {"duration": 1.0, "texture": ExtResource("head1")}, {"duration": 1.0, "texture": ExtResource("head2")}, {"duration": 1.0, "texture": ExtResource("head3")}],
 "loop": false,
 "name": &"Headbutt",
-"speed": 12.0
-},
-{
-"frames": [{"duration": 1.0, "texture": ExtResource("4")}],
+"speed": 8.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("punch0")}, {"duration": 1.0, "texture": ExtResource("punch1")}, {"duration": 1.0, "texture": ExtResource("punch2")}, {"duration": 1.0, "texture": ExtResource("punch3")}, {"duration": 1.0, "texture": ExtResource("punch4")}, {"duration": 1.0, "texture": ExtResource("punch5")}, {"duration": 1.0, "texture": ExtResource("punch6")}],
+"loop": false,
+"name": &"Punch",
+"speed": 14.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("eat")}],
+"loop": false,
+"name": &"Eat",
+"speed": 1.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("idle")}],
 "loop": false,
 "name": &"Hit",
 "speed": 1.0
-},
-{
-"frames": [{"duration": 1.0, "texture": ExtResource("4")}],
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("idle")}],
 "loop": false,
 "name": &"Death",
 "speed": 1.0

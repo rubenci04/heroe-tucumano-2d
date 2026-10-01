@@ -1,0 +1,6 @@
+{
+  "checkpoints": [
+    {"id":"route_midpoint", "x":3600, "sector":"Monteros", "required_encounters":["route_wave_02"], "after_set_piece":"ExpresbusSetPiece"},
+    {"id":"route_after_heavy", "x":5600, "sector":"Villa Quinteros", "required_encounters":["route_wave_04"], "after_set_piece":"TesaSetPiece"}
+  ]
+}

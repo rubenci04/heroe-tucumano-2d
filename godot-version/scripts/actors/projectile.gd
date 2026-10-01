@@ -5,8 +5,10 @@ const DEFINITIONS: Dictionary = {
 	&"orange": preload("res://data/projectiles/orange.tres"),
 	&"stone": preload("res://data/projectiles/stone.tres"),
 	&"bottle": preload("res://data/projectiles/bottle.tres"),
+	&"hipster_coffee": preload("res://data/projectiles/hipster_coffee.tres"),
 	&"coffee": preload("res://data/projectiles/coffee.tres"),
 	&"bullet": preload("res://data/projectiles/bullet.tres"),
+	&"agent_orb": preload("res://data/projectiles/agent_orb.tres"),
 	&"drone_bolt": preload("res://data/projectiles/drone_bolt.tres")
 }
 
@@ -53,16 +55,19 @@ func _ready() -> void:
 	visual.scale = Vector2.ONE*definition.visual_scale
 	# Player projectiles face their travel vector once. Enemy projectile presentation
 	# keeps its legacy behavior; the agent bullet itself faces left at rest.
-	if kind == &"bullet":
+	if kind in [&"hipster_coffee",&"coffee"]:
+		# The original artwork leans clockwise; compensate once, never follow flight.
+		visual.rotation = deg_to_rad(-22.0)
+	elif kind == &"bullet":
 		visual.rotation = PI if direction > 0 else 0.0
-	elif team == &"player" or kind in [&"drone_bolt",&"coffee"]:
+	elif team == &"player" or kind in [&"drone_bolt",&"agent_orb",&"coffee",&"hipster_coffee"]:
 		visual.rotation = travel_direction.angle()
 	visual.play(definition.animation)
 	var rectangle := collision_shape.shape as RectangleShape2D
 	rectangle.size = definition.collision_size
 	collision_shape.position = definition.collision_offset
 	collision_layer = GameConfig.PROJECTILE_LAYER
-	collision_mask = (GameConfig.ENEMY_LAYER if team == &"player" else GameConfig.PLAYER_LAYER) | (1 << lane_index)
+	collision_mask = (GameConfig.ENEMY_LAYER if team == &"player" else GameConfig.PLAYER_LAYER) | GameConfig.WORLD_LAYER
 	body_entered.connect(_on_body_entered)
 	area_entered.connect(_on_area_entered)
 
@@ -84,7 +89,7 @@ func _physics_process(delta: float) -> void:
 	if spent:
 		return
 	global_position += displacement
-	if team != &"player" and kind != &"drone_bolt":
+	if team != &"player" and kind not in [&"drone_bolt",&"agent_orb",&"hipster_coffee",&"coffee"]:
 		visual.rotation += direction*deg_to_rad(definition.rotation_speed_degrees)*delta
 	remaining_life -= delta
 	if remaining_life <= 0.0 or position.x < -120.0 or position.x > GameConfig.WORLD_WIDTH+120.0:
