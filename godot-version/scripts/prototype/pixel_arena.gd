@@ -260,6 +260,8 @@ func _update_hipster_attack(enemy: Node) -> void:
 
 func _anchor_batch_visual(sprite: AnimatedSprite2D) -> void:
 	var texture := sprite.sprite_frames.get_frame_texture(sprite.animation, sprite.frame)
+	if texture == null:
+		return # animation_changed can fire before Godot resets the previous frame index.
 	var is_batch := texture.resource_path.begins_with("res://characters/") or texture.resource_path.begins_with("res://assets/characters/")
 	var feet_y := float(sprite.get_meta("batch_ground_y")) if is_batch else CollisionFactory.opaque_bounds(texture).end.y
 	var base_scale: float = sprite.get_meta("batch_visual_scale", sprite.scale.y)
@@ -288,6 +290,15 @@ func _spawn_car() -> void:
 func _spawn_projectile(origin: Vector2,_lane: int,direction: Variant,kind: String,team: String, emitter: Node2D = null) -> void:
 	if is_instance_valid(emitter):
 		origin = emitter.global_position + (origin - emitter.global_position) * emitter.scale
+		var sockets: Dictionary = preload("res://scripts/prototype/feel_config.gd").BATCH_MUZZLE_SOURCE
+		var character: String = emitter.get_meta("prototype_character", "")
+		if sockets.has(character):
+			# Source pixels follow the visual transform, including its procedural recoil.
+			var socket: Vector2 = sockets[character] - Vector2(160, 240)
+			var mirrored: bool = emitter.facing < 0 if character == "hipster" else emitter.facing > 0
+			if mirrored:
+				socket.x = -socket.x
+			origin = emitter.visual.to_global(socket)
 	var projectile = PROJECTILE_SCENE.instantiate()
 	projectile.position = origin
 	projectile.lane_index = 0

@@ -45,14 +45,20 @@ func run() -> void:
 	var reached_preboss := false
 	var preboss_frame := -1
 	for frame in range(14000):
-		var waiting_for_expresbus: bool = player.position.x>=expresbus.trigger_x and expresbus.phase!=expresbus.Phase.FINISHED
-		var waiting_for_tesa: bool = player.position.x>=tesa.trigger_x and tesa.phase!=tesa.Phase.FINISHED
+		# READY may still await an earlier encounter. Continue moving to finish it;
+		# wait only for a bus that has actually started its warning/crossing.
+		var waiting_for_expresbus: bool = expresbus.phase in [expresbus.Phase.WARNING, expresbus.Phase.CROSSING]
+		var waiting_for_tesa: bool = tesa.phase in [tesa.Phase.WARNING, tesa.Phase.CROSSING]
 		if player.position.x < 7400.0 and not waiting_for_expresbus and not waiting_for_tesa:
 			player.position.x = minf(7400.0,player.position.x+160.0/60.0)
 		player.position.y = GameConfig.GROUND_Y
 		await physics_frame
 		for encounter_id: StringName in director._active_enemies.keys():
 			for actor in director.get_active_enemies(encounter_id):
+				# This traversal uses 10,000s invulnerability to isolate progression.
+				# It is not a respawn and must not hold newly spawned ranged actors.
+				if actor.get("_waiting_respawn_read") == true and player.invulnerability > 9000.0:
+					actor._waiting_respawn_read = false
 				var instance_id: int = actor.get_instance_id()
 				if not seen_instances.has(instance_id):
 					seen_instances[instance_id] = true
@@ -177,6 +183,11 @@ func snapshot(route: Node) -> Dictionary:
 	if is_instance_valid(route.boss):
 		boss_state = route.boss.boss_state
 	return {
+		"controls_enabled":route.player.controls_enabled,
+		"player_health":route.player.health,
+		"player_lives":route.player.lives,
+		"player_state":route.player.state,
+		"actors":route.get_node("Enemies").get_children().map(func(actor: Node): return {"type":actor.get("archetype"),"x":actor.position.x,"y":actor.position.y,"state":actor.get("ai_state"),"active":actor.get("active"),"velocity":actor.get("velocity"),"respawn_read":actor.get("_waiting_respawn_read")}),
 		"player_x":snappedf(route.player.position.x,0.1),
 		"active_enemies":route.get_node("Enemies").get_child_count(),
 		"active_encounters":director._active_enemies.keys(),

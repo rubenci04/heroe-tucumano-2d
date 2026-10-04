@@ -32,7 +32,7 @@ func setup(world_node: Node2D, player_node: CharacterBody2D) -> void:
 
 
 func watch_enemy(enemy: Node) -> void:
-	var data := {"pose": Pose.new(), "tween": null, "base_pos": enemy.visual.position, "base_scale": enemy.visual.scale}
+	var data := {"pose": Pose.new(), "tween": null, "base_pos": enemy.visual.position, "base_scale": enemy.visual.scale, "wheel_angle": 0.0}
 	_enemies[enemy] = data
 	enemy.health_component.damaged.connect(func(_a, _c, _s): _on_enemy_hit(enemy))
 	enemy.defeated.connect(func(_p): _on_enemy_defeated(enemy))
@@ -76,6 +76,8 @@ func _on_enemy_defeated(enemy: Node) -> void:
 	world.add_child(ghost)
 	ghost.global_position = src.global_position
 	ghost.global_transform = src.global_transform
+	if ghost.has_node("WheelSpokes"):
+		ghost.get_node("WheelSpokes").hide()
 	ghost.z_index = 15
 	ghost.stop()
 	src.visible = false
@@ -203,6 +205,7 @@ func _update_enemy(enemy: Node, d: Dictionary) -> void:
 			v.add_child(spokes)
 			spokes.draw.connect(func():
 				for center in [Vector2(-46.0, -17.0), Vector2(38.0, -17.0)]:
-					var direction := Vector2.from_angle(_time * 10.0) * 5.0
+					var direction := Vector2.from_angle(d.wheel_angle) * 5.0
 					spokes.draw_line(center - direction, center + direction, Color(0.3, 0.3, 0.3, 0.6), 1.0))
+		d.wheel_angle += enemy.velocity.x * get_process_delta_time() / maxf(2.0, 5.0 * v.scale.x * enemy.scale.x)
 		v.get_node("WheelSpokes").queue_redraw()
