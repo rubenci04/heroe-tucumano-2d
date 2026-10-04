@@ -124,6 +124,9 @@ func _spawn_boss() -> void:
 	_add_contact_shadow(boss, "palermitano")
 	feel.watch_enemy(boss)
 	anim.watch_enemy(boss)
+	boss.pattern_started.connect(func(pattern: int):
+		if pattern == boss.Pattern.CHAIN:
+			boss.visual.play(&"golpe" if boss.chain_activations % 2 == 0 else &"golpe_v2"))
 	boss.health_component.damaged.connect(func(_amount, _health, _source):
 		if boss.boss_state in [boss.BossState.DECIDE, boss.BossState.RECOVERY]:
 			boss.visual.play(&"golpes_recibidos"))
@@ -147,6 +150,8 @@ func _apply_batch_frames(actor: Node, character: String, aliases: Dictionary) ->
 		return
 	var incoming := load(path) as SpriteFrames
 	var sprite: AnimatedSprite2D = actor.visual
+	sprite.set_meta("batch_character", character)
+	sprite.set_meta("legacy_offsets", (actor._visual_frame_offsets if character == "ciruja" else actor._visual_offset_profiles).duplicate(true))
 	var frames: SpriteFrames = sprite.sprite_frames.duplicate(true)
 	# Keep every folder available under its source name; aliases bridge existing states.
 	for name in incoming.get_animation_names():
@@ -167,12 +172,16 @@ func _apply_batch_frames(actor: Node, character: String, aliases: Dictionary) ->
 	sprite.sprite_frames = frames
 	sprite.play(current)
 	sprite.set_meta("batch_ground_y", float(incoming.get_meta("ground_y")))
+	sprite.set_meta("batch_visual_scale", sprite.scale.y)
+	sprite.set_meta("batch_reference_height", CollisionFactory.opaque_bounds(incoming.get_frame_texture(aliases.values()[0], 0)).size.y)
 	# Retain the original actor colliders and scale; this is a prototype visual swap.
 	if character == "ciruja":
 		actor._visual_frame_offsets.clear()
 	else:
 		actor._visual_offset_profiles.clear()
 	batch_visuals.append(sprite)
+	sprite.animation_changed.connect(_anchor_batch_visual.bind(sprite))
+	sprite.frame_changed.connect(_anchor_batch_visual.bind(sprite))
 	_anchor_batch_visual(sprite)
 
 
@@ -212,10 +221,26 @@ func _add_contact_shadow(actor: Node2D, character: String) -> void:
 
 
 func _process(_delta: float) -> void:
+	if player.state == player.State.DEATH:
+		player.visual.rotation = 0.0 # New death poses already contain the fall.
 	for enemy in enemies.get_children():
+		if enemy.get("boss_state") != null and enemy.active:
+			if enemy.boss_state == enemy.BossState.DECIDE:
+				var idle: StringName = &"idle_v2" if enemy.last_pattern == enemy.Pattern.SUMMON_AGENTS else &"idle"
+				if enemy.visual.animation != &"golpes_recibidos" or not enemy.visual.is_playing():
+					enemy.visual.play(idle)
 		if enemy.get("archetype") == "hipster":
 			enemy.visual.flip_h = enemy.facing < 0 # New scooter artwork faces right.
 			_update_hipster_attack(enemy)
+		if enemy.get("archetype") == "grandote" and enemy.active_attack_kind == enemy.AttackKind.GROUND_SLAM:
+			# Existing slam gameplay has 13 legacy poses; map its stages onto seven new poses.
+			if enemy.ai_state == enemy.AIState.TELEGRAPH:
+				var progress: float = 1.0 - enemy._state_remaining / enemy.GRANDOTE_SLAM_DEFINITION.startup_duration
+				enemy.visual.frame = clampi(int(progress * 4.0), 0, 3)
+			elif enemy.ai_state == enemy.AIState.ATTACK:
+				enemy.visual.frame = 4
+			elif enemy.ai_state == enemy.AIState.RECOVERY:
+				enemy.visual.frame = 5 if enemy._state_remaining > enemy.GRANDOTE_SLAM_DEFINITION.recovery_duration * 0.5 else 6
 	for sprite in batch_visuals:
 		if is_instance_valid(sprite):
 			_anchor_batch_visual(sprite)
@@ -236,9 +261,19 @@ func _update_hipster_attack(enemy: Node) -> void:
 func _anchor_batch_visual(sprite: AnimatedSprite2D) -> void:
 	var texture := sprite.sprite_frames.get_frame_texture(sprite.animation, sprite.frame)
 	var is_batch := texture.resource_path.begins_with("res://characters/") or texture.resource_path.begins_with("res://assets/characters/")
-	var feet_y := float(sprite.get_meta("batch_ground_y")) if is_batch else texture.get_height() * 0.5 + 98.0
+	var feet_y := float(sprite.get_meta("batch_ground_y")) if is_batch else CollisionFactory.opaque_bounds(texture).end.y
+	var base_scale: float = sprite.get_meta("batch_visual_scale", sprite.scale.y)
+	if not is_batch:
+		var first := sprite.sprite_frames.get_frame_texture(sprite.animation, 0)
+		base_scale *= float(sprite.get_meta("batch_reference_height", 190.0)) / CollisionFactory.opaque_bounds(first).size.y
+	sprite.scale = Vector2.ONE * base_scale * Vector2(sprite.get_meta("pose_multiplier", Vector2.ONE))
 	# Centered sprite: canvas y=240 maps to actor origin, including rotation/stretch.
 	sprite.offset = Vector2(0.0, texture.get_height() * 0.5 - feet_y)
+	if not is_batch:
+		var offsets: Array = sprite.get_meta("legacy_offsets", {}).get(sprite.animation, [])
+		if sprite.frame < offsets.size():
+			var saved = offsets[sprite.frame]
+			sprite.offset.x = saved.x if saved is Vector2 else float(saved[0])
 	if not sprite.has_meta("batch_static_actor"):
 		sprite.position.y = 0.0
 

@@ -116,6 +116,8 @@ func _foot_y(v: AnimatedSprite2D) -> float:
 	var tex: Texture2D = null
 	if v.sprite_frames != null and v.sprite_frames.has_animation(v.animation):
 		tex = v.sprite_frames.get_frame_texture(v.animation, v.frame)
+	if v.has_meta("batch_ground_y") and tex != null:
+		return float(v.get_meta("batch_ground_y")) - tex.get_height() * 0.5 + v.offset.y
 	return (tex.get_height() * 0.5 if tex != null else 0.0) + v.offset.y
 
 
@@ -123,6 +125,7 @@ func _foot_y(v: AnimatedSprite2D) -> float:
 func _apply(v: AnimatedSprite2D, base_pos: Vector2, base_scale: Vector2, mult: Vector2, rot: float, shift_x: float) -> void:
 	var new_scale := base_scale * mult
 	v.scale = new_scale
+	v.set_meta("pose_multiplier", mult)
 	v.rotation = rot
 	v.position = Vector2(base_pos.x + shift_x, base_pos.y + _foot_y(v) * (base_scale.y - new_scale.y))
 
