@@ -7,14 +7,14 @@ script = ExtResource("1")
 sequence_id = &"demo_ending_acheral"
 entries = Array[Dictionary]([{
 "speaker": "Hincha de San Martín",
-"text": "¡Se terminó el chamuyo, Palermitano! La receta se queda en Tucumán."
+"text": "¡Se terminó el chamuyo, Palermitano! ¡Soltá a la Campeona!"
 }, {
 "speaker": "El Palermitano",
-"text": "Esto fue apenas una validación de mercado. Nos replegamos hacia Acheral."
+"text": "Esto fue apenas una validación de mercado. Nos replegamos al Ingenio Arcor con la Campeona."
 }, {
 "speaker": "Hincha de San Martín",
-"text": "¡Andá nomás! En la Ruta 38 no se afana la receta de nadie."
+"text": "¡Voy detrás de ustedes! Esto no termina hasta traerla de vuelta."
 }, {
 "speaker": "El Palermitano",
-"text": "Considérenlo una pausa estratégica. Próximo destino: Acheral."
+"text": "Considérenlo una pausa estratégica. Próximo destino: Ingenio Arcor."
 }])

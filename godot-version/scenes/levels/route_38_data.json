@@ -58,6 +58,18 @@
 					"x_offset": 690,
 					"lane": 0,
 					"delay": 1.35
+				},
+				{
+					"enemy_id": "hipster",
+					"x_offset": 750,
+					"lane": 0,
+					"delay": 1.8
+				},
+				{
+					"enemy_id": "hipster",
+					"x_offset": 810,
+					"lane": 0,
+					"delay": 2.25
 				}
 			],
 			"rest": 0.8
@@ -187,6 +199,18 @@
 					"x_offset": 640,
 					"lane": 0,
 					"delay": 1.35
+				},
+				{
+					"enemy_id": "hipster",
+					"x_offset": 700,
+					"lane": 0,
+					"delay": 1.8
+				},
+				{
+					"enemy_id": "agente",
+					"x_offset": 760,
+					"lane": 0,
+					"delay": 2.25
 				}
 			],
 			"rest": 1

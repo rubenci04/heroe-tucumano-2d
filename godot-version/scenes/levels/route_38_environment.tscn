@@ -41,7 +41,6 @@ position = Vector2(903, 0)
 scale = Vector2(0.51, 0.51)
 texture = ExtResource("sky")
 centered = false
-flip_h = true
 
 [node name="MainPanorama" type="Parallax2D" parent="." unique_id=1234422360]
 z_index = -15

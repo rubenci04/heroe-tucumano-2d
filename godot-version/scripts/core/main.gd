@@ -147,8 +147,8 @@ func _finish_demo_closing() -> void:
 	demo_closing_complete = true
 	_sync_session_from_player()
 	hud.show_result(
-		"DEMO COMPLETADA · PALERMITANO DERROTADO",
-		"La receta vuelve a estar a salvo en Famaillá.\nPRÓXIMO DESTINO: ACHERAL · CONTINUARÁ…\nPuntaje: %d · Monedas: %d\nR: reiniciar · Esc/B: salir" % [player.score,player.coins]
+		"RUTA 38 · BATALLA GANADA",
+		"Palermitano se retira: la Campeona sigue secuestrada.\nPRÓXIMO DESTINO: INGENIO ARCOR · CONTINUARÁ…\nPuntaje: %d · Monedas: %d\nR: reiniciar · Esc/B: salir" % [player.score,player.coins]
 	)
 	change_state(GAME_SESSION.DemoState.RESULT)
 	demo_closing_finished.emit()
