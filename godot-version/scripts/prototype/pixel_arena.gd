@@ -11,6 +11,7 @@ const PROCEDURAL_ANIM = preload("res://scripts/prototype/procedural_anim.gd")
 const CHARACTER_SCALE = preload("res://scripts/prototype/character_scale.gd")
 const BOSS_SCENE = preload("res://scenes/actors/palermitano_boss.tscn")
 const GROUND_WAVE_SCENE = preload("res://scenes/actors/grandote_ground_wave.tscn")
+const CONTACT_SHADOW = preload("res://scripts/prototype/contact_shadow.gd")
 const ARENA_LEFT := 200.0
 const ARENA_RIGHT := 600.0
 const PLAYER_START := Vector2(260.0,370.0)
@@ -45,6 +46,7 @@ func _ready() -> void:
 	player.shot_requested.connect(_spawn_projectile.bind(player))
 	player.respawn_requested.connect(_on_player_respawn_requested)
 	_refill_player()
+	_add_contact_shadow(player, "ciruja")
 	_spawn_enemy("hipster",ARENA_RIGHT-60.0)
 	_spawn_enemy("agente",ARENA_RIGHT-140.0)
 	_spawn_enemy("grandote",ARENA_RIGHT-210.0)
@@ -96,6 +98,7 @@ func _spawn_enemy(archetype: String,x: float) -> CharacterBody2D:
 			&"grandote_ground_slam": &"golpe_piso", &"Death": &"muerte"
 		})
 	CHARACTER_SCALE.apply(enemy, archetype)
+	_add_contact_shadow(enemy, archetype)
 	feel.watch_enemy(enemy)
 	anim.watch_enemy(enemy)
 	return enemy
@@ -118,6 +121,7 @@ func _spawn_boss() -> void:
 		&"boss_joke": &"idle_v2", &"boss_order": &"idle_v2", &"Death": &"derrota"
 	})
 	CHARACTER_SCALE.apply(boss, "palermitano")
+	_add_contact_shadow(boss, "palermitano")
 	feel.watch_enemy(boss)
 	anim.watch_enemy(boss)
 	boss.health_component.damaged.connect(func(_amount, _health, _source):
@@ -192,8 +196,19 @@ func _spawn_campeona() -> void:
 	sprite.set_meta("batch_static_actor", true)
 	sprite.play(&"idle")
 	CHARACTER_SCALE.apply_npc(sprite, "campeona")
+	_add_contact_shadow(sprite, "campeona")
 	batch_visuals.append(sprite)
 	_anchor_batch_visual(sprite)
+
+
+func _add_contact_shadow(actor: Node2D, character: String) -> void:
+	var shadow = CONTACT_SHADOW.new()
+	shadow.name = character.capitalize() + "ContactShadow"
+	shadow.actor = actor
+	shadow.visible_height = preload("res://scripts/prototype/feel_config.gd").target_height(character)
+	shadow.ground_y = GameConfig.GROUND_Y
+	shadow.z_index = -1
+	world.add_child(shadow)
 
 
 func _process(_delta: float) -> void:
