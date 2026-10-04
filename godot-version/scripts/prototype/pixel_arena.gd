@@ -9,6 +9,8 @@ const FEEL_DIRECTOR = preload("res://scripts/prototype/feel_director.gd")
 const CIRUJA_SKIN = preload("res://scripts/prototype/ciruja_skin.gd")
 const PROCEDURAL_ANIM = preload("res://scripts/prototype/procedural_anim.gd")
 const CHARACTER_SCALE = preload("res://scripts/prototype/character_scale.gd")
+const BOSS_SCENE = preload("res://scenes/actors/palermitano_boss.tscn")
+const GROUND_WAVE_SCENE = preload("res://scenes/actors/grandote_ground_wave.tscn")
 const ARENA_LEFT := 200.0
 const ARENA_RIGHT := 600.0
 const PLAYER_START := Vector2(260.0,370.0)
@@ -45,6 +47,8 @@ func _ready() -> void:
 	_refill_player()
 	_spawn_enemy("hipster",ARENA_RIGHT-60.0)
 	_spawn_enemy("agente",ARENA_RIGHT-140.0)
+	_spawn_enemy("grandote",ARENA_RIGHT-210.0)
+	_spawn_boss()
 	_spawn_campeona()
 	_spawn_car()
 	# Apply anchoring after existing procedural animation; production code is untouched.
@@ -67,12 +71,13 @@ func _on_player_respawn_requested() -> void:
 	_refill_player()
 
 
-func _spawn_enemy(archetype: String,x: float) -> void:
+func _spawn_enemy(archetype: String,x: float) -> CharacterBody2D:
 	var enemy = ENEMY_SCENE.instantiate()
 	enemy.archetype = archetype
 	enemy.target = player
 	enemy.position = Vector2(x,GameConfig.GROUND_Y)
 	enemy.shot_requested.connect(_spawn_projectile.bind(enemy))
+	enemy.ground_wave_requested.connect(_spawn_ground_wave.bind(enemy))
 	enemies.add_child(enemy)
 	CHARACTER_SCALE.remember(enemy)
 	if archetype == "agente":
@@ -80,9 +85,55 @@ func _spawn_enemy(archetype: String,x: float) -> void:
 			enemy.definition.run_animation: &"correr", enemy.definition.attack_animation: &"disparar",
 			&"Punch": &"punio", &"Death": &"muerte"
 		})
+	elif archetype == "hipster":
+		_apply_batch_frames(enemy, "hipster", {
+			enemy.definition.run_animation: &"avanzar_idle", enemy.definition.attack_animation: &"tirar_cafe",
+			&"Death": &"caida"
+		})
+	elif archetype == "grandote":
+		_apply_batch_frames(enemy, "grandote", {
+			enemy.definition.run_animation: &"correr", enemy.definition.attack_animation: &"punio",
+			&"grandote_ground_slam": &"golpe_piso", &"Death": &"muerte"
+		})
 	CHARACTER_SCALE.apply(enemy, archetype)
 	feel.watch_enemy(enemy)
 	anim.watch_enemy(enemy)
+	return enemy
+
+
+func _spawn_boss() -> void:
+	var boss = BOSS_SCENE.instantiate()
+	boss.target = player
+	boss.position = Vector2(ARENA_RIGHT - 15.0, GameConfig.GROUND_Y)
+	boss.arena_bounds = Vector2(ARENA_LEFT + 20.0, ARENA_RIGHT - 15.0)
+	boss.aimed_shot_requested.connect(_spawn_projectile.bind(boss))
+	boss.summon_requested.connect(func(count: int, _lane: int):
+		for _index in count:
+			if boss.get_live_summon_count() < boss.max_live_summons:
+				boss.register_summon(_spawn_enemy("agente", ARENA_RIGHT - 45.0)))
+	enemies.add_child(boss)
+	CHARACTER_SCALE.remember(boss)
+	_apply_batch_frames(boss, "palermitano", {
+		&"boss_run": &"correr", &"boss_idle": &"idle", &"boss_punch": &"golpe_v2",
+		&"boss_joke": &"idle_v2", &"boss_order": &"idle_v2", &"Death": &"derrota"
+	})
+	CHARACTER_SCALE.apply(boss, "palermitano")
+	feel.watch_enemy(boss)
+	anim.watch_enemy(boss)
+	boss.health_component.damaged.connect(func(_amount, _health, _source):
+		if boss.boss_state in [boss.BossState.DECIDE, boss.BossState.RECOVERY]:
+			boss.visual.play(&"golpes_recibidos"))
+
+
+func _spawn_ground_wave(origin: Vector2, lane: int, direction: int, emitter: Node2D) -> void:
+	var wave = GROUND_WAVE_SCENE.instantiate()
+	wave.position = emitter.global_position + (origin - emitter.global_position) * emitter.scale
+	wave.lane_index = lane
+	wave.direction = direction
+	projectiles.add_child(wave)
+	# The legacy wave toggles monitoring on hit; defer that call outside the physics signal.
+	wave.body_entered.disconnect(wave._on_body_entered)
+	wave.body_entered.connect(func(body: Node): wave.call_deferred("try_hit_body", body))
 
 
 func _apply_batch_frames(actor: Node, character: String, aliases: Dictionary) -> void:
@@ -146,9 +197,25 @@ func _spawn_campeona() -> void:
 
 
 func _process(_delta: float) -> void:
+	for enemy in enemies.get_children():
+		if enemy.get("archetype") == "hipster":
+			enemy.visual.flip_h = enemy.facing < 0 # New scooter artwork faces right.
+			_update_hipster_attack(enemy)
 	for sprite in batch_visuals:
 		if is_instance_valid(sprite):
 			_anchor_batch_visual(sprite)
+
+
+func _update_hipster_attack(enemy: Node) -> void:
+	# Alternate existing throw actions locally; production Hipster stays coffee-only.
+	var preparing: bool = enemy.ai_state == enemy.AIState.TELEGRAPH
+	if preparing and not enemy.get_meta("batch_preparing", false):
+		var bottle: bool = not enemy.get_meta("batch_last_bottle", true)
+		enemy.set_meta("batch_last_bottle", bottle)
+		enemy.definition.projectile_definition = load("res://data/projectiles/bottle.tres" if bottle else "res://data/projectiles/hipster_coffee.tres")
+		enemy.definition.attack_animation = &"tirar_botella" if bottle else &"tirar_cafe"
+		enemy.visual.play(enemy.definition.attack_animation)
+	enemy.set_meta("batch_preparing", preparing)
 
 
 func _anchor_batch_visual(sprite: AnimatedSprite2D) -> void:

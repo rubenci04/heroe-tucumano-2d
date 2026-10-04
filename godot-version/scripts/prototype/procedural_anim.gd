@@ -4,6 +4,8 @@ extends Node
 
 const CFG = preload("res://scripts/prototype/feel_config.gd")
 
+const CIRUJA_GROUND_Y := -0.84   # pie del sprite original respecto al origen del player (igual que ciruja_skin.gd)
+
 class Pose extends RefCounted:
 	var recoil := 0.0   # 0..1, se anima con tween
 
@@ -65,7 +67,7 @@ func _on_enemy_defeated(enemy: Node) -> void:
 	_enemies.erase(enemy)
 	if d.tween != null and d.tween.is_valid():
 		d.tween.kill()
-	if enemy.definition.escapes_when_depleted:
+	if enemy.get("definition") != null and enemy.definition.escapes_when_depleted:
 		return
 	var src: AnimatedSprite2D = enemy.visual
 	var ghost: AnimatedSprite2D = src.duplicate()
@@ -73,9 +75,18 @@ func _on_enemy_defeated(enemy: Node) -> void:
 	ghost.modulate = Color.WHITE
 	world.add_child(ghost)
 	ghost.global_position = src.global_position
+	ghost.global_transform = src.global_transform
 	ghost.z_index = 15
 	ghost.stop()
 	src.visible = false
+	if src.has_meta("batch_ground_y") and src.sprite_frames.has_animation(&"Death"):
+		ghost.play(&"Death")
+		ghost.frame_changed.connect(func():
+			var texture := ghost.sprite_frames.get_frame_texture(ghost.animation, ghost.frame)
+			ghost.offset = Vector2(0.0, texture.get_height() * 0.5 - 240.0))
+		ghost.offset = Vector2(0.0, ghost.sprite_frames.get_frame_texture(&"Death", 0).get_height() * 0.5 - 240.0)
+		ghost.animation_finished.connect(ghost.queue_free)
+		return
 	var away := signf(enemy.global_position.x - player.global_position.x)
 	if away == 0.0:
 		away = -float(enemy.facing)
@@ -150,10 +161,18 @@ func _update_player(delta: float) -> void:
 		breath = sin(_time * TAU * CFG.BREATH_SPEED) * CFG.BREATH_AMOUNT
 	var sy := 1.0 + _p_stretch - _p_land * CFG.LAND_SQUASH + breath
 	var sx := 1.0 - _p_stretch * 0.5 + _p_land * CFG.LAND_SQUASH * 0.6 - breath * 0.5
-	_apply(v, _p_base_pos, Vector2.ONE * player.character_visual_scale, Vector2(sx, sy), _p_lean, -facing * CFG.PLAYER_SHOT_KICK * _p_pose.recoil)
+	var base_pos := _p_base_pos
+	var base_scale: float = player.character_visual_scale
+	if player.has_meta("run_pl_anim") and v.animation == player.get_meta("run_pl_anim"):
+		# cuadros PixelLab de carrera: otra resolución, mismo alto visual y mismo punto de suelo
+		base_scale *= player.get_meta("run_pl_ratio")
+		base_pos.y = CIRUJA_GROUND_Y - player.get_meta("run_pl_foot") * base_scale
+	_apply(v, base_pos, Vector2.ONE * base_scale, Vector2(sx, sy), _p_lean, -facing * CFG.PLAYER_SHOT_KICK * _p_pose.recoil)
 
 
 func _update_enemy(enemy: Node, d: Dictionary) -> void:
+	if enemy.get("boss_state") != null:
+		return # Boss already owns telegraph feedback; do not apply generic AI state logic.
 	var v: AnimatedSprite2D = enemy.visual
 	var facing := float(enemy.facing)
 	var antic := 0.0
@@ -168,4 +187,19 @@ func _update_enemy(enemy: Node, d: Dictionary) -> void:
 	var sx := 1.0 + CFG.ENEMY_ANTIC_SQUASH * 0.5 * antic
 	var rot := -facing * deg_to_rad(CFG.ENEMY_ANTIC_LEAN_DEG) * antic + away * deg_to_rad(CFG.ENEMY_HIT_LEAN_DEG) * recoil
 	var shift := -facing * CFG.ENEMY_ANTIC_PULL * antic + away * CFG.ENEMY_HIT_PUSH * recoil
+	if enemy.get_meta("prototype_character", "") == "hipster" and absf(enemy.velocity.x) > 1.0:
+		sy += sin(_time * 9.0) * 0.025
+		sx -= sin(_time * 9.0) * 0.0125
 	_apply(v, d.base_pos, d.base_scale, Vector2(sx, sy), rot, shift)
+	if enemy.get_meta("prototype_character", "") == "hipster" and enemy.ai_state not in [enemy.AIState.TELEGRAPH, enemy.AIState.ATTACK]:
+		v.rotation += sin(_time * 9.0) * 0.015
+		# Roll about the two existing wheel centers, never rotate the entire scooter.
+		if not v.has_node("WheelSpokes"):
+			var spokes := Node2D.new()
+			spokes.name = "WheelSpokes"
+			v.add_child(spokes)
+			spokes.draw.connect(func():
+				for center in [Vector2(-46.0, -17.0), Vector2(38.0, -17.0)]:
+					var direction := Vector2.from_angle(_time * 10.0) * 5.0
+					spokes.draw_line(center - direction, center + direction, Color(0.3, 0.3, 0.3, 0.6), 1.0))
+		v.get_node("WheelSpokes").queue_redraw()
