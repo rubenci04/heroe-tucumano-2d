@@ -1,0 +1,22 @@
+{
+ "idle_v2": {
+  "cuadros": 4,
+  "fps": 6,
+  "bucle": true
+ },
+ "golpes_recibidos": {
+  "cuadros": 7,
+  "fps": 10,
+  "bucle": false
+ },
+ "golpe_v2": {
+  "cuadros": 7,
+  "fps": 12,
+  "bucle": false
+ },
+ "derrota": {
+  "cuadros": 9,
+  "fps": 10,
+  "bucle": false
+ }
+}

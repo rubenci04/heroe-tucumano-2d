@@ -1,0 +1,109 @@
+{
+ "idle": {
+  "cuadros": 6,
+  "fps": 4,
+  "bucle": true,
+  "alto_px": [
+   189,
+   192
+  ],
+  "fila_pies": [
+   239,
+   239
+  ],
+  "deriva_color_max": 1.0,
+  "indices_video": [
+   32,
+   38,
+   44,
+   50,
+   57,
+   63
+  ]
+ },
+ "saludar": {
+  "cuadros": 10,
+  "fps": 6,
+  "bucle": false,
+  "alto_px": [
+   189,
+   192
+  ],
+  "fila_pies": [
+   239,
+   239
+  ],
+  "deriva_color_max": 1.4,
+  "indices_video": [
+   104,
+   110,
+   117,
+   123,
+   130,
+   136,
+   143,
+   149,
+   156,
+   162
+  ]
+ },
+ "escala_B": 0.2923,
+ "hornear": {
+  "cuadros": 14,
+  "fps": 6,
+  "bucle": false,
+  "alto_px": [
+   185,
+   195
+  ],
+  "fila_pies": [
+   236,
+   239
+  ],
+  "deriva_color_max": 2.6,
+  "indices_video": [
+   42,
+   53,
+   64,
+   75,
+   86,
+   97,
+   108,
+   120,
+   131,
+   142,
+   153,
+   164,
+   175,
+   186
+  ]
+ },
+ "pose_manos_cintura": {
+  "cuadros": 1,
+  "fps": 1,
+  "bucle": false,
+  "alto_px": [
+   196,
+   196
+  ],
+  "fila_pies": [
+   239,
+   239
+  ],
+  "deriva_color_max": 0.0,
+  "indices_video": [
+   235
+  ]
+ },
+ "escala_A": 0.2874,
+ "forcejeo": {
+  "cuadros": 9,
+  "fps": 10,
+  "bucle": false
+ },
+ "relajarse_agradecer": {
+  "cuadros": 9,
+  "fps": 8,
+  "bucle": false
+ }
+}

@@ -1,0 +1,55 @@
+[gd_resource type="SpriteFrames" load_steps=43 format=3]
+
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/ajustar_gorra/f_00.png" id="1"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/ajustar_gorra/f_01.png" id="2"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/ajustar_gorra/f_02.png" id="3"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/ajustar_gorra/f_03.png" id="4"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/ajustar_gorra/f_04.png" id="5"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/correr/f_00.png" id="6"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/correr/f_01.png" id="7"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/correr/f_02.png" id="8"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/correr/f_03.png" id="9"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/correr/f_04.png" id="10"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/correr/f_05.png" id="11"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/correr/f_06.png" id="12"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/correr/f_07.png" id="13"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/embestida/f_00.png" id="14"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/embestida/f_01.png" id="15"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/embestida/f_02.png" id="16"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/embestida/f_03.png" id="17"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/grito/f_00.png" id="18"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/grito/f_01.png" id="19"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/grito/f_02.png" id="20"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/grito/f_03.png" id="21"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/muerte/f_00.png" id="22"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/muerte/f_01.png" id="23"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/muerte/f_02.png" id="24"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/muerte/f_03.png" id="25"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/muerte/f_04.png" id="26"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/muerte/f_05.png" id="27"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/muerte/f_06.png" id="28"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/muerte/f_07.png" id="29"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/patada/f_00.png" id="30"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/patada/f_01.png" id="31"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/patada/f_02.png" id="32"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/patada/f_03.png" id="33"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/patada/f_04.png" id="34"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/patada/f_05.png" id="35"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/patada/f_06.png" id="36"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/pinazo/f_00.png" id="37"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/pinazo/f_01.png" id="38"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/pinazo/f_02.png" id="39"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/pinazo/f_03.png" id="40"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/pinazo/f_04.png" id="41"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/ciruja/pinazo/f_05.png" id="42"]
+
+[resource]
+animations = [{"frames": [{"duration": 1.0, "texture": ExtResource("1")}, {"duration": 1.0, "texture": ExtResource("2")}, {"duration": 1.0, "texture": ExtResource("3")}, {"duration": 1.0, "texture": ExtResource("4")}, {"duration": 1.0, "texture": ExtResource("5")}], "loop": false, "name": &"ajustar_gorra", "speed": 8.0},
+{"frames": [{"duration": 1.0, "texture": ExtResource("6")}, {"duration": 1.0, "texture": ExtResource("7")}, {"duration": 1.0, "texture": ExtResource("8")}, {"duration": 1.0, "texture": ExtResource("9")}, {"duration": 1.0, "texture": ExtResource("10")}, {"duration": 1.0, "texture": ExtResource("11")}, {"duration": 1.0, "texture": ExtResource("12")}, {"duration": 1.0, "texture": ExtResource("13")}], "loop": true, "name": &"correr", "speed": 12.0},
+{"frames": [{"duration": 1.0, "texture": ExtResource("14")}, {"duration": 1.0, "texture": ExtResource("15")}, {"duration": 1.0, "texture": ExtResource("16")}, {"duration": 1.0, "texture": ExtResource("17")}], "loop": false, "name": &"embestida", "speed": 10.0},
+{"frames": [{"duration": 1.0, "texture": ExtResource("18")}, {"duration": 1.0, "texture": ExtResource("19")}, {"duration": 1.0, "texture": ExtResource("20")}, {"duration": 1.0, "texture": ExtResource("21")}], "loop": false, "name": &"grito", "speed": 8.0},
+{"frames": [{"duration": 1.0, "texture": ExtResource("22")}, {"duration": 1.0, "texture": ExtResource("23")}, {"duration": 1.0, "texture": ExtResource("24")}, {"duration": 1.0, "texture": ExtResource("25")}, {"duration": 1.0, "texture": ExtResource("26")}, {"duration": 1.0, "texture": ExtResource("27")}, {"duration": 1.0, "texture": ExtResource("28")}, {"duration": 1.0, "texture": ExtResource("29")}], "loop": false, "name": &"muerte", "speed": 10.0},
+{"frames": [{"duration": 1.0, "texture": ExtResource("30")}, {"duration": 1.0, "texture": ExtResource("31")}, {"duration": 1.0, "texture": ExtResource("32")}, {"duration": 1.0, "texture": ExtResource("33")}, {"duration": 1.0, "texture": ExtResource("34")}, {"duration": 1.0, "texture": ExtResource("35")}, {"duration": 1.0, "texture": ExtResource("36")}], "loop": false, "name": &"patada", "speed": 12.0},
+{"frames": [{"duration": 1.0, "texture": ExtResource("37")}, {"duration": 1.0, "texture": ExtResource("38")}, {"duration": 1.0, "texture": ExtResource("39")}, {"duration": 1.0, "texture": ExtResource("40")}, {"duration": 1.0, "texture": ExtResource("41")}, {"duration": 1.0, "texture": ExtResource("42")}], "loop": false, "name": &"pinazo", "speed": 12.0}]
+metadata/ground_y = 240.0
+metadata/character = "ciruja"

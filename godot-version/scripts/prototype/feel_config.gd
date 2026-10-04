@@ -1,6 +1,16 @@
 extends RefCounted
 ## Todos los valores de game feel de la arena prototipo. Ajustá acá.
 
+# Visible content, viewport 400x225; not the transparent canvas. Ciruja stays unchanged.
+const REFERENCE_VISIBLE_HEIGHT := 74.0
+const CHARACTER_PROPORTIONS := {
+	"ciruja": 1.0, "agente": 1.0, "campeona": 0.95,
+	"hipster": 0.9, "grandote": 1.25, "palermitano": 1.3,
+}
+
+static func target_height(character: String) -> float:
+	return REFERENCE_VISIBLE_HEIGHT * float(CHARACTER_PROPORTIONS[character])
+
 # Hit-stop (frames de render congelados al impactar a un enemigo)
 const HITSTOP_FRAMES := 3
 const HITSTOP_TIME_SCALE := 0.02
@@ -55,6 +65,11 @@ const CIRUJA_SKIN_DIRS := {
 	CirujaSkin.VARIANTE_A_SATURADA: "var_a_saturada",
 	CirujaSkin.VARIANTE_B_APAGADA: "var_b_apagada",
 }
+
+# Carrera de Ciruja generada con PixelLab (8 cuadros en bucle). Solo reemplaza "Run"; el resto de animaciones no cambia.
+const CIRUJA_RUN_PIXELLAB := false         # Keep the illustrated source; no pixel-art fallback.
+const CIRUJA_RUN_PIXELLAB_CORREGIDO := true # true = gorra roja + piel morocha / false = colores originales de PixelLab
+const CIRUJA_RUN_PIXELLAB_FPS := 10.0
 
 # --- Animación procedural (solo sprites visuales, no hitbox) ---
 # Ciruja: inclinación al correr (grados), respiración en idle, stretch/squash en salto/aterrizaje
