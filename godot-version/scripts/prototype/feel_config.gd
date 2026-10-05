@@ -234,3 +234,9 @@ const BACKDROP_PANORAMA_BOTTOM_Y := 372.0
 const HUD_TITLE_SIZE := 48
 const HUD_TITLE_SIZE_LONG := 36        # para títulos largos, que no entran a 48 en 800 px
 const HUD_TITLE_SHORT_CHARS := 20
+
+# --- Campeona: secuencia "se la llevan" (arranca con la intro del jefe) ---
+const CAMPEONA_STRUGGLE_TIME := 0.9    # s forcejeando en su lugar (animación forcejeo)
+const CAMPEONA_DRAG_TIME := 1.3        # s siendo arrastrada fuera de pantalla a la derecha
+const CAMPEONA_DRAG_SHAKE := 2.5       # sacudida de cámara mientras la arrastran
+const CAMPEONA_EXIT_MARGIN := 60.0     # px más allá del borde derecho de cámara donde desaparece

@@ -35,6 +35,8 @@ var hud: CanvasLayer
 var boss_director: Node
 var backdrop: Node2D
 var boss: CharacterBody2D
+var campeona: AnimatedSprite2D
+var campeona_taken := false
 
 
 func _ready() -> void:
@@ -72,6 +74,7 @@ func _ready() -> void:
 	add_child(boss_director)
 	boss_director.setup(boss,player,$ViewportContainer/SubViewport/World/Camera2D,hud,feel,enemies,projectiles)
 	boss_director.fight_won.connect(_show_result_after_delay.bind(&"victory"))
+	boss_director.intro_started.connect(_take_campeona)
 	player.died.connect(_show_result_after_delay.bind(&"game_over"))
 	_spawn_campeona()
 	_spawn_car()
@@ -233,6 +236,28 @@ func _spawn_campeona() -> void:
 	_add_contact_shadow(sprite, "campeona")
 	batch_visuals.append(sprite)
 	_anchor_batch_visual(sprite)
+	campeona = sprite
+
+
+## Forcejea y es arrastrada a la derecha fuera de cámara; después se elimina (no vuelve a la esquina).
+func _take_campeona() -> void:
+	if campeona_taken or not is_instance_valid(campeona):
+		return
+	campeona_taken = true
+	var sprite := campeona
+	var camera := $ViewportContainer/SubViewport/World/Camera2D as Camera2D
+	sprite.play(&"forcejeo")
+	var exit_x := camera.position.x + 200.0 + CFG.CAMPEONA_EXIT_MARGIN
+	var tween := create_tween()
+	tween.tween_interval(CFG.CAMPEONA_STRUGGLE_TIME)
+	tween.tween_callback(func():
+		sprite.flip_h = true
+		feel.shake(CFG.CAMPEONA_DRAG_SHAKE, CFG.CAMPEONA_DRAG_TIME))
+	tween.tween_property(sprite, "position:x", exit_x, CFG.CAMPEONA_DRAG_TIME).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tween.tween_callback(func():
+		batch_visuals.erase(sprite)
+		sprite.queue_free()
+		campeona = null)
 
 
 func _add_contact_shadow(actor: Node2D, character: String) -> void:
