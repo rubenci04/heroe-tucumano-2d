@@ -36,6 +36,7 @@ func _run() -> void:
 	current_scene = arena
 	await _frames(2)
 	await _check_impact()
+	await _check_death()
 	arena.queue_free()
 	await process_frame
 	Engine.time_scale = 1.0
@@ -89,3 +90,41 @@ func _check_impact() -> void:
 	check(a_start > 0.0 and boss != null, "Enemies resolved")
 	await _frames(8)
 	Engine.time_scale = 1.0
+
+
+func _ghost_for(character_animation: StringName) -> AnimatedSprite2D:
+	for child in arena.world.get_children():
+		if child is AnimatedSprite2D and child.animation == character_animation and child.z_index == 15:
+			return child
+	return null
+
+
+func _check_death() -> void:
+	var feel: Node = arena.feel
+	var grandote := _enemy("grandote")
+	grandote.set_physics_process(false)
+	Engine.time_scale = 1.0
+	feel._hitstop_frames = 0
+	feel.fx._particles.clear()
+	grandote.health_component.restore_full(true)
+	grandote.health_component.take_damage(999, &"player")
+	check(feel._slowmo_until_ms > Time.get_ticks_msec() and is_equal_approx(feel._slowmo_scale, float(CFG.DEATH_SLOWMO.grandote.scale)), "Big enemy death triggers slow motion")
+	feel._hitstop_frames = 0
+	feel._apply_time_scale()
+	check(Engine.time_scale < 1.0, "Slow motion lowers the time scale")
+	var ghost := _ghost_for(&"Death")
+	check(ghost != null, "Dying enemy leaves a body that plays its Death frames")
+	var ground_before: int = 0
+	for _i in 120:
+		await process_frame
+	Engine.time_scale = 1.0
+	feel._slowmo_until_ms = 0
+	check(feel.fx._particles.size() > ground_before, "Fall raises ground dust")
+	check(is_instance_valid(ghost), "Body persists while Death plays")
+	if is_instance_valid(ghost):
+		ghost.animation_finished.emit()
+		await create_timer(0.4).timeout
+		check(is_instance_valid(ghost) and is_equal_approx(ghost.modulate.a, 1.0), "Body stays visible after the fall before fading")
+		ghost.queue_free()
+	var agent := _enemy("agente")
+	check(CFG.DEATH_SLOWMO.has("grandote") and not CFG.DEATH_SLOWMO.has("agente") and agent != null, "Only big enemies get slow motion")

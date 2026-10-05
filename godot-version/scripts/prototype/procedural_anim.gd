@@ -22,6 +22,7 @@ var _p_was_on_floor := true
 var _p_air_time := 0.0
 var _time := 0.0
 var _enemies := {}   # enemy -> {pose, tween, base_pos, base_scale}
+var fx: Node2D   # capa de partículas (feel_fx) para el polvo de caída
 
 
 func setup(world_node: Node2D, player_node: CharacterBody2D) -> void:
@@ -81,13 +82,19 @@ func _on_enemy_defeated(enemy: Node) -> void:
 	ghost.z_index = 15
 	ghost.stop()
 	src.visible = false
+	var character := String(enemy.get_meta("prototype_character", ""))
+	var heavy: bool = CFG.DEATH_SLOWMO.has(character)
+	var linger: float = CFG.DEATH_LINGER_HEAVY if heavy else CFG.DEATH_LINGER
+	var ground_pos := Vector2(ghost.global_position.x, GameConfig.GROUND_Y)
 	if src.has_meta("batch_ground_y") and src.sprite_frames.has_animation(&"Death"):
 		ghost.play(&"Death")
 		ghost.frame_changed.connect(func():
 			var texture := ghost.sprite_frames.get_frame_texture(ghost.animation, ghost.frame)
 			ghost.offset = Vector2(0.0, texture.get_height() * 0.5 - 240.0))
 		ghost.offset = Vector2(0.0, ghost.sprite_frames.get_frame_texture(&"Death", 0).get_height() * 0.5 - 240.0)
-		ghost.animation_finished.connect(ghost.queue_free)
+		var fall_time: float = ghost.sprite_frames.get_frame_count(&"Death") / maxf(ghost.sprite_frames.get_animation_speed(&"Death"), 1.0) * CFG.DEATH_DUST_AT
+		_schedule_fall_dust(ground_pos, character, fall_time)
+		ghost.animation_finished.connect(func(): _linger_and_fade(ghost, linger))
 		return
 	var away := signf(enemy.global_position.x - player.global_position.x)
 	if away == 0.0:
@@ -97,11 +104,11 @@ func _on_enemy_defeated(enemy: Node) -> void:
 	var t := ghost.create_tween().set_parallel(true)
 	t.tween_property(ghost, "rotation", away * deg_to_rad(CFG.ENEMY_DEATH_SPIN_DEG), dur).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
 	t.tween_property(ghost, "position:x", start.x + away * CFG.ENEMY_DEATH_PUSH, dur).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
-	t.tween_property(ghost, "modulate:a", 0.0, dur - CFG.ENEMY_DEATH_FADE_DELAY).set_delay(CFG.ENEMY_DEATH_FADE_DELAY)
 	var ty := ghost.create_tween()
 	ty.tween_property(ghost, "position:y", start.y - CFG.ENEMY_DEATH_HOP, dur * 0.3).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
 	ty.tween_property(ghost, "position:y", start.y + CFG.ENEMY_DEATH_FALL, dur * 0.7).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
-	t.finished.connect(ghost.queue_free)
+	_schedule_fall_dust(Vector2(start.x + away * CFG.ENEMY_DEATH_PUSH, GameConfig.GROUND_Y), character, dur * CFG.DEATH_DUST_FALLBACK_AT)
+	t.finished.connect(func(): _linger_and_fade(ghost, linger))
 
 
 func _process(delta: float) -> void:
@@ -209,3 +216,24 @@ func _update_enemy(enemy: Node, d: Dictionary) -> void:
 					spokes.draw_line(center - direction, center + direction, Color(0.3, 0.3, 0.3, 0.6), 1.0))
 		d.wheel_angle += enemy.velocity.x * get_process_delta_time() / maxf(2.0, 5.0 * v.scale.x * enemy.scale.x)
 		v.get_node("WheelSpokes").queue_redraw()
+
+
+## Polvo a ras de suelo cuando el cuerpo cae (retardo = momento de impacto con el piso).
+func _schedule_fall_dust(position: Vector2, character: String, delay: float) -> void:
+	if fx == null:
+		return
+	var profile: Dictionary = CFG.DEATH_DUST.get(character, CFG.DEATH_DUST_DEFAULT)
+	get_tree().create_timer(maxf(delay, 0.01)).timeout.connect(func():
+		if is_instance_valid(fx):
+			fx.ground_dust(position, int(profile.count), float(profile.spread))
+			fx.dust(position, int(profile.count) / 2))
+
+
+## El cuerpo queda `linger` segundos en el suelo y recién después se desvanece.
+func _linger_and_fade(body: CanvasItem, linger: float) -> void:
+	if not is_instance_valid(body):
+		return
+	var fade := body.create_tween()
+	fade.tween_interval(linger)
+	fade.tween_property(body, "modulate:a", 0.0, CFG.DEATH_FADE)
+	fade.tween_callback(body.queue_free)

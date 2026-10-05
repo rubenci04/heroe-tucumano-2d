@@ -126,3 +126,35 @@ const ENEMY_DEATH_PUSH := 28.0     # px hacia atrás
 const ENEMY_DEATH_HOP := 14.0      # salto inicial
 const ENEMY_DEATH_FALL := 6.0      # cuánto baja respecto al punto inicial
 const ENEMY_DEATH_FADE_DELAY := 0.3
+
+# --- Muertes con peso ---
+# Cámara lenta (tiempo real) al matar a un enemigo grande: escala del tiempo y duración.
+const DEATH_SLOWMO := {
+	"grandote": {"scale": 0.3, "time": 0.45},
+	"palermitano": {"scale": 0.2, "time": 0.75},
+}
+# Polvo al tocar el suelo el cuerpo: cantidad de bocanadas y ancho en px.
+const DEATH_DUST := {
+	"agente": {"count": 8, "spread": 22.0},
+	"hipster": {"count": 10, "spread": 26.0},
+	"grandote": {"count": 16, "spread": 36.0},
+	"palermitano": {"count": 18, "spread": 40.0},
+}
+const DEATH_DUST_DEFAULT := {"count": 8, "spread": 22.0}
+const DEATH_DUST_AT := 0.55            # fracción de la animación de muerte en que el cuerpo toca el suelo
+const DEATH_DUST_FALLBACK_AT := 0.45   # idem con la caída por tweens (sin cuadros de muerte)
+const DEATH_LINGER := 1.0              # s que el cuerpo queda en el suelo antes de desvanecerse
+const DEATH_LINGER_HEAVY := 1.8        # idem para Grandote y jefe
+const DEATH_FADE := 0.55
+const GROUND_DUST_LIFE := 0.5
+const GROUND_DUST_SPEED := 38.0
+const GROUND_DUST_SIZE := 2.6
+
+# --- Casquillos y fogonazos de enemigos ---
+const CASING_COLOR := Color(0.95, 0.72, 0.25)
+const CASING_GRAVITY := 520.0
+const CASING_BOUNCE := 0.35
+const CASING_SPEED_X := Vector2(18.0, 45.0)
+const CASING_SPEED_UP := Vector2(60.0, 110.0)
+const CASING_LIFE := 1.6
+const ENEMY_MUZZLE_SIZE := 0.8

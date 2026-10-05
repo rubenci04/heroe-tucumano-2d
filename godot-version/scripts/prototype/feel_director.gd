@@ -45,6 +45,9 @@ func watch_enemy(enemy: Node) -> void:
 		_knock.erase(enemy)
 		if is_instance_valid(enemy):
 			fx.explosion(enemy.global_position + CFG.DEATH_BODY_OFFSET)
+			var slowmo: Dictionary = CFG.DEATH_SLOWMO.get(String(enemy.get_meta("prototype_character", "")), {})
+			if not slowmo.is_empty():
+				slow_motion(float(slowmo.scale), float(slowmo.time))
 		shake(CFG.SHAKE_EXPLODE_INTENSITY, CFG.SHAKE_EXPLODE_DURATION))
 
 

@@ -44,6 +44,7 @@ func _ready() -> void:
 	anim = PROCEDURAL_ANIM.new()
 	add_child(anim)
 	anim.setup(world,player)
+	anim.fx = feel.fx
 	player.shot_requested.connect(_spawn_projectile.bind(player))
 	player.respawn_requested.connect(_on_player_respawn_requested)
 	_refill_player()
