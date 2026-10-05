@@ -313,5 +313,5 @@ const IDLE_WEIGHT_TILT_DEG := 0.8      # inclinación leve acompañando el cambi
 # centro supera ≈ INGENIO_VISIBLE_CAMERA_X; el tope real (WORLD_WIDTH-400 = 7600 y arena del jefe 7000-7950) queda muy debajo.
 const INGENIO_START_BG_X := 7410.0
 const RIOSECO_SIGN_BG_X := 6490.0
-const INGENIO_VISIBLE_CAMERA_X := 11500.0  # estimado por extrapolación (a 9000 recién entra el cartel RÍO SECO)
+const INGENIO_VISIBLE_CAMERA_X := 10100.0  # estimado: a cámara 9000 recién entra el cartel RÍO SECO (borde derecho ≈ x 6540)
 const LEVEL1_CAMERA_MAX_X := 7600.0        # valor vigente en main.gd (WORLD_WIDTH - 400)
