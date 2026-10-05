@@ -214,3 +214,17 @@ const HUD_RESTART_HINT := "R: volver a jugar"
 const HUD_RESULT_DELAY := 1.4          # s entre el último golpe/caída y la pantalla final
 const HUD_HEAD_CROP := 0.46            # alto del recorte de cabeza / alto de la silueta
 const HUD_HEAD_OFFSET_X := 8.0
+
+# --- Parallax de la arena (cada capa avanza esta fracción del desplazamiento de Ciruja) ---
+const BACKDROP_SCROLL_SKY := 0.06
+const BACKDROP_SCROLL_PANORAMA := 0.35
+const BACKDROP_SKY_SCALE := 0.51
+const BACKDROP_SKY_TILE_PX := 1561.0   # ancho útil en textura (el resto se funde con el comienzo, sin espejar)
+const BACKDROP_SKY_OVERLAP := 0.12007
+const BACKDROP_SKY_BOTTOM_Y := 395.0   # borde inferior del cielo (queda tapado por el panorama)
+const BACKDROP_PANORAMA_REGION := Rect2(100.0, 440.0, 1600.0, 260.0)
+const BACKDROP_PANORAMA_SCALE := 0.84
+const BACKDROP_PANORAMA_BOTTOM_Y := 372.0
+const HUD_TITLE_SIZE := 48
+const HUD_TITLE_SIZE_LONG := 36        # para títulos largos, que no entran a 48 en 800 px
+const HUD_TITLE_SHORT_CHARS := 20

@@ -8,6 +8,11 @@
 [ext_resource type="Texture2D" uid="uid://fr5rcrqc3rgp" path="res://assets/suelo_ruta.png" id="road"]
 [ext_resource type="Texture2D" uid="uid://cd8bp1wwwtnw" path="res://assets/cartel_famailla.png" id="sign"]
 [ext_resource type="Texture2D" uid="uid://ducutjcaqt5nf" path="res://assets/fondo_cerros.png" id="sky"]
+[ext_resource type="Shader" path="res://shaders/seamless_tile.gdshader" id="seamless"]
+
+[sub_resource type="ShaderMaterial" id="SkySeamless"]
+shader = ExtResource("seamless")
+shader_parameter/overlap = 0.12007
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_panorama_a"]
 atlas = ExtResource("panorama")
@@ -28,18 +33,24 @@ script = ExtResource("environment")
 [node name="DistantBackground" type="Parallax2D" parent="." unique_id=317980110]
 z_index = -20
 scroll_scale = Vector2(0.08, 0)
-repeat_size = Vector2(1806, 0)
+repeat_size = Vector2(1592.22, 0)
 repeat_times = 3
 
 [node name="MountainsA" type="Sprite2D" parent="DistantBackground" unique_id=2122133138]
 scale = Vector2(0.51, 0.51)
 texture = ExtResource("sky")
+material = SubResource("SkySeamless")
+region_enabled = true
+region_rect = Rect2(0, 0, 1561, 887)
 centered = false
 
 [node name="MountainsB" type="Sprite2D" parent="DistantBackground" unique_id=1522930375]
-position = Vector2(903, 0)
+position = Vector2(796.11, 0)
 scale = Vector2(0.51, 0.51)
 texture = ExtResource("sky")
+material = SubResource("SkySeamless")
+region_enabled = true
+region_rect = Rect2(0, 0, 1561, 887)
 centered = false
 
 [node name="MainPanorama" type="Parallax2D" parent="." unique_id=1234422360]

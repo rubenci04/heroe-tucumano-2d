@@ -39,6 +39,7 @@ func _run() -> void:
 	await _check_death()
 	await _check_projectiles()
 	await _check_boss()
+	await _check_parallax()
 	await _check_hud()
 	arena.queue_free()
 	await process_frame
@@ -246,3 +247,35 @@ func _check_hud() -> void:
 		thick = thick and label.get_theme_constant("outline_size") >= 3
 	check(thick, "Main HUD labels all carry the cartoon outline")
 	game_hud.queue_free()
+
+
+func _check_parallax() -> void:
+	var backdrop: Node2D = arena.backdrop
+	var player: CharacterBody2D = arena.player
+	check(backdrop.sky_tiles.size() == 2 and backdrop.sky_tiles.all(func(tile): return not tile.flip_h and tile.scale.x > 0.0), "Arena sky repeats without mirroring")
+	check(CFG.BACKDROP_SCROLL_SKY < CFG.BACKDROP_SCROLL_PANORAMA and CFG.BACKDROP_SCROLL_PANORAMA < 1.0, "Sky, panorama and ground scroll at different speeds")
+	var gap := false
+	for x in range(220, 581, 20):
+		player.global_position.x = float(x)
+		backdrop._process(0.0)
+		var first: Sprite2D = backdrop.sky_tiles[0]
+		var second: Sprite2D = backdrop.sky_tiles[1]
+		var width: float = CFG.BACKDROP_SKY_TILE_PX * CFG.BACKDROP_SKY_SCALE
+		gap = gap or first.position.x > backdrop.view_left or second.position.x + width < backdrop.view_left + 400.0 or absf(second.position.x - first.position.x - width) > 0.01
+	check(not gap, "Sky tiles cover the whole camera view and join edge to edge at any position")
+	var start_panorama: float = backdrop.panorama.position.x
+	var start_sky: float = backdrop.sky_tiles[0].position.x
+	player.global_position.x += 100.0
+	backdrop._process(0.0)
+	check(is_equal_approx(start_panorama - backdrop.panorama.position.x, 100.0 * CFG.BACKDROP_SCROLL_PANORAMA), "Panorama layer moves at its own fraction of Ciruja's travel")
+	check(absf(start_sky - backdrop.sky_tiles[0].position.x) < 100.0 * CFG.BACKDROP_SCROLL_PANORAMA, "Sky layer moves slower than the panorama")
+	var panorama_right: float = backdrop.panorama.position.x + backdrop.panorama.texture.get_width() * backdrop.panorama.scale.x
+	check(backdrop.panorama.position.x <= 200.0 and panorama_right >= 600.0, "Panorama still covers the arena view after moving")
+	var shader_material: ShaderMaterial = backdrop.sky_tiles[0].material
+	check(shader_material != null and shader_material.shader.code.contains("wrapped"), "Sky module blends its end into its start instead of mirroring")
+	var environment = load("res://scenes/levels/route_38_environment.tscn").instantiate()
+	var tiles := [environment.get_node("DistantBackground/MountainsA"), environment.get_node("DistantBackground/MountainsB")]
+	check(tiles.all(func(tile): return not tile.flip_h and tile.material is ShaderMaterial), "Route sky repeats without mirroring")
+	var step: float = tiles[0].region_rect.size.x * tiles[0].scale.x
+	check(is_equal_approx(tiles[1].position.x, step) and is_equal_approx(environment.get_node("DistantBackground").repeat_size.x, step * 2.0), "Route sky module width matches its repeat distance")
+	environment.free()

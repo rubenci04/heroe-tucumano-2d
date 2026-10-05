@@ -15,6 +15,7 @@ const CONTACT_SHADOW = preload("res://scripts/prototype/contact_shadow.gd")
 const PROJECTILE_FX = preload("res://scripts/prototype/projectile_fx.gd")
 const BOSS_DIRECTOR = preload("res://scripts/prototype/boss_director.gd")
 const PROTOTYPE_HUD = preload("res://scripts/prototype/prototype_hud.gd")
+const PROTOTYPE_BACKDROP = preload("res://scripts/prototype/prototype_backdrop.gd")
 const CFG = preload("res://scripts/prototype/feel_config.gd")
 const ARENA_LEFT := 200.0
 const ARENA_RIGHT := 600.0
@@ -32,11 +33,15 @@ var feel: Node
 var anim: Node
 var hud: CanvasLayer
 var boss_director: Node
+var backdrop: Node2D
 var boss: CharacterBody2D
 
 
 func _ready() -> void:
 	INPUT_SETUP.configure()
+	backdrop = PROTOTYPE_BACKDROP.new()
+	world.add_child(backdrop)
+	backdrop.setup(player,ARENA_LEFT,($ViewportContainer/SubViewport/World/Camera2D as Camera2D).position.x)
 	feel = FEEL_DIRECTOR.new()
 	add_child(feel)
 	feel.setup(world,$ViewportContainer,player)

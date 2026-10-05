@@ -79,7 +79,6 @@ func _build_boss_bar() -> void:
 func _build_banner() -> void:
 	banner = make_label("", 46, CFG.HUD_TEXT_COLOR)
 	banner.name = "Banner"
-	banner.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	banner.position = Vector2(0.0, 150.0)
 	banner.size = Vector2(800.0, 60.0)
 	banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -227,6 +226,8 @@ func show_victory() -> void:
 
 func _show_overlay(title: String, text: String, color: Color) -> void:
 	overlay_title.text = title
+	overlay_title.add_theme_font_size_override("font_size", CFG.HUD_TITLE_SIZE if title.length() <= CFG.HUD_TITLE_SHORT_CHARS else CFG.HUD_TITLE_SIZE_LONG)
+	overlay_title.add_theme_constant_override("outline_size", int(CFG.HUD_OUTLINE_RATIO * (CFG.HUD_TITLE_SIZE if title.length() <= CFG.HUD_TITLE_SHORT_CHARS else CFG.HUD_TITLE_SIZE_LONG)))
 	overlay_title.add_theme_color_override("font_color", color)
 	overlay_text.text = "%s\nPUNTOS: %05d" % [text, player.score if is_instance_valid(player) else 0]
 	overlay.modulate.a = 0.0
