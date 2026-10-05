@@ -199,7 +199,7 @@ const BOSS_PHASE2_THRESHOLD := 0.5     # fracción de vida a la que entra la fas
 const BOSS_PHASE2_SPEED_MULT := 1.4    # movimiento
 const BOSS_PHASE2_TEMPO_MULT := 0.7    # multiplica esperas/cooldowns/telegraphs (menor = más rápido)
 const BOSS_PHASE2_ANIM_SPEED := 1.25
-const BOSS_PHASE2_TINT := Color(1.0, 0.82, 0.78)
+const BOSS_PHASE2_TINT := Color(1.0, 0.55, 0.5)  # tinte persistente del sprite
 const BOSS_PHASE2_SHAKE := 5.0
 const BOSS_PHASE2_BANNER := "¡SE ENOJÓ!"
 const BOSS_PHASE2_BANNER_TIME := 1.1
@@ -240,3 +240,18 @@ const CAMPEONA_STRUGGLE_TIME := 0.9    # s forcejeando en su lugar (animación f
 const CAMPEONA_DRAG_TIME := 1.3        # s siendo arrastrada fuera de pantalla a la derecha
 const CAMPEONA_DRAG_SHAKE := 2.5       # sacudida de cámara mientras la arrastran
 const CAMPEONA_EXIT_MARGIN := 60.0     # px más allá del borde derecho de cámara donde desaparece
+
+# --- Fase 2 del jefe: transición evidente + patrón distinto ---
+const BOSS_PHASE2_ROAR_ANIM := &"golpe_v2"   # no hay animación de grito: se usa el golpe como rugido
+const BOSS_PHASE2_ROAR_TIME := 0.8     # s quieto rugiendo (ventana justa para el jugador, sin daño al jugador)
+const BOSS_PHASE2_FLASH_COLOR := Color(1.0, 0.1, 0.05, 0.38)
+const BOSS_PHASE2_FLASH_TIME := 0.35   # parpadeo rojo de pantalla
+const BOSS_PHASE2_AURA_INTERVAL := 0.12 # s entre ráfagas de chispas/polvo alrededor del jefe
+const BOSS_PHASE2_AURA_LINES := 9      # líneas de velocidad radiales
+const BOSS_PHASE2_AURA_COLOR := Color(1.0, 0.35, 0.2, 0.7)
+const BOSS_PHASE2_AURA_RADIUS := Vector2(26.0, 58.0)  # radio interno/externo de las líneas
+const BOSS_PHASE2_DECISION_MULT := 0.5 # menos pausa entre golpes (se suma al tempo general)
+const BOSS_PHASE2_COFFEE_SPREAD := 13.0 # abanico de café más abierto (grados; fase 1 = 7)
+const BOSS_PHASE2_CHAIN_RANGE_MULT := 1.35 # la cadena alcanza más lejos: pega más seguido
+const BOSS_PHASE2_CHAIN_COOLDOWN_MULT := 0.6
+const BOSS_PHASE2_SUMMON_COOLDOWN_MULT := 0.7

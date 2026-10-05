@@ -3,6 +3,7 @@ extends Node
 ## Solo usa propiedades públicas/exportadas y señales del jefe; no cambia scripts de gameplay.
 
 const CFG = preload("res://scripts/prototype/feel_config.gd")
+const BOSS_AURA = preload("res://scripts/prototype/boss_aura.gd")
 
 signal intro_started
 signal intro_finished
@@ -22,6 +23,8 @@ var stage: Stage = Stage.WAITING
 var _intro_time := 0.0
 var _camera_home := Vector2.ZERO
 var _frozen: Array[Node] = []
+var _aura: Node2D
+var _aura_time := 0.0
 
 
 func setup(boss_node: CharacterBody2D, player_node: CharacterBody2D, camera_node: Camera2D, hud_node: CanvasLayer, feel_node: Node, enemy_root: Node2D, projectile_root: Node2D) -> void:
@@ -101,15 +104,24 @@ func _on_boss_health_changed(current: int, maximum: int) -> void:
 		_start_phase_two()
 
 
-## Fase 2: más rápido en todo (movimiento, esperas, telegraphs y cooldowns) y animación acelerada.
+## Fase 2: rugido (pausa corta), flash rojo, tinte y aura persistentes, y patrón más agresivo.
 func _start_phase_two() -> void:
 	stage = Stage.PHASE_TWO
 	var tempo := CFG.BOSS_PHASE2_TEMPO_MULT
 	boss.lane_move_speed *= CFG.BOSS_PHASE2_SPEED_MULT
 	for property in [&"decision_delay", &"coffee_telegraph", &"coffee_shot_interval", &"coffee_recovery", &"coffee_cooldown", &"summon_telegraph", &"summon_recovery", &"summon_cooldown", &"chain_cooldown"]:
 		boss.set(property, float(boss.get(property)) * tempo)
+	# Patrón distinto: menos pausa entre golpes, abanico de café más abierto, cadena más larga y frecuente.
+	boss.decision_delay *= CFG.BOSS_PHASE2_DECISION_MULT
+	boss.coffee_spread_degrees = CFG.BOSS_PHASE2_COFFEE_SPREAD
+	boss.chain_range *= CFG.BOSS_PHASE2_CHAIN_RANGE_MULT
+	boss.chain_cooldown *= CFG.BOSS_PHASE2_CHAIN_COOLDOWN_MULT
+	boss.summon_cooldown *= CFG.BOSS_PHASE2_SUMMON_COOLDOWN_MULT
 	boss.visual.speed_scale = CFG.BOSS_PHASE2_ANIM_SPEED
 	boss.visual.self_modulate = CFG.BOSS_PHASE2_TINT
+	_add_aura()
+	_roar()
+	_screen_flash()
 	feel.shake(CFG.BOSS_PHASE2_SHAKE, 0.3)
 	feel.request_hitstop(4)
 	feel.fx.sparks(boss.global_position + CFG.DEATH_BODY_OFFSET)
@@ -117,7 +129,50 @@ func _start_phase_two() -> void:
 	phase_two_started.emit()
 
 
+func _roar() -> void:
+	# Quieto y rugiendo un momento: el jefe no actúa, así que la transición no castiga al jugador.
+	boss.active = false
+	boss.visual.play(CFG.BOSS_PHASE2_ROAR_ANIM)
+	await get_tree().create_timer(CFG.BOSS_PHASE2_ROAR_TIME).timeout
+	if is_instance_valid(boss) and stage == Stage.PHASE_TWO and boss.boss_state != boss.BossState.DEFEATED:
+		boss.active = true
+
+
+func _screen_flash() -> void:
+	var flash := ColorRect.new()
+	flash.color = CFG.BOSS_PHASE2_FLASH_COLOR
+	flash.set_anchors_preset(Control.PRESET_FULL_RECT)
+	flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hud.add_child(flash)
+	var tween := flash.create_tween()
+	tween.tween_property(flash, "modulate:a", 0.0, CFG.BOSS_PHASE2_FLASH_TIME)
+	tween.tween_callback(flash.queue_free)
+
+
+func _add_aura() -> void:
+	_aura = BOSS_AURA.new()
+	_aura.scale = Vector2.ONE / boss.scale
+	_aura.position = CFG.DEATH_BODY_OFFSET / boss.scale
+	boss.add_child(_aura)
+	_aura_time = 0.0
+
+
+func _physics_process(delta: float) -> void:
+	if stage != Stage.PHASE_TWO or not is_instance_valid(boss):
+		return
+	_aura_time += delta
+	if _aura_time >= CFG.BOSS_PHASE2_AURA_INTERVAL:
+		_aura_time = 0.0
+		var origin := boss.global_position + CFG.DEATH_BODY_OFFSET + Vector2(randf_range(-14.0, 14.0), randf_range(-16.0, 18.0))
+		if randf() < 0.5:
+			feel.fx.sparks(origin)
+		else:
+			feel.fx.dust(origin, 2)
+
+
 func _on_boss_defeated() -> void:
 	stage = Stage.DEFEATED
+	if is_instance_valid(_aura):
+		_aura.queue_free()
 	hud.hide_boss_bar(1.2)
 	fight_won.emit()
