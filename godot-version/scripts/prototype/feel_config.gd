@@ -179,3 +179,28 @@ const PROJECTILE_SHADOW_FLATNESS := 0.28
 const PROJECTILE_SHADOW_ALPHA := 0.28
 const PROJECTILE_SHADOW_HEIGHT_RANGE := 160.0
 const PROJECTILE_SHADOW_MIN_SCALE := 0.4
+
+# --- Jefe Palermitano ---
+const BOSS_TRIGGER_X := 400.0          # Ciruja cruza esta X y arranca la intro
+const BOSS_INTRO_DURATION := 2.0       # s con cámara bloqueada, nombre y barra apareciendo
+const BOSS_INTRO_ZOOM := 1.25
+const BOSS_INTRO_ZOOM_IN := 0.5        # s en acercarse al jefe
+const BOSS_INTRO_ZOOM_OUT := 0.45      # s en volver al plano fijo de la arena
+const BOSS_ACTIVATE_REACTION := 0.35   # s de pausa del jefe al terminar la intro, antes de decidir
+const BOSS_NAME := "EL PALERMITANO"
+const BOSS_SUBTITLE := "Se llevó a la Campeona"
+const BOSS_PHASE2_THRESHOLD := 0.5     # fracción de vida a la que entra la fase 2
+const BOSS_PHASE2_SPEED_MULT := 1.4    # movimiento
+const BOSS_PHASE2_TEMPO_MULT := 0.7    # multiplica esperas/cooldowns/telegraphs (menor = más rápido)
+const BOSS_PHASE2_ANIM_SPEED := 1.25
+const BOSS_PHASE2_TINT := Color(1.0, 0.82, 0.78)
+const BOSS_PHASE2_SHAKE := 5.0
+const BOSS_PHASE2_BANNER := "¡SE ENOJÓ!"
+const BOSS_PHASE2_BANNER_TIME := 1.1
+# La cadena queda preparada (estado de ataque y alcance intactos) pero sin animación propia.
+const BOSS_CHAIN_ANIMATED := false
+
+# --- HUD y pantallas (texto legible con borde, estilo cartoon) ---
+const HUD_TEXT_COLOR := Color(1.0, 0.88, 0.15)
+const HUD_OUTLINE_COLOR := Color(0.14, 0.07, 0.03)
+const HUD_OUTLINE_RATIO := 0.3         # grosor del borde = tamaño de fuente × ratio

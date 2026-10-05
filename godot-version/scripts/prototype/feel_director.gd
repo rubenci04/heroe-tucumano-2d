@@ -59,7 +59,7 @@ func watch_projectile(projectile: Node) -> void:
 
 ## Hit-stop + shake + flash + knockback, medidos por personaje y por daño recibido.
 func _on_enemy_damaged(enemy: Node, amount: int, source: Variant) -> void:
-	if not is_instance_valid(enemy) or String(source) == "enemy":
+	if not is_instance_valid(enemy) or (source is Node and source.get("team") == &"enemy"):
 		return
 	var profile := CFG.impact_profile(String(enemy.get_meta("prototype_character", "")))
 	var strength := clampf(float(amount) / CFG.IMPACT_REFERENCE_DAMAGE, CFG.IMPACT_STRENGTH_MIN, CFG.IMPACT_STRENGTH_MAX)

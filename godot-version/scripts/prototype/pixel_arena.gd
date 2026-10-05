@@ -13,6 +13,8 @@ const BOSS_SCENE = preload("res://scenes/actors/palermitano_boss.tscn")
 const GROUND_WAVE_SCENE = preload("res://scenes/actors/grandote_ground_wave.tscn")
 const CONTACT_SHADOW = preload("res://scripts/prototype/contact_shadow.gd")
 const PROJECTILE_FX = preload("res://scripts/prototype/projectile_fx.gd")
+const BOSS_DIRECTOR = preload("res://scripts/prototype/boss_director.gd")
+const PROTOTYPE_HUD = preload("res://scripts/prototype/prototype_hud.gd")
 const CFG = preload("res://scripts/prototype/feel_config.gd")
 const ARENA_LEFT := 200.0
 const ARENA_RIGHT := 600.0
@@ -28,6 +30,9 @@ var batch_visuals: Array[AnimatedSprite2D] = []
 var car: Node2D
 var feel: Node
 var anim: Node
+var hud: CanvasLayer
+var boss_director: Node
+var boss: CharacterBody2D
 
 
 func _ready() -> void:
@@ -54,7 +59,12 @@ func _ready() -> void:
 	_spawn_enemy("hipster",ARENA_RIGHT-60.0)
 	_spawn_enemy("agente",ARENA_RIGHT-140.0)
 	_spawn_enemy("grandote",ARENA_RIGHT-210.0)
-	_spawn_boss()
+	hud = PROTOTYPE_HUD.new()
+	add_child(hud)
+	boss = _spawn_boss()
+	boss_director = BOSS_DIRECTOR.new()
+	add_child(boss_director)
+	boss_director.setup(boss,player,$ViewportContainer/SubViewport/World/Camera2D,hud,feel,enemies,projectiles)
 	_spawn_campeona()
 	_spawn_car()
 	# Apply anchoring after existing procedural animation; production code is untouched.
@@ -108,8 +118,9 @@ func _spawn_enemy(archetype: String,x: float) -> CharacterBody2D:
 	return enemy
 
 
-func _spawn_boss() -> void:
+func _spawn_boss() -> CharacterBody2D:
 	var boss = BOSS_SCENE.instantiate()
+	boss.intro_duration = CFG.BOSS_ACTIVATE_REACTION
 	boss.target = player
 	boss.position = Vector2(ARENA_RIGHT - 15.0, GameConfig.GROUND_Y)
 	boss.arena_bounds = Vector2(ARENA_LEFT + 20.0, ARENA_RIGHT - 15.0)
@@ -121,19 +132,21 @@ func _spawn_boss() -> void:
 	enemies.add_child(boss)
 	CHARACTER_SCALE.remember(boss)
 	_apply_batch_frames(boss, "palermitano", {
-		&"boss_run": &"correr", &"boss_idle": &"idle", &"boss_punch": &"golpe_v2",
+		&"boss_run": &"correr", &"boss_idle": &"idle", &"boss_punch": &"golpe_v2" if CFG.BOSS_CHAIN_ANIMATED else &"idle",
 		&"boss_joke": &"idle_v2", &"boss_order": &"idle_v2", &"Death": &"derrota"
 	})
 	CHARACTER_SCALE.apply(boss, "palermitano")
 	_add_contact_shadow(boss, "palermitano")
 	feel.watch_enemy(boss)
 	anim.watch_enemy(boss)
-	boss.pattern_started.connect(func(pattern: int):
-		if pattern == boss.Pattern.CHAIN:
-			boss.visual.play(&"golpe" if boss.chain_activations % 2 == 0 else &"golpe_v2"))
+	if CFG.BOSS_CHAIN_ANIMATED:
+		boss.pattern_started.connect(func(pattern: int):
+			if pattern == boss.Pattern.CHAIN:
+				boss.visual.play(&"golpe" if boss.chain_activations % 2 == 0 else &"golpe_v2"))
 	boss.health_component.damaged.connect(func(_amount, _health, _source):
 		if boss.boss_state in [boss.BossState.DECIDE, boss.BossState.RECOVERY]:
 			boss.visual.play(&"golpes_recibidos"))
+	return boss
 
 
 func _spawn_ground_wave(origin: Vector2, lane: int, direction: int, emitter: Node2D) -> void:

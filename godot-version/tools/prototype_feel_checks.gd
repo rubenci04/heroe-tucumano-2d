@@ -38,6 +38,7 @@ func _run() -> void:
 	await _check_impact()
 	await _check_death()
 	await _check_projectiles()
+	await _check_boss()
 	arena.queue_free()
 	await process_frame
 	Engine.time_scale = 1.0
@@ -170,3 +171,44 @@ func _check_projectiles() -> void:
 	for child in arena.projectiles.get_children():
 		child.queue_free()
 	await process_frame
+
+
+func _check_boss() -> void:
+	var director: Node = arena.boss_director
+	var boss: CharacterBody2D = arena.boss
+	var player: CharacterBody2D = arena.player
+	var camera: Camera2D = arena.get_node("ViewportContainer/SubViewport/World/Camera2D")
+	check(director.stage == director.Stage.WAITING and not boss.active, "Boss waits inactive before the trigger")
+	check(not boss.hurtbox.receiving_enabled if "receiving_enabled" in boss.hurtbox else true, "Boss cannot be hurt before its intro")
+	check(arena.hud.boss_panel != null and not arena.hud.boss_panel.visible, "Boss bar hidden before the intro")
+	check(not CFG.BOSS_CHAIN_ANIMATED and boss.visual.sprite_frames.get_frame_count(&"boss_punch") == boss.visual.sprite_frames.get_frame_count(&"idle"), "Chain attack is prepared without a dedicated animation")
+	check(is_equal_approx(boss.intro_duration, CFG.BOSS_ACTIVATE_REACTION), "Boss reaction pause is configured")
+	for enemy in arena.enemies.get_children():
+		if enemy != boss:
+			enemy.queue_free()
+	await process_frame
+	player.global_position.x = CFG.BOSS_TRIGGER_X + 10.0
+	await process_frame
+	check(director.stage == director.Stage.INTRO, "Crossing the trigger starts the 2 s intro")
+	check(not player.controls_enabled, "Ciruja is held during the intro")
+	check(arena.hud.boss_panel.visible and arena.hud.banner.text == CFG.BOSS_NAME, "Intro shows the boss name and its own life bar")
+	check(not boss.active, "Boss stays idle during the intro")
+	check(arena.projectiles.process_mode == Node.PROCESS_MODE_DISABLED, "World is frozen during the intro")
+	await create_timer(0.6).timeout
+	check(camera.zoom.x > 1.0, "Camera pushes in on the boss during the intro")
+	director._process(CFG.BOSS_INTRO_DURATION)
+	check(director.stage == director.Stage.FIGHT and boss.active and player.controls_enabled, "Fight starts after the intro and releases the camera lock")
+	check(camera.zoom == Vector2.ONE and camera.position == director._camera_home, "Camera ends locked on the arena frame")
+	boss.set_physics_process(false)
+	var speed_before: float = boss.lane_move_speed
+	var cooldown_before: float = boss.coffee_cooldown
+	var maximum: int = boss.health_component.max_health
+	boss.health_component.restore_full(true)
+	boss.health_component.set_current_health(int(maximum * CFG.BOSS_PHASE2_THRESHOLD) + 1)
+	check(director.stage == director.Stage.FIGHT, "Phase 2 not reached above 50% health")
+	boss.health_component.set_current_health(int(maximum * CFG.BOSS_PHASE2_THRESHOLD))
+	check(director.stage == director.Stage.PHASE_TWO, "Phase 2 starts at 50% health")
+	check(boss.lane_move_speed > speed_before and boss.coffee_cooldown < cooldown_before and boss.visual.speed_scale > 1.0, "Phase 2 is faster in movement, tempo and animation")
+	boss.health_component.set_current_health(int(maximum * 0.4))
+	check(is_equal_approx(boss.lane_move_speed, speed_before * CFG.BOSS_PHASE2_SPEED_MULT), "Phase 2 multipliers apply only once")
+	check(is_equal_approx(arena.hud.boss_bar.value, maximum * 0.4), "Boss bar follows its health")
