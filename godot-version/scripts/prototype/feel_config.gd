@@ -306,3 +306,12 @@ const IDLE_BLEND_SPEED := 8.0          # suavizado al entrar/salir del idle (sin
 const IDLE_WEIGHT_HZ := 0.35           # ciclos/s del cambio de peso
 const IDLE_WEIGHT_SHIFT := 0.8         # px de desplazamiento lateral del cuerpo
 const IDLE_WEIGHT_TILT_DEG := 0.8      # inclinación leve acompañando el cambio de peso
+
+# --- Fin del nivel 1 (referencia medida; no está conectado a la ruta, que ya cumple el límite) ---
+# fondo_completo.png (8000 px): el cartel/poste "Ingenio Providencia" empieza en x≈7410 y el edificio en ≈7490;
+# el cartel "RÍO SECO" está en x≈6490. Con el parallax 0.66 de la ruta la cámara solo ve el ingenio si su
+# centro supera ≈ INGENIO_VISIBLE_CAMERA_X; el tope real (WORLD_WIDTH-400 = 7600 y arena del jefe 7000-7950) queda muy debajo.
+const INGENIO_START_BG_X := 7410.0
+const RIOSECO_SIGN_BG_X := 6490.0
+const INGENIO_VISIBLE_CAMERA_X := 11500.0  # estimado por extrapolación (a 9000 recién entra el cartel RÍO SECO)
+const LEVEL1_CAMERA_MAX_X := 7600.0        # valor vigente en main.gd (WORLD_WIDTH - 400)
