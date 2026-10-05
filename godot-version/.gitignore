@@ -1,3 +1,5 @@
 .godot/
 validation/*.log
 validation/*.png
+characters/lote2_cuadros/paquete_unico_cuadros.zip
+characters/lote2_cuadros/**/*.gif
