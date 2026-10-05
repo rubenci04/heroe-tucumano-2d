@@ -61,10 +61,13 @@ func _ready() -> void:
 	_spawn_enemy("grandote",ARENA_RIGHT-210.0)
 	hud = PROTOTYPE_HUD.new()
 	add_child(hud)
+	hud.bind_player(player)
 	boss = _spawn_boss()
 	boss_director = BOSS_DIRECTOR.new()
 	add_child(boss_director)
 	boss_director.setup(boss,player,$ViewportContainer/SubViewport/World/Camera2D,hud,feel,enemies,projectiles)
+	boss_director.fight_won.connect(_show_result_after_delay.bind(&"victory"))
+	player.died.connect(_show_result_after_delay.bind(&"game_over"))
 	_spawn_campeona()
 	_spawn_car()
 	# Apply anchoring after existing procedural animation; production code is untouched.
@@ -336,3 +339,19 @@ func _spawn_projectile(origin: Vector2,_lane: int,direction: Variant,kind: Strin
 		var shot_direction: Vector2 = direction if direction is Vector2 else Vector2(float(direction), 0.0)
 		feel.fx.muzzle_flash(origin, shot_direction, CFG.ENEMY_MUZZLE_SIZE)
 		feel.fx.casing(origin, shot_direction)
+
+
+func _show_result_after_delay(result: StringName) -> void:
+	if is_instance_valid(player):
+		player.controls_enabled = false
+	await get_tree().create_timer(CFG.HUD_RESULT_DELAY).timeout
+	if result == &"victory":
+		hud.show_victory()
+	else:
+		hud.show_game_over()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("restart"):
+		Engine.time_scale = 1.0
+		get_tree().reload_current_scene()

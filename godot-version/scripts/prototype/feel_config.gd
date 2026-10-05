@@ -204,3 +204,13 @@ const BOSS_CHAIN_ANIMATED := false
 const HUD_TEXT_COLOR := Color(1.0, 0.88, 0.15)
 const HUD_OUTLINE_COLOR := Color(0.14, 0.07, 0.03)
 const HUD_OUTLINE_RATIO := 0.3         # grosor del borde = tamaño de fuente × ratio
+const HUD_PANEL_FILL := Color(0.16, 0.08, 0.04, 0.82)
+const HUD_PANEL_BORDER := Color(1.0, 0.72, 0.2)
+const HUD_GAME_OVER_TITLE := "¡CIRUJA CAYÓ!"
+const HUD_GAME_OVER_TEXT := "La Campeona sigue cautiva en manos del Palermitano.\nNo la dejes sola: ¡reintentá!"
+const HUD_VICTORY_TITLE := "¡EL PALERMITANO HUYE AL INGENIO!"
+const HUD_VICTORY_TEXT := "Ciruja sigue tras la Campeona que se llevaron de Famaillá.\nPróximo destino: Ingenio Arcor."
+const HUD_RESTART_HINT := "R: volver a jugar"
+const HUD_RESULT_DELAY := 1.4          # s entre el último golpe/caída y la pantalla final
+const HUD_HEAD_CROP := 0.46            # alto del recorte de cabeza / alto de la silueta
+const HUD_HEAD_OFFSET_X := 8.0

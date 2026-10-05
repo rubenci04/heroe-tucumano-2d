@@ -129,3 +129,113 @@ func show_banner(title: String, subtitle: String, hold: float) -> void:
 	var out := _banner_tween.chain().set_parallel(true)
 	out.tween_property(banner, "modulate:a", 0.0, 0.35).set_delay(hold)
 	out.tween_property(banner_sub, "modulate:a", 0.0, 0.35).set_delay(hold)
+
+
+# --- Jugador: vidas y puntos ---
+var player: CharacterBody2D
+var lives_label: Label
+var score_label: Label
+var head_icon: TextureRect
+var overlay: Control
+var overlay_title: Label
+var overlay_text: Label
+var overlay_hint: Label
+
+
+func bind_player(player_node: CharacterBody2D) -> void:
+	player = player_node
+	_build_player_panel()
+	_build_overlay()
+
+
+func _build_player_panel() -> void:
+	var panel := PanelContainer.new()
+	panel.name = "PlayerPanel"
+	panel.position = Vector2(14.0, 12.0)
+	panel.add_theme_stylebox_override("panel", _style(CFG.HUD_PANEL_FILL, CFG.HUD_PANEL_BORDER, 14, 4))
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(panel)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	panel.add_child(row)
+	head_icon = TextureRect.new()
+	head_icon.custom_minimum_size = Vector2(46.0, 46.0)
+	head_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	head_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	head_icon.texture = _head_texture()
+	row.add_child(head_icon)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", -4)
+	row.add_child(column)
+	lives_label = make_label("x 3", 26)
+	score_label = make_label("00000", 20, Color(1, 1, 1))
+	column.add_child(lives_label)
+	column.add_child(score_label)
+
+
+## Cabeza de Ciruja recortada de su primer cuadro (sin imágenes nuevas): parte alta de la silueta opaca.
+func _head_texture() -> Texture2D:
+	var frames: SpriteFrames = player.visual.sprite_frames
+	for animation in [&"ajustar_gorra", &"correr", &"Idle"]:
+		if frames.has_animation(animation) and frames.get_frame_count(animation) > 0:
+			var texture := frames.get_frame_texture(animation, 0)
+			var bounds := CollisionFactory.opaque_bounds(texture)
+			var atlas := AtlasTexture.new()
+			atlas.atlas = texture
+			var side := bounds.size.y * CFG.HUD_HEAD_CROP
+			atlas.region = Rect2(bounds.get_center().x - side * 0.5 + CFG.HUD_HEAD_OFFSET_X, bounds.position.y, side, side)
+			return atlas
+	return null
+
+
+func _build_overlay() -> void:
+	overlay = Control.new()
+	overlay.name = "Overlay"
+	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.visible = false
+	overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(overlay)
+	var dim := ColorRect.new()
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.color = Color(0.1, 0.05, 0.03, 0.78)
+	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	overlay.add_child(dim)
+	overlay_title = make_label("", 48)
+	overlay_title.position = Vector2(0.0, 120.0)
+	overlay_title.size = Vector2(800.0, 64.0)
+	overlay_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	overlay.add_child(overlay_title)
+	overlay_text = make_label("", 22, Color(1, 1, 1))
+	overlay_text.position = Vector2(0.0, 196.0)
+	overlay_text.size = Vector2(800.0, 120.0)
+	overlay_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	overlay.add_child(overlay_text)
+	overlay_hint = make_label(CFG.HUD_RESTART_HINT, 20, Color(1.0, 0.7, 0.25))
+	overlay_hint.position = Vector2(0.0, 360.0)
+	overlay_hint.size = Vector2(800.0, 30.0)
+	overlay_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	overlay.add_child(overlay_hint)
+
+
+func show_game_over() -> void:
+	_show_overlay(CFG.HUD_GAME_OVER_TITLE, CFG.HUD_GAME_OVER_TEXT, Color(1.0, 0.4, 0.3))
+
+
+func show_victory() -> void:
+	_show_overlay(CFG.HUD_VICTORY_TITLE, CFG.HUD_VICTORY_TEXT, CFG.HUD_TEXT_COLOR)
+
+
+func _show_overlay(title: String, text: String, color: Color) -> void:
+	overlay_title.text = title
+	overlay_title.add_theme_color_override("font_color", color)
+	overlay_text.text = "%s\nPUNTOS: %05d" % [text, player.score if is_instance_valid(player) else 0]
+	overlay.modulate.a = 0.0
+	overlay.visible = true
+	create_tween().tween_property(overlay, "modulate:a", 1.0, 0.4)
+
+
+func _process(_delta: float) -> void:
+	if not is_instance_valid(player) or lives_label == null:
+		return
+	lives_label.text = "x %d" % maxi(player.lives, 0)
+	score_label.text = "%05d" % player.score

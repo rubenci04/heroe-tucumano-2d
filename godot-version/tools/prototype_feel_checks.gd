@@ -39,6 +39,7 @@ func _run() -> void:
 	await _check_death()
 	await _check_projectiles()
 	await _check_boss()
+	await _check_hud()
 	arena.queue_free()
 	await process_frame
 	Engine.time_scale = 1.0
@@ -212,3 +213,36 @@ func _check_boss() -> void:
 	boss.health_component.set_current_health(int(maximum * 0.4))
 	check(is_equal_approx(boss.lane_move_speed, speed_before * CFG.BOSS_PHASE2_SPEED_MULT), "Phase 2 multipliers apply only once")
 	check(is_equal_approx(arena.hud.boss_bar.value, maximum * 0.4), "Boss bar follows its health")
+
+
+func _check_hud() -> void:
+	var hud: CanvasLayer = arena.hud
+	var player: CharacterBody2D = arena.player
+	check(hud.lives_label != null and hud.head_icon.texture != null, "HUD shows Ciruja's head icon with the lives counter")
+	player.lives = 2
+	player.score = 1234
+	await _frames(3)
+	check(hud.lives_label.text == "x 2" and hud.score_label.text == "01234", "Lives and score follow the player")
+	for label in [hud.lives_label, hud.score_label, hud.banner, hud.boss_name_label]:
+		check(label.get_theme_constant("outline_size") >= 4 and label.get_theme_color("font_outline_color").v < 0.3, "Prototype HUD text has a thick dark outline")
+	hud.show_game_over()
+	check(hud.overlay.visible and "Campeona" in hud.overlay_text.text and "cautiva" in hud.overlay_text.text, "Game over keeps the Campeona captive")
+	check(not "rescat" in hud.overlay_text.text.to_lower(), "Game over does not claim a rescue")
+	hud.show_victory()
+	check("Ingenio" in hud.overlay_text.text and "Famaillá" in hud.overlay_text.text and "HUYE" in hud.overlay_title.text, "Victory: Palermitano flees to the Ingenio, Campeona from Famaillá still to rescue")
+	hud.overlay.visible = false
+	arena.boss_director.fight_won.emit()
+	await create_timer(CFG.HUD_RESULT_DELAY + 0.3).timeout
+	check(hud.overlay.visible and "HUYE" in hud.overlay_title.text, "Victory screen appears after the boss falls")
+	hud.overlay.visible = false
+	player.died.emit()
+	await create_timer(CFG.HUD_RESULT_DELAY + 0.3).timeout
+	check(hud.overlay.visible and "CAYÓ" in hud.overlay_title.text, "Game over screen appears after Ciruja's final death")
+	var game_hud = load("res://ui/hud.tscn").instantiate()
+	root.add_child(game_hud)
+	await process_frame
+	var thick := true
+	for label: Label in game_hud.find_children("*", "Label", true, false):
+		thick = thick and label.get_theme_constant("outline_size") >= 3
+	check(thick, "Main HUD labels all carry the cartoon outline")
+	game_hud.queue_free()

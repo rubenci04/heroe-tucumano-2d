@@ -147,8 +147,8 @@ func _finish_demo_closing() -> void:
 	demo_closing_complete = true
 	_sync_session_from_player()
 	hud.show_result(
-		"RUTA 38 · BATALLA GANADA",
-		"Palermitano se retira: la Campeona sigue secuestrada.\nPRÓXIMO DESTINO: INGENIO ARCOR · CONTINUARÁ…\nPuntaje: %d · Monedas: %d\nR: reiniciar · Esc/B: salir" % [player.score,player.coins]
+		"¡EL PALERMITANO HUYE AL INGENIO!",
+		"Ciruja sigue tras la Campeona que se llevaron de Famaillá.\nPRÓXIMO DESTINO: INGENIO ARCOR · CONTINUARÁ…\nPuntaje: %d · Monedas: %d\nR: reiniciar · Esc/B: salir" % [player.score,player.coins]
 	)
 	change_state(GAME_SESSION.DemoState.RESULT)
 	demo_closing_finished.emit()
@@ -385,7 +385,7 @@ func _on_player_died() -> void:
 	player.controls_enabled = false
 	_sync_session_from_player()
 	await get_tree().create_timer(0.55).timeout
-	hud.show_result("¡TE LIQUIDARON EN LA RUTA!","Puntaje: %d · Monedas: %d\nR: reiniciar desde último checkpoint" % [player.score,player.coins])
+	hud.show_result("¡CIRUJA CAYÓ EN LA RUTA!","La Campeona de Famaillá sigue cautiva.\nPuntaje: %d · Monedas: %d\nR: reintentar desde el último checkpoint" % [player.score,player.coins])
 	change_state(GAME_SESSION.DemoState.RESULT)
 
 
@@ -436,7 +436,7 @@ func _on_player_respawn_requested() -> void:
 func _on_boss_escaped() -> void:
 	_sync_session_from_player()
 	AudioManager.play_effect("victoria")
-	hud.show_result("RÍO SECO · BATALLA GANADA","¡El jefe escapó al Ingenio Arcor!\nNivel 2: interior de la fábrica · Próximamente\nPuntaje: %d · Monedas: %d · R para volver" % [player.score,player.coins])
+	hud.show_result("¡EL PALERMITANO HUYE AL INGENIO!","Ciruja sigue tras la Campeona que se llevaron de Famaillá.\nNivel 2: interior de la fábrica · Próximamente\nPuntaje: %d · Monedas: %d · R para volver" % [player.score,player.coins])
 	change_state(GAME_SESSION.DemoState.RESULT)
 
 func _sync_session_from_player() -> void:
