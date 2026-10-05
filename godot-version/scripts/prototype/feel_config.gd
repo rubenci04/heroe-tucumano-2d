@@ -10,7 +10,13 @@ const CHARACTER_PROPORTIONS := {
 # Measured on the new 320x256 source frames: gun tip / throwing hand.
 const BATCH_MUZZLE_SOURCE := {"agente": Vector2(110, 101), "hipster": Vector2(146, 132)}
 
+# Altura objetivo del Hipster (jinete + monopatín) en px. Tocala acá; hitbox y punto de lanzamiento escalan solos.
+const HIPSTER_TARGET_HEIGHT := 92.0
+const TARGET_HEIGHT_OVERRIDE := {"hipster": HIPSTER_TARGET_HEIGHT}
+
 static func target_height(character: String) -> float:
+	if TARGET_HEIGHT_OVERRIDE.has(character):
+		return float(TARGET_HEIGHT_OVERRIDE[character])
 	return REFERENCE_VISIBLE_HEIGHT * float(CHARACTER_PROPORTIONS[character])
 
 # Hit-stop (frames de render congelados al impactar a un enemigo)
