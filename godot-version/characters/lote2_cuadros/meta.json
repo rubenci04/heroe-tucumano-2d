@@ -22,14 +22,14 @@
    ],
    "nota": "bucle p=16",
    "alto_px": [
-    172,
-    177
+    173,
+    178
    ],
    "fila_pies": [
     231,
     239
    ],
-   "deriva_color_max": 6.2,
+   "deriva_color_max": 6.3,
    "cuadros_recortados": 0
   },
   "ajustar_gorra": {
@@ -57,7 +57,7 @@
     240,
     240
    ],
-   "deriva_color_max": 12.3,
+   "deriva_color_max": 12.4,
    "cuadros_recortados": 0
   },
   "pinazo": {
@@ -79,11 +79,11 @@
    ],
    "nota": "",
    "alto_px": [
-    174,
-    189
+    175,
+    190
    ],
    "fila_pies": [
-    239,
+    240,
     240
    ],
    "deriva_color_max": 1.5,
@@ -106,11 +106,11 @@
    ],
    "nota": "",
    "alto_px": [
-    179,
+    180,
     186
    ],
    "fila_pies": [
-    239,
+    240,
     240
    ],
    "deriva_color_max": 1.8,
@@ -143,7 +143,7 @@
     239,
     240
    ],
-   "deriva_color_max": 3.0,
+   "deriva_color_max": 3.1,
    "cuadros_recortados": 0
   },
   "embestida": {
@@ -167,10 +167,10 @@
     191
    ],
    "fila_pies": [
-    238,
+    239,
     240
    ],
-   "deriva_color_max": 7.5,
+   "deriva_color_max": 8.0,
    "cuadros_recortados": 0
   },
   "muerte": {
@@ -184,24 +184,24 @@
    "origen_video": "ciru_a",
    "indices": [
     148,
-    155,
-    163,
-    170,
-    178,
-    185,
-    193,
-    200
+    153,
+    157,
+    162,
+    167,
+    172,
+    176,
+    181
    ],
-   "nota": "el cuadro con estrella de impacto es FX del video; quitar si no se quiere",
+   "nota": "el video saca a Ciruja del cuadro al caer: se usan solo cuadros sin recorte; la pose final tendria que acostarse por codigo o regenerar el video con mas espacio a la izquierda",
    "alto_px": [
-    100,
+    112,
     188
    ],
    "fila_pies": [
-    195,
-    240
+    204,
+    239
    ],
-   "deriva_color_max": 8.2,
+   "deriva_color_max": 13.6,
    "cuadros_recortados": 0
   }
  },
@@ -228,14 +228,14 @@
    ],
    "nota": "bucle p=18",
    "alto_px": [
-    180,
+    181,
     191
    ],
    "fila_pies": [
-    227,
+    228,
     239
    ],
-   "deriva_color_max": 4.0,
+   "deriva_color_max": 4.1,
    "cuadros_recortados": 0
   },
   "disparar": {
@@ -265,7 +265,7 @@
     235,
     240
    ],
-   "deriva_color_max": 6.1,
+   "deriva_color_max": 5.9,
    "cuadros_recortados": 0
   },
   "agarrar": {
@@ -291,8 +291,8 @@
     190
    ],
    "fila_pies": [
-    238,
-    240
+    237,
+    239
    ],
    "deriva_color_max": 2.3,
    "cuadros_recortados": 0
@@ -348,11 +348,11 @@
    "nota": "",
    "alto_px": [
     81,
-    184
+    185
    ],
    "fila_pies": [
-    230,
-    240
+    229,
+    239
    ],
    "deriva_color_max": 7.3,
    "cuadros_recortados": 0
@@ -377,14 +377,14 @@
    ],
    "nota": "el video casi no se mueve: usar rebote por codigo",
    "alto_px": [
-    190,
+    191,
     191
    ],
    "fila_pies": [
     240,
     240
    ],
-   "deriva_color_max": 0.6,
+   "deriva_color_max": 0.5,
    "cuadros_recortados": 0
   },
   "tirar_botella": {
@@ -445,7 +445,7 @@
     240,
     240
    ],
-   "deriva_color_max": 3.4,
+   "deriva_color_max": 3.5,
    "cuadros_recortados": 0
   },
   "caida": {
@@ -479,7 +479,7 @@
    "cuadros_recortados": 0
   }
  },
- "_escala_grandote": 0.3135,
+ "_escala_grandote": 0.3128,
  "_escala_grandote_fondo_blanco": 0.3094,
  "grandote": {
   "correr": {
@@ -503,14 +503,14 @@
    ],
    "nota": "bucle p=17",
    "alto_px": [
-    173,
-    183
+    172,
+    182
    ],
    "fila_pies": [
     232,
     240
    ],
-   "deriva_color_max": 10.2,
+   "deriva_color_max": 10.3,
    "cuadros_recortados": 0
   },
   "golpe_piso": {
@@ -596,14 +596,14 @@
    ],
    "nota": "",
    "alto_px": [
-    82,
-    149
+    81,
+    157
    ],
    "fila_pies": [
     222,
-    240
+    239
    ],
-   "deriva_color_max": 9.3,
+   "deriva_color_max": 9.4,
    "cuadros_recortados": 0
   }
  },
@@ -696,10 +696,95 @@
    ],
    "deriva_color_max": 1.1,
    "cuadros_recortados": 0
-  }
- },
- "_REVISAR_palermitano": {
-  "derrota_barba_larga": {
+  },
+  "idle_v2": {
+   "cuadros": 4,
+   "fps": 6,
+   "bucle": true,
+   "canvas": [
+    320,
+    256
+   ],
+   "origen_video": "pal2",
+   "indices": [
+    0,
+    6,
+    12,
+    18
+   ],
+   "nota": "",
+   "alto_px": [
+    191,
+    191
+   ],
+   "fila_pies": [
+    239,
+    239
+   ],
+   "deriva_color_max": 0.3,
+   "cuadros_recortados": 0
+  },
+  "golpes_recibidos": {
+   "cuadros": 7,
+   "fps": 10,
+   "bucle": false,
+   "canvas": [
+    320,
+    256
+   ],
+   "origen_video": "pal2",
+   "indices": [
+    32,
+    36,
+    48,
+    52,
+    56,
+    60,
+    64
+   ],
+   "nota": "se saltaron cuadros con FX/taza (40, 44, 72, 88)",
+   "alto_px": [
+    183,
+    187
+   ],
+   "fila_pies": [
+    239,
+    239
+   ],
+   "deriva_color_max": 5.1,
+   "cuadros_recortados": 0
+  },
+  "golpe_v2": {
+   "cuadros": 7,
+   "fps": 12,
+   "bucle": false,
+   "canvas": [
+    320,
+    256
+   ],
+   "origen_video": "pal2",
+   "indices": [
+    100,
+    109,
+    117,
+    126,
+    135,
+    143,
+    152
+   ],
+   "nota": "",
+   "alto_px": [
+    180,
+    184
+   ],
+   "fila_pies": [
+    239,
+    240
+   ],
+   "deriva_color_max": 4.1,
+   "cuadros_recortados": 0
+  },
+  "derrota": {
    "cuadros": 9,
    "fps": 10,
    "bucle": false,
@@ -707,28 +792,94 @@
     384,
     256
    ],
-   "origen_video": "pal_g",
+   "origen_video": "pal2",
    "indices": [
-    120,
-    134,
-    148,
-    161,
-    175,
-    189,
-    202,
+    200,
+    206,
+    210,
+    214,
     216,
-    230
+    220,
+    224,
+    230,
+    238
    ],
-   "nota": "barba y lentes distintos al resto: no usar sin corregir",
+   "nota": "polvo del video incluido",
    "alto_px": [
-    64,
-    190
+    78,
+    186
    ],
    "fila_pies": [
-    223,
+    227,
+    239
+   ],
+   "deriva_color_max": 13.9,
+   "cuadros_recortados": 0
+  }
+ },
+ "campeona": {
+  "forcejeo": {
+   "cuadros": 9,
+   "fps": 10,
+   "bucle": false,
+   "canvas": [
+    320,
+    256
+   ],
+   "origen_video": "camp_f",
+   "indices": [
+    20,
+    31,
+    42,
+    54,
+    65,
+    76,
+    88,
+    99,
+    110
+   ],
+   "nota": "ella casi no cambia de pose: tirar de los brazos y animar por codigo (tiron/sacudida)",
+   "alto_px": [
+    190,
+    193
+   ],
+   "fila_pies": [
+    240,
     240
    ],
-   "deriva_color_max": 12.8,
+   "deriva_color_max": 2.3,
+   "cuadros_recortados": 0
+  },
+  "relajarse_agradecer": {
+   "cuadros": 9,
+   "fps": 8,
+   "bucle": false,
+   "canvas": [
+    320,
+    256
+   ],
+   "origen_video": "camp_f",
+   "indices": [
+    150,
+    161,
+    172,
+    183,
+    194,
+    205,
+    216,
+    227,
+    238
+   ],
+   "nota": "",
+   "alto_px": [
+    190,
+    192
+   ],
+   "fila_pies": [
+    240,
+    240
+   ],
+   "deriva_color_max": 5.0,
    "cuadros_recortados": 0
   }
  }

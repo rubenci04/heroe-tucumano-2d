@@ -1,0 +1,4 @@
+Tucuman Rush - paquete UNICO de cuadros (reemplaza lote2 y lote3).
+Descomprimir en godot-version/assets/characters/ y aceptar reemplazar todo. Un solo meta.json con fps/bucle de cada animacion.
+Canvas 320x256 (384x256 en caidas/muertes anchas). Pies en y=240. Escala unica por personaje (~190 px).
+Ver "nota" en meta.json para limitaciones de cada animacion.
