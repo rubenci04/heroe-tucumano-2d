@@ -33,6 +33,7 @@ func _ready() -> void:
 	feel = FEEL_DIRECTOR.new()
 	add_child(feel)
 	feel.setup(world,$ViewportContainer,player)
+	feel.arena_bounds = Vector2(ARENA_LEFT + 20.0,ARENA_RIGHT - 15.0)
 	_apply_batch_frames(player, "ciruja", {
 		&"Run": &"correr", &"Punch": &"pinazo", &"Headbutt": &"embestida", &"Death": &"muerte"
 	})

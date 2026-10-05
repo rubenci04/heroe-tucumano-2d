@@ -16,6 +16,28 @@ static func target_height(character: String) -> float:
 # Hit-stop (frames de render congelados al impactar a un enemigo)
 const HITSTOP_FRAMES := 3
 const HITSTOP_TIME_SCALE := 0.02
+const PLAYER_HURT_HITSTOP_FRAMES := 2
+
+# Impacto por personaje: hitstop (frames, 2-4), shake (px de pantalla), flash blanco (frames),
+# knock (px/s de empuje inicial; decae con KNOCKBACK_DECAY). Grandote y jefe pegan más fuerte
+# en la pantalla pero se desplazan menos (más masa).
+const IMPACT_PROFILES := {
+	"agente": {"hitstop": 2, "shake": 1.5, "flash": 2, "knock": 90.0},
+	"hipster": {"hitstop": 2, "shake": 1.5, "flash": 2, "knock": 100.0},
+	"grandote": {"hitstop": 4, "shake": 3.0, "flash": 3, "knock": 45.0},
+	"palermitano": {"hitstop": 4, "shake": 3.5, "flash": 3, "knock": 22.0},
+}
+const IMPACT_DEFAULT := {"hitstop": 3, "shake": 2.0, "flash": 2, "knock": 70.0}
+const IMPACT_REFERENCE_DAMAGE := 1.0   # daño que cuenta como golpe "normal"
+const IMPACT_STRENGTH_MIN := 0.75      # multiplicador de shake/knock según daño recibido
+const IMPACT_STRENGTH_MAX := 2.0
+const IMPACT_HEAVY_DAMAGE := 3         # a partir de este daño el hit-stop sube un frame
+const SHAKE_IMPACT_DURATION := 0.10
+const KNOCKBACK_DECAY := 9.0           # 1/s, caída exponencial del empuje
+const KNOCKBACK_MIN_SPEED := 3.0
+
+static func impact_profile(character: String) -> Dictionary:
+	return IMPACT_PROFILES.get(character, IMPACT_DEFAULT)
 
 # Screen shake: intensidad en píxeles de pantalla, duración en segundos
 const SHAKE_SHOT_INTENSITY := 1.5
