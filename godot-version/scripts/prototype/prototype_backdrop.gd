@@ -23,6 +23,7 @@ func setup(player_node: Node2D, left: float, center: float) -> void:
 	view_center = center
 	_build_sky()
 	_build_panorama()
+	_build_floor()
 
 
 func _build_sky() -> void:
@@ -68,3 +69,26 @@ func _process(_delta: float) -> void:
 	for index in sky_tiles.size():
 		sky_tiles[index].position.x = view_left - shift + index * sky_step
 	panorama.position.x = view_center - panorama.texture.get_width() * panorama.scale.x * 0.5 - travelled * CFG.BACKDROP_SCROLL_PANORAMA
+
+
+## Suelo opaco y continuo: reemplaza la tira de 5 px visible; el panorama queda como fondo, no como piso.
+func _build_floor() -> void:
+	var old := get_parent().get_node_or_null("FloorVisual")
+	if old != null:
+		old.visible = false
+	var width := 2000.0
+	var left := view_center - width * 0.5
+	var bands := [
+		[CFG.FLOOR_TOP_Y, CFG.FLOOR_BOTTOM_Y - CFG.FLOOR_TOP_Y, CFG.FLOOR_COLOR],
+		[CFG.FLOOR_TOP_Y, CFG.FLOOR_CURB_HEIGHT, CFG.FLOOR_CURB_COLOR],
+		[CFG.FLOOR_TOP_Y + CFG.FLOOR_CURB_HEIGHT, CFG.FLOOR_SHADE_HEIGHT, CFG.FLOOR_SHADE_COLOR],
+	]
+	for index in bands.size():
+		var band := ColorRect.new()
+		band.name = "FloorBand%d" % index
+		band.position = Vector2(left, bands[index][0])
+		band.size = Vector2(width, bands[index][1])
+		band.color = bands[index][2]
+		band.z_index = -6
+		band.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(band)

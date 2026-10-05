@@ -255,3 +255,12 @@ const BOSS_PHASE2_COFFEE_SPREAD := 13.0 # abanico de café más abierto (grados;
 const BOSS_PHASE2_CHAIN_RANGE_MULT := 1.35 # la cadena alcanza más lejos: pega más seguido
 const BOSS_PHASE2_CHAIN_COOLDOWN_MULT := 0.6
 const BOSS_PHASE2_SUMMON_COOLDOWN_MULT := 0.7
+
+# --- Suelo sólido de la arena (el panorama es un recorte con alfa degradado: no sirve de piso) ---
+const FLOOR_TOP_Y := 352.0             # borde superior del suelo (tapa la base del panorama)
+const FLOOR_BOTTOM_Y := 440.0
+const FLOOR_COLOR := Color(0.36, 0.33, 0.30)
+const FLOOR_CURB_COLOR := Color(0.62, 0.58, 0.50)  # cordón claro en el borde superior
+const FLOOR_CURB_HEIGHT := 3.0
+const FLOOR_SHADE_COLOR := Color(0.0, 0.0, 0.0, 0.18) # franja oscura bajo el cordón (da profundidad)
+const FLOOR_SHADE_HEIGHT := 5.0
