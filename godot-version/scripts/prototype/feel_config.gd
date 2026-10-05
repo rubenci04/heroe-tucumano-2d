@@ -5,7 +5,7 @@ extends RefCounted
 const REFERENCE_VISIBLE_HEIGHT := 74.0
 const CHARACTER_PROPORTIONS := {
 	"ciruja": 1.0, "agente": 1.0, "campeona": 0.95,
-	"hipster": 0.9, "grandote": 1.25, "palermitano": 1.3,
+	"hipster": 1.054, "grandote": 1.25, "palermitano": 1.3,
 }
 # Measured on the new 320x256 source frames: gun tip / throwing hand.
 const BATCH_MUZZLE_SOURCE := {"agente": Vector2(110, 101), "hipster": Vector2(146, 132)}
