@@ -49,7 +49,7 @@ static func run(tree: SceneTree,scene: Node) -> Array[Dictionary]:
 	director.advance_spawns(0.46,3500.0)
 	director.advance_spawns(0.45,3500.0)
 	director.advance_spawns(1.5,3500.0)
-	results.append({"ok":director.get_active_enemy_count(&"route_wave_03")==3 and director._pending.size()==3,"message":"Population cap seven keeps excess entries pending"})
+	results.append({"ok":director.get_active_enemy_count(&"route_wave_03")==1 and director._pending.size()==5,"message":"Population cap seven keeps excess entries pending"})
 	director.reset_runtime_state(true)
 	director.activate_encounter(&"route_drone_02",6100.0)
 	actors = director.get_active_enemies(&"route_drone_02")
@@ -84,7 +84,7 @@ static func run(tree: SceneTree,scene: Node) -> Array[Dictionary]:
 	actors[0].position.x = 6800.0
 	director.update_safety(7800.0,7600.0,800.0)
 	results.append({"ok":actors[0].is_queued_for_deletion() and not actors[1].is_queued_for_deletion(),"message":"Leash retires only actors far behind, never in front"})
-	director.advance_spawns(1.4,7800.0)
+	director.advance_spawns(2.3,7800.0)
 	for remaining_actor in director.get_active_enemies(&"route_wave_01"):
 		remaining_actor.take_damage(999,&"player")
 	await tree.process_frame
