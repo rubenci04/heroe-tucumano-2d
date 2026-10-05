@@ -37,6 +37,7 @@ func _run() -> void:
 	await _frames(2)
 	await _check_impact()
 	await _check_death()
+	await _check_projectiles()
 	arena.queue_free()
 	await process_frame
 	Engine.time_scale = 1.0
@@ -128,3 +129,44 @@ func _check_death() -> void:
 		ghost.queue_free()
 	var agent := _enemy("agente")
 	check(CFG.DEATH_SLOWMO.has("grandote") and not CFG.DEATH_SLOWMO.has("agente") and agent != null, "Only big enemies get slow motion")
+
+
+func _check_projectiles() -> void:
+	var feel: Node = arena.feel
+	var hipster := _enemy("hipster")
+	var agent := _enemy("agente")
+	var boss := _enemy("palermitano")
+	for kind in ["bottle", "hipster_coffee"]:
+		arena._spawn_projectile(hipster.global_position + Vector2(-24, -42), 0, -1, kind, "enemy", hipster)
+		var projectile: Node = arena.projectiles.get_child(-1)
+		projectile.set_physics_process(false)
+		check(projectile.has_node("TrailFx") and projectile.has_node("ShadowFx"), "Projectile has trail and ground shadow: " + kind)
+		var start_rotation: float = projectile.visual.rotation
+		var seen_hop := 0.0
+		for _i in 18:
+			await process_frame
+			seen_hop = minf(seen_hop, projectile.visual.position.y)
+		check(seen_hop < 0.0, "Projectile bounces while flying: " + kind)
+		check(projectile.get_node("TrailFx")._points.size() >= 2, "Projectile leaves a trail: " + kind)
+		if kind == "hipster_coffee":
+			check(not is_equal_approx(projectile.visual.rotation, start_rotation), "Cup rotates in flight")
+		var shadow: Node2D = projectile.get_node("ShadowFx")
+		check(shadow.z_index == -1 and shadow.top_level, "Shadow sits on the ground plane beneath actors: " + kind)
+		projectile.queue_free()
+	feel.fx._casings.clear()
+	feel.fx._flashes.clear()
+	agent.facing = -1
+	arena._spawn_projectile(agent.global_position + Vector2(-22, -58), 0, -1, "agent_orb", "enemy", agent)
+	arena.projectiles.get_child(-1).set_physics_process(false)
+	check(feel.fx._flashes.size() == 1 and feel.fx._casings.size() == 1, "Agent shot has muzzle flash and ejected casing")
+	check(feel.fx._casings[0].vel.x > 0.0, "Casing ejects backwards from the shot direction")
+	for _i in 140:
+		await process_frame
+	check(feel.fx._casings.size() == 0 or feel.fx._casings[0].pos.y <= GameConfig.GROUND_Y + 0.01, "Casing never falls below the ground")
+	arena._spawn_projectile(boss.global_position + Vector2(-30, -60), 0, -1, "coffee", "enemy", boss)
+	var thrown: Node = arena.projectiles.get_child(-1)
+	thrown.set_physics_process(false)
+	check(float(thrown.get_node("TrailFx").profile.shadow) > float(CFG.PROJECTILE_FX.bottle.shadow), "Boss throws get the heavy 'stone' presence")
+	for child in arena.projectiles.get_children():
+		child.queue_free()
+	await process_frame

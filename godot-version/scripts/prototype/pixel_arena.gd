@@ -12,6 +12,8 @@ const CHARACTER_SCALE = preload("res://scripts/prototype/character_scale.gd")
 const BOSS_SCENE = preload("res://scenes/actors/palermitano_boss.tscn")
 const GROUND_WAVE_SCENE = preload("res://scenes/actors/grandote_ground_wave.tscn")
 const CONTACT_SHADOW = preload("res://scripts/prototype/contact_shadow.gd")
+const PROJECTILE_FX = preload("res://scripts/prototype/projectile_fx.gd")
+const CFG = preload("res://scripts/prototype/feel_config.gd")
 const ARENA_LEFT := 200.0
 const ARENA_RIGHT := 600.0
 const PLAYER_START := Vector2(260.0,370.0)
@@ -315,3 +317,9 @@ func _spawn_projectile(origin: Vector2,_lane: int,direction: Variant,kind: Strin
 		feel.watch_projectile(projectile)
 	projectile.z_index = 20
 	projectiles.add_child(projectile)
+	var emitter_character: String = emitter.get_meta("prototype_character", "") if is_instance_valid(emitter) else ""
+	PROJECTILE_FX.decorate(projectile, kind, emitter_character)
+	if emitter_character == "agente":
+		var shot_direction: Vector2 = direction if direction is Vector2 else Vector2(float(direction), 0.0)
+		feel.fx.muzzle_flash(origin, shot_direction, CFG.ENEMY_MUZZLE_SIZE)
+		feel.fx.casing(origin, shot_direction)

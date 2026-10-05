@@ -158,3 +158,24 @@ const CASING_SPEED_X := Vector2(18.0, 45.0)
 const CASING_SPEED_UP := Vector2(60.0, 110.0)
 const CASING_LIFE := 1.6
 const ENEMY_MUZZLE_SIZE := 0.8
+
+# --- Proyectiles por código: giro (°/s), rebote (px) y frecuencia (saltos/s), estela y sombra ---
+const PROJECTILE_FX := {
+	"bottle": {"spin": 0.0, "hop": 6.0, "hop_hz": 2.2, "trail": 9, "trail_width": 3.0, "trail_color": Color(0.75, 0.9, 1.0, 0.55), "shadow": 1.0},
+	"hipster_coffee": {"spin": 380.0, "hop": 4.0, "hop_hz": 2.6, "trail": 8, "trail_width": 3.0, "trail_color": Color(0.55, 0.35, 0.2, 0.55), "shadow": 1.0},
+	"coffee": {"spin": 300.0, "hop": 3.0, "hop_hz": 2.0, "trail": 10, "trail_width": 4.0, "trail_color": Color(0.5, 0.32, 0.2, 0.6), "shadow": 1.2},
+	"agent_orb": {"spin": 0.0, "hop": 0.0, "hop_hz": 0.0, "trail": 6, "trail_width": 2.5, "trail_color": Color(1.0, 0.9, 0.4, 0.6), "shadow": 0.7},
+	"bullet": {"spin": 0.0, "hop": 0.0, "hop_hz": 0.0, "trail": 6, "trail_width": 2.0, "trail_color": Color(1.0, 0.9, 0.4, 0.6), "shadow": 0.6},
+	"orange": {"spin": 420.0, "hop": 0.0, "hop_hz": 0.0, "trail": 6, "trail_width": 2.5, "trail_color": Color(1.0, 0.6, 0.15, 0.5), "shadow": 0.8},
+	"stone": {"spin": 480.0, "hop": 0.0, "hop_hz": 0.0, "trail": 6, "trail_width": 2.5, "trail_color": Color(0.7, 0.68, 0.62, 0.5), "shadow": 0.9},
+}
+const PROJECTILE_FX_DEFAULT := {"spin": 0.0, "hop": 0.0, "hop_hz": 0.0, "trail": 5, "trail_width": 2.0, "trail_color": Color(1, 1, 1, 0.35), "shadow": 0.8}
+# Lo que lanza el Palermitano se trata como "piedra" pesada: giro lento, estela larga y sombra grande.
+const PROJECTILE_FX_BY_EMITTER := {
+	"palermitano": {"spin": 480.0, "hop": 3.0, "hop_hz": 1.8, "trail": 12, "trail_width": 4.5, "trail_color": Color(0.62, 0.56, 0.5, 0.6), "shadow": 1.4},
+}
+const PROJECTILE_SHADOW_WIDTH := 6.0
+const PROJECTILE_SHADOW_FLATNESS := 0.28
+const PROJECTILE_SHADOW_ALPHA := 0.28
+const PROJECTILE_SHADOW_HEIGHT_RANGE := 160.0
+const PROJECTILE_SHADOW_MIN_SCALE := 0.4
