@@ -17,6 +17,8 @@ const BOSS_DIRECTOR = preload("res://scripts/prototype/boss_director.gd")
 const PROTOTYPE_HUD = preload("res://scripts/prototype/prototype_hud.gd")
 const PROTOTYPE_BACKDROP = preload("res://scripts/prototype/prototype_backdrop.gd")
 const CFG = preload("res://scripts/prototype/feel_config.gd")
+const ARC_SHOT = preload("res://scripts/prototype/arc_shot.gd")
+const STAIN_MANAGER = preload("res://scripts/prototype/stain_manager.gd")
 const ARENA_LEFT := 200.0
 const ARENA_RIGHT := 600.0
 const PLAYER_START := Vector2(260.0,370.0)
@@ -35,6 +37,7 @@ var hud: CanvasLayer
 var boss_director: Node
 var backdrop: Node2D
 var boss: CharacterBody2D
+var stains: Node
 var campeona: AnimatedSprite2D
 var campeona_taken := false
 
@@ -59,6 +62,9 @@ func _ready() -> void:
 	add_child(anim)
 	anim.setup(world,player)
 	anim.fx = feel.fx
+	stains = STAIN_MANAGER.new()
+	add_child(stains)
+	stains.setup(world,player,feel.fx)
 	player.shot_requested.connect(_spawn_projectile.bind(player))
 	player.respawn_requested.connect(_on_player_respawn_requested)
 	_refill_player()
@@ -187,13 +193,16 @@ func _apply_batch_frames(actor: Node, character: String, aliases: Dictionary) ->
 	for name in aliases:
 		if incoming.has_animation(aliases[name]):
 			_copy_animation(incoming, aliases[name], frames, name)
-	# No Idle folder for Ciruja/Agente: a static first Run pose, not a fabricated animation.
+	# Ciruja: idle = f_00 de ajustar_gorra (parado, neutro). Agente: primera pose de Run.
 	if incoming.has_animation(&"correr"):
 		var idle_name: StringName = actor.character_definition.idle_animation if character == "ciruja" else &"Idle"
 		if not frames.has_animation(idle_name):
 			frames.add_animation(idle_name)
 		frames.clear(idle_name)
-		frames.add_frame(idle_name, incoming.get_frame_texture(&"correr", 0))
+		var idle_texture := incoming.get_frame_texture(&"correr", 0)
+		if character == "ciruja" and incoming.has_animation(CFG.IDLE_SOURCE_ANIMATION):
+			idle_texture = incoming.get_frame_texture(CFG.IDLE_SOURCE_ANIMATION, CFG.IDLE_SOURCE_FRAME)
+		frames.add_frame(idle_name, idle_texture)
 		frames.set_animation_speed(idle_name, 1.0)
 		frames.set_animation_loop(idle_name, true)
 	var current := sprite.animation
@@ -365,6 +374,8 @@ func _spawn_projectile(origin: Vector2,_lane: int,direction: Variant,kind: Strin
 	projectiles.add_child(projectile)
 	var emitter_character: String = emitter.get_meta("prototype_character", "") if is_instance_valid(emitter) else ""
 	PROJECTILE_FX.decorate(projectile, kind, emitter_character)
+	if team == "enemy" and kind in CFG.ARC_KINDS and is_instance_valid(player):
+		ARC_SHOT.attach(projectile, player.global_position + CFG.ARC_AIM_OFFSET, kind).landed.connect(stains.add_stain)
 	if emitter_character == "agente":
 		var shot_direction: Vector2 = direction if direction is Vector2 else Vector2(float(direction), 0.0)
 		feel.fx.muzzle_flash(origin, shot_direction, CFG.ENEMY_MUZZLE_SIZE)

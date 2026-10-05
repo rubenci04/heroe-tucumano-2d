@@ -20,6 +20,7 @@ var _p_lean := 0.0
 var _p_base_pos := Vector2.ZERO
 var _p_was_on_floor := true
 var _p_air_time := 0.0
+var _p_idle := 0.0
 var _time := 0.0
 var _enemies := {}   # enemy -> {pose, tween, base_pos, base_scale}
 var fx: Node2D   # capa de partículas (feel_fx) para el polvo de caída
@@ -168,9 +169,10 @@ func _update_player(delta: float) -> void:
 	if on_floor:
 		target_lean = deg_to_rad(CFG.RUN_LEAN_DEG) * clampf(vx / GameConfig.WALK_SPEED, 0.0, 1.0) * facing
 	_p_lean = lerpf(_p_lean, target_lean, clampf(CFG.RUN_LEAN_SMOOTH * delta, 0.0, 1.0))
-	var breath := 0.0
-	if on_floor and vx < 10.0 and player.state == player.State.IDLE:
-		breath = sin(_time * TAU * CFG.BREATH_SPEED) * CFG.BREATH_AMOUNT
+	var idle_now: bool = on_floor and vx < 10.0 and player.state == player.State.IDLE
+	_p_idle = lerpf(_p_idle, 1.0 if idle_now else 0.0, clampf(CFG.IDLE_BLEND_SPEED * delta, 0.0, 1.0))
+	var breath := sin(_time * TAU * CFG.BREATH_SPEED) * CFG.BREATH_AMOUNT * _p_idle
+	var weight := sin(_time * TAU * CFG.IDLE_WEIGHT_HZ) * _p_idle
 	var sy := 1.0 + _p_stretch - _p_land * CFG.LAND_SQUASH + breath
 	var sx := 1.0 - _p_stretch * 0.5 + _p_land * CFG.LAND_SQUASH * 0.6 - breath * 0.5
 	var base_pos := _p_base_pos
@@ -179,7 +181,7 @@ func _update_player(delta: float) -> void:
 		# cuadros PixelLab de carrera: otra resolución, mismo alto visual y mismo punto de suelo
 		base_scale *= player.get_meta("run_pl_ratio")
 		base_pos.y = CIRUJA_GROUND_Y - player.get_meta("run_pl_foot") * base_scale
-	_apply(v, base_pos, Vector2.ONE * base_scale, Vector2(sx, sy), _p_lean, -facing * CFG.PLAYER_SHOT_KICK * _p_pose.recoil)
+	_apply(v, base_pos, Vector2.ONE * base_scale, Vector2(sx, sy), _p_lean + deg_to_rad(CFG.IDLE_WEIGHT_TILT_DEG) * weight, -facing * CFG.PLAYER_SHOT_KICK * _p_pose.recoil + CFG.IDLE_WEIGHT_SHIFT * weight)
 
 
 func _update_enemy(enemy: Node, d: Dictionary) -> void:

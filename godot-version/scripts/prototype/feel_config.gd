@@ -264,3 +264,45 @@ const FLOOR_CURB_COLOR := Color(0.62, 0.58, 0.50)  # cordón claro en el borde s
 const FLOOR_CURB_HEIGHT := 3.0
 const FLOOR_SHADE_COLOR := Color(0.0, 0.0, 0.0, 0.18) # franja oscura bajo el cordón (da profundidad)
 const FLOOR_SHADE_HEIGHT := 5.0
+
+# --- Café y botella enemigos: pequeños, lanzados en arco hacia el jugador ---
+const ARC_KINDS := ["coffee", "hipster_coffee", "bottle"]
+const COFFEE_VISIBLE_HEIGHT := 10.0    # px visibles en el viewport 400x225 (vaso)
+const BOTTLE_VISIBLE_HEIGHT := 12.0    # px visibles de la botella
+const ARC_AIM_OFFSET := Vector2(0.0, -24.0)  # punto del cuerpo del jugador al que apunta (torso)
+const ARC_HORIZONTAL_SPEED := 150.0    # px/s horizontales; con la distancia define el tiempo de vuelo
+const ARC_TIME_MIN := 0.45
+const ARC_TIME_MAX := 1.3
+const ARC_APEX_HEIGHT := 34.0          # altura extra del arco sobre la línea tiro-objetivo, en px
+const ARC_SCATTER_X := 14.0            # dispersión aleatoria (± px) del punto de impacto
+const ARC_TRAIL_WIDTH_MULT := 0.5      # la estela se afina con el vaso más chico
+const ARC_HITBOX_MIN := 6.0            # lado mínimo de la hitbox en px
+
+# --- Mancha de café / botella en el piso ---
+const STAIN_DURATION := 5.0            # s que dura la mancha (incluye el desvanecido final)
+const STAIN_FADE_TIME := 1.0           # s finales en que se desvanece
+const STAIN_MAX := 4                   # manchas simultáneas; la más vieja se borra
+const STAIN_RADIUS := Vector2(24.0, 6.0)   # radios x/y de la elipse (perspectiva del piso)
+const STAIN_OFFSET_Y := -5.0           # sube la mancha sobre el piso visible (la cámara corta a y=375)
+const STAIN_SLOW := 0.6                # multiplicador de velocidad de Ciruja sobre la mancha
+const STAIN_DAMAGE := 1                # daño por quemadura
+const STAIN_BURN_INTERVAL := 0.8       # s entre quemaduras mientras Ciruja esté encima
+const STAIN_BURN_FIRST_DELAY := 0.3    # s hasta la primera quemadura al pisarla
+const STAIN_CAN_KILL := false          # false: la quemadura nunca baja la vida de 1
+const STAIN_BURN_FLASH_COLOR := Color(1.0, 0.35, 0.3)
+const STAIN_BURN_FLASH_TIME := 0.22
+const STAIN_FILL := Color(0.30, 0.17, 0.08, 0.6)
+const STAIN_INNER := Color(0.42, 0.25, 0.12, 0.45)
+const STAIN_BORDER := Color(0.14, 0.07, 0.03, 0.8)
+const STAIN_STEAM_INTERVAL := 0.16     # s entre vapores
+const STAIN_STEAM_RISE := 16.0         # px/s
+const STAIN_STEAM_LIFE := 1.0
+const STAIN_STEAM_COLOR := Color(0.95, 0.93, 0.9, 0.3)
+
+# --- Idle de Ciruja (cuadro f_00 de ajustar_gorra + respiro y cambio de peso por código) ---
+const IDLE_SOURCE_ANIMATION := &"ajustar_gorra"
+const IDLE_SOURCE_FRAME := 0
+const IDLE_BLEND_SPEED := 8.0          # suavizado al entrar/salir del idle (sin saltos)
+const IDLE_WEIGHT_HZ := 0.35           # ciclos/s del cambio de peso
+const IDLE_WEIGHT_SHIFT := 0.8         # px de desplazamiento lateral del cuerpo
+const IDLE_WEIGHT_TILT_DEG := 0.8      # inclinación leve acompañando el cambio de peso
