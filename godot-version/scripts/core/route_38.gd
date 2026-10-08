@@ -25,6 +25,7 @@ const ENCOUNTER_DIRECTOR = preload("res://scripts/level/encounter_director.gd")
 const TRAFFIC_DIRECTOR = preload("res://scripts/level/traffic_director.gd")
 const CHECKPOINT_SCENE = preload("res://scenes/level/checkpoint.tscn")
 const BATCH_VISUALS = preload("res://scripts/prototype/batch_visuals.gd")
+const BOSS_DIRECTOR = preload("res://scripts/prototype/boss_director.gd")
 const CFG = preload("res://scripts/prototype/feel_config.gd")
 const FEEL_DIRECTOR = preload("res://scripts/prototype/feel_director.gd")
 const PROCEDURAL_ANIM = preload("res://scripts/prototype/procedural_anim.gd")
@@ -76,6 +77,10 @@ var feel: Node          # impactos, hit-stop, muertes con peso y fx (scripts/pro
 var anim: Node          # animación procedural: respiración, retroceso y caídas
 var stains: Node        # manchas de café en el piso
 var shot_emitter: Node2D  # emisor del disparo en curso; lo lee main para decorar el proyectil
+var hud_node: Node        # HUD del juego (main); la usa la intro del jefe
+var camera_node: Camera2D # cámara de main
+var camera_locked := false  # true durante la intro del jefe: main deja de seguir al jugador
+var boss_director: Node
 
 func _ready() -> void:
 	_batch = BATCH_VISUALS.new()
@@ -309,6 +314,12 @@ func spawn_palermitano(x: float,lane: int) -> CharacterBody2D:
 	_add_contact_shadow(boss,"palermitano")
 	feel.watch_enemy(boss)
 	anim.watch_enemy(boss)
+	boss_director = BOSS_DIRECTOR.new()
+	add_child(boss_director)
+	boss_director.trigger_x = -INF
+	boss_director.setup(boss,player,camera_node,hud_node,feel,$Enemies,$Projectiles)
+	boss_director.intro_started.connect(func(): camera_locked = true)
+	boss_director.intro_finished.connect(func(): camera_locked = false)
 	traffic_director.set_enabled(false,true)
 	boss_spawned.emit(boss.health_component,"EL PALERMITANO")
 	boss_arena_changed.emit(true,BOSS_ARENA_BOUNDS.x,BOSS_ARENA_BOUNDS.y)
@@ -336,6 +347,7 @@ func _on_palermitano_defeated(points: int) -> void:
 
 
 func _on_palermitano_exiting() -> void:
+	camera_locked = false
 	if not demo_closing:
 		_clear_boss_feedback()
 	boss = null
@@ -358,6 +370,12 @@ func _spawn_grandote_ground_wave(origin: Vector2,lane: int,direction: int) -> Ar
 	wave.direction = direction
 	$Projectiles.add_child(wave)
 	return wave
+
+## main entrega la HUD y la cámara antes de que aparezca el jefe.
+func bind_presentation(hud_ref: Node,camera_ref: Camera2D) -> void:
+	hud_node = hud_ref
+	camera_node = camera_ref
+
 
 func _spawn_miniboss_grandote(x: float,lane: int) -> CharacterBody2D:
 	if is_instance_valid(miniboss):

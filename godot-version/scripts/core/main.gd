@@ -57,6 +57,7 @@ func _ready() -> void:
 	route.location_changed.connect(hud.set_location)
 	route.boss_spawned.connect(_on_miniboss_spawned)
 	route.screen_shake_requested.connect(_start_camera_shake)
+	route.bind_presentation(hud,camera)
 	gallery.closed.connect(_close_gallery)
 	hud.bind_combo(player.combo_component)
 	hud.bind_special(player.tucumanazo_counter)
@@ -83,7 +84,8 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if current_state != GAME_SESSION.DemoState.GAMEPLAY:
 		return
-	camera.position.x = clampf(player.position.x,camera_follow_min_x,camera_follow_max_x)
+	if not route.camera_locked:
+		camera.position.x = clampf(player.position.x,camera_follow_min_x,camera_follow_max_x)
 	_update_camera_shake(delta)
 
 func _start_camera_shake(intensity: float,duration: float) -> void:

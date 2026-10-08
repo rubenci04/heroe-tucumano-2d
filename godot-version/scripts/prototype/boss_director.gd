@@ -15,11 +15,13 @@ enum Stage { WAITING, INTRO, FIGHT, PHASE_TWO, DEFEATED }
 var boss: CharacterBody2D
 var player: CharacterBody2D
 var camera: Camera2D
-var hud: CanvasLayer
+var hud: Node
 var feel: Node
 var enemies: Node2D
 var projectiles: Node2D
 var stage: Stage = Stage.WAITING
+## X del jugador que arranca la intro (arena prototipo). La ruta 38 usa -INF: la intro arranca al aparecer el jefe.
+var trigger_x := CFG.BOSS_TRIGGER_X
 var _intro_time := 0.0
 var _camera_home := Vector2.ZERO
 var _frozen: Array[Node] = []
@@ -27,7 +29,7 @@ var _aura: Node2D
 var _aura_time := 0.0
 
 
-func setup(boss_node: CharacterBody2D, player_node: CharacterBody2D, camera_node: Camera2D, hud_node: CanvasLayer, feel_node: Node, enemy_root: Node2D, projectile_root: Node2D) -> void:
+func setup(boss_node: CharacterBody2D, player_node: CharacterBody2D, camera_node: Camera2D, hud_node: Node, feel_node: Node, enemy_root: Node2D, projectile_root: Node2D) -> void:
 	boss = boss_node
 	player = player_node
 	camera = camera_node
@@ -49,7 +51,7 @@ func _process(delta: float) -> void:
 		return
 	match stage:
 		Stage.WAITING:
-			if is_instance_valid(player) and player.global_position.x >= CFG.BOSS_TRIGGER_X and player.state != player.State.DEATH:
+			if is_instance_valid(player) and player.global_position.x >= trigger_x and player.state != player.State.DEATH:
 				_start_intro()
 		Stage.INTRO:
 			_intro_time += delta
@@ -58,6 +60,8 @@ func _process(delta: float) -> void:
 
 
 func _start_intro() -> void:
+	# La cámara la sigue main en la ruta: la posición de inicio es la real, no la de la arena prototipo.
+	_camera_home = camera.position
 	stage = Stage.INTRO
 	_intro_time = 0.0
 	player.controls_enabled = false

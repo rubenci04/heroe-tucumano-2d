@@ -19,6 +19,7 @@ var _combo_component: Node
 var _special_counter: Node
 var _health_component: Node
 var _game_session: Node
+var _banner: Label
 var _player_status_source: Node
 var _boss_health_component: Node
 var _lives: int = 0
@@ -38,6 +39,18 @@ func _ready() -> void:
 	# Barras de arriba y abajo con el mismo panel marrón cartoon que la HUD prototipo.
 	$TopBar.color = CFG.HUD_PANEL_FILL
 	$BottomBar.color = CFG.HUD_PANEL_FILL
+	# Banner grande centrado (intro y fase 2 del jefe), con la misma API que la HUD prototipo.
+	_banner = Label.new()
+	_banner.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	_banner.offset_top = 120.0
+	_banner.offset_left = -400.0
+	_banner.offset_right = 400.0
+	_banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_banner.visible = false
+	add_child(_banner)
+	CARTOON.style_label(_banner,CFG.HUD_TITLE_SIZE)
+	_banner.add_theme_color_override("font_color",CFG.HUD_TEXT_COLOR)
 
 
 ## Todo texto del HUD lleva borde oscuro grueso (estilo cartoon, legible sobre cualquier fondo).
@@ -241,3 +254,34 @@ func show_result(title: String,description: String) -> void:
 	$Results/Title.text = title
 	$Results/Description.text = description
 	$PauseLabel.visible = false
+
+
+## Barra de jefe con la API de la HUD prototipo (la usa boss_director): reutiliza la barra de bind_boss_health.
+func show_boss_bar(maximum: int, current: int) -> void:
+	boss_bar.max_value = maximum
+	boss_bar.value = current
+	boss_bar.visible = true
+	boss_name.text = CFG.BOSS_NAME
+	boss_name.visible = true
+
+
+func set_boss_health(current: int, maximum: int) -> void:
+	_on_boss_health_changed(current, maximum)
+
+
+func hide_boss_bar(delay: float = 0.0) -> void:
+	var tween := create_tween()
+	tween.tween_interval(maxf(delay, 0.0))
+	tween.tween_callback(func():
+		boss_bar.visible = false
+		boss_name.visible = false)
+
+
+func show_banner(title: String, subtitle: String, hold: float) -> void:
+	_banner.text = title if subtitle.is_empty() else "%s\n%s" % [title, subtitle]
+	_banner.modulate.a = 1.0
+	_banner.visible = true
+	var tween := create_tween()
+	tween.tween_interval(maxf(hold, 0.0))
+	tween.tween_property(_banner, "modulate:a", 0.0, 0.4)
+	tween.tween_callback(func(): _banner.visible = false)
