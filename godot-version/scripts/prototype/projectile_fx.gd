@@ -9,6 +9,7 @@ const SELF = preload("res://scripts/prototype/projectile_fx.gd")
 var projectile: Node2D
 var profile: Dictionary = {}
 var shadow_mode := false
+var outline_mode := false
 var _time := 0.0
 var _points: Array[Vector2] = []
 var _base_y := 0.0
@@ -23,6 +24,7 @@ static func profile_for(kind: String, emitter_character: String) -> Dictionary:
 
 ## Debe llamarse con el proyectil ya dentro del árbol (necesita `visual`).
 static func decorate(target: Node2D, kind: String, emitter_character: String = "") -> void:
+	_fit_readable_visual(target, kind)
 	var data := profile_for(kind, emitter_character)
 	for shadow in [true, false]:
 		var rig: Node2D = SELF.new()
@@ -34,6 +36,29 @@ static func decorate(target: Node2D, kind: String, emitter_character: String = "
 		rig.z_as_relative = false
 		rig.z_index = -1 if shadow else 19
 		target.add_child(rig)
+
+
+static func _fit_readable_visual(target: Node2D, kind: String) -> void:
+	if not CFG.PROJECTILE_FX_VISIBLE_HEIGHTS.has(kind):
+		return
+	var visual: AnimatedSprite2D = target.visual
+	var texture := visual.sprite_frames.get_frame_texture(visual.animation, 0)
+	var old_scale := visual.scale.y
+	var inner_height: float = CFG.PROJECTILE_FX_VISIBLE_HEIGHTS[kind] - 2.0 * CFG.PROJECTILE_FX_OUTLINE_WIDTH
+	visual.scale = Vector2.ONE * inner_height / CollisionFactory.opaque_bounds(texture).size.y
+	var ratio := visual.scale.y / old_scale
+	var shape: RectangleShape2D = target.collision_shape.shape.duplicate()
+	shape.size = Vector2(maxf(CFG.ARC_HITBOX_MIN, shape.size.x * ratio), maxf(CFG.ARC_HITBOX_MIN, shape.size.y * ratio))
+	target.collision_shape.shape = shape
+	target.collision_shape.position *= ratio
+	# Eight dark silhouettes behind the source make a real screen-pixel outline.
+	# Child of Visual: follows rotation/hop without changing projectile physics.
+	var outline: Node2D = SELF.new()
+	outline.name = "ReadableOutline"
+	outline.z_index = -1
+	outline.projectile = target
+	outline.outline_mode = true
+	visual.add_child(outline)
 
 
 func _ready() -> void:
@@ -48,6 +73,8 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	if outline_mode:
+		return
 	if not is_instance_valid(projectile):
 		return
 	_time += delta
@@ -69,6 +96,13 @@ func _process(delta: float) -> void:
 
 func _draw() -> void:
 	if not is_instance_valid(projectile):
+		return
+	if outline_mode:
+		var visual: AnimatedSprite2D = projectile.visual
+		var texture := visual.sprite_frames.get_frame_texture(visual.animation, visual.frame)
+		var local_width := CFG.PROJECTILE_FX_OUTLINE_WIDTH / visual.scale.y
+		for index in 8:
+			draw_texture(texture, -texture.get_size() * 0.5 + visual.offset + Vector2.from_angle(index * TAU / 8) * local_width, CFG.PROJECTILE_FX_OUTLINE_COLOR)
 		return
 	if shadow_mode:
 		var height := maxf(0.0, GameConfig.GROUND_Y - projectile.global_position.y)

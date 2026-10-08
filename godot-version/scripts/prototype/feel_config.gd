@@ -177,6 +177,9 @@ const PROJECTILE_FX := {
 	"stone": {"spin": 480.0, "hop": 0.0, "hop_hz": 0.0, "trail": 6, "trail_width": 2.5, "trail_color": Color(0.7, 0.68, 0.62, 0.5), "shadow": 0.9},
 }
 const PROJECTILE_FX_DEFAULT := {"spin": 0.0, "hop": 0.0, "hop_hz": 0.0, "trail": 5, "trail_width": 2.0, "trail_color": Color(1, 1, 1, 0.35), "shadow": 0.8}
+const PROJECTILE_FX_VISIBLE_HEIGHTS := {"hipster_coffee": 18.0, "coffee": 18.0, "bottle": 20.0, "orange": 14.0}
+const PROJECTILE_FX_OUTLINE_WIDTH := 2.0
+const PROJECTILE_FX_OUTLINE_COLOR := Color(0.08, 0.045, 0.025, 1.0)
 # Lo que lanza el Palermitano se trata como "piedra" pesada: giro lento, estela larga y sombra grande.
 const PROJECTILE_FX_BY_EMITTER := {
 	"palermitano": {"spin": 480.0, "hop": 3.0, "hop_hz": 1.8, "trail": 12, "trail_width": 4.5, "trail_color": Color(0.62, 0.56, 0.5, 0.6), "shadow": 1.4},
@@ -268,8 +271,8 @@ const FLOOR_SHADE_HEIGHT := 5.0
 
 # --- Café y botella enemigos: pequeños, lanzados en arco hacia el jugador ---
 const ARC_KINDS := ["coffee", "hipster_coffee", "bottle"]
-const COFFEE_VISIBLE_HEIGHT := 10.0    # px visibles en el viewport 400x225 (vaso)
-const BOTTLE_VISIBLE_HEIGHT := 12.0    # px visibles de la botella
+const COFFEE_VISIBLE_HEIGHT: float = PROJECTILE_FX_VISIBLE_HEIGHTS.hipster_coffee
+const BOTTLE_VISIBLE_HEIGHT: float = PROJECTILE_FX_VISIBLE_HEIGHTS.bottle
 const ARC_AIM_OFFSET := Vector2(0.0, -24.0)  # punto del cuerpo del jugador al que apunta (torso)
 const ARC_HORIZONTAL_SPEED := 150.0    # px/s horizontales; con la distancia define el tiempo de vuelo
 const ARC_TIME_MIN := 0.45

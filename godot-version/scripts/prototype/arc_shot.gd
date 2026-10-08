@@ -36,19 +36,10 @@ func _launch(aim_position: Vector2) -> void:
 
 
 func _shrink(kind: String) -> void:
-	var visual: AnimatedSprite2D = projectile.visual
-	var texture := visual.sprite_frames.get_frame_texture(visual.animation, 0)
-	var opaque_height := CollisionFactory.opaque_bounds(texture).size.y
-	var wanted := CFG.BOTTLE_VISIBLE_HEIGHT if kind == "bottle" else CFG.COFFEE_VISIBLE_HEIGHT
-	var old_scale := visual.scale.y
-	var new_scale := wanted / opaque_height
-	visual.scale = Vector2.ONE * new_scale
-	# Hitbox proporcional al nuevo tamaño (forma propia: la del proyectil se comparte entre instancias).
-	var ratio := new_scale / old_scale
-	var shape := (projectile.collision_shape.shape as RectangleShape2D).duplicate() as RectangleShape2D
-	shape.size = Vector2(maxf(CFG.ARC_HITBOX_MIN, shape.size.x * ratio), maxf(CFG.ARC_HITBOX_MIN, shape.size.y * ratio))
-	projectile.collision_shape.shape = shape
-	projectile.collision_shape.position *= ratio
+	# Size, collision and outline are applied once by PROJECTILE_FX.decorate.
+	# Standalone callers of ArcShot get the same presentation.
+	if not projectile.visual.has_node("ReadableOutline"):
+		preload("res://scripts/prototype/projectile_fx.gd")._fit_readable_visual(projectile, kind)
 	# Estela más fina, sin tocar el perfil compartido.
 	var trail := projectile.get_node_or_null("TrailFx")
 	if trail != null:

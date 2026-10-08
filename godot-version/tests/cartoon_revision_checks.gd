@@ -134,6 +134,21 @@ func _run() -> void:
 		check(absf(champion_height - 76.0) < 0.01, "Campeona height is 76")
 		check(route.STATIONARY_VEHICLES[0].scale == 0.777 and route.DECOR_VEHICLE_SCALE == 1.223, "Stationary vehicle scale unchanged")
 		await capture("p3_proportions")
+	if point == 4:
+		var x := 300.0
+		for kind in ["hipster_coffee", "bottle", "orange"]:
+			scene._spawn_projectile(Vector2(x, 280), 0, 1, kind, "player" if kind == "orange" else "enemy")
+			var shot = route.get_node("Projectiles").get_child(-1)
+			shot.set_physics_process(false)
+			for child in shot.get_children():
+				child.set_process(false)
+				child.set_physics_process(false)
+			shot.visual.rotation = 0
+			var height: float = CollisionFactory.opaque_bounds(shot.visual.sprite_frames.get_frame_texture(shot.visual.animation, 0)).size.y * shot.visual.scale.y + CFG.PROJECTILE_FX_OUTLINE_WIDTH * 2
+			check(absf(height - CFG.PROJECTILE_FX_VISIBLE_HEIGHTS[kind]) < 0.01, "Readable height includes outline: " + kind)
+			check(shot.visual.has_node("ReadableOutline"), "Dark outline: " + kind)
+			x += 100
+		await capture("p4_projectiles")
 	root.get_node("AudioManager").stop_all()
 	scene.queue_free()
 	await process_frame
