@@ -301,7 +301,7 @@ func run_tests() -> void:
 	check(distant_background.scroll_scale.x<panorama.scroll_scale.x and panorama.scroll_scale.x<road_back.scroll_scale.x,"Sky, panorama and road have coherent depth speeds")
 	check(road_back.repeat_size.x==2*(road_back.get_node("Road").texture.get_width()-1) and road_back.repeat_times>=3,"Road mirrors matching edges with one pixel overlap")
 	check(environment.get_node_or_null("RouteSectors")==null and environment.get_node_or_null("RoadLayers/FrontLane")==null,"Old regional overlays and duplicate ground are absent")
-	check(environment_sprites.size()==11 and environment_sprites.all(func(sprite: Node): return sprite.get("texture") is Texture2D),"All retained environmental sprites and three panorama regions load valid textures")
+	check(environment_sprites.size()==12 and environment_sprites.all(func(sprite: Node): return sprite.get("texture") is Texture2D),"All retained environmental sprites, grounded Virgencita and three panorama regions load valid textures")
 	check(environment_sprites.all(func(sprite: Node): return sprite.get_script()==null) and environment.find_children("*","CollisionObject2D",true,false).is_empty(),"Static decoration remains separate from gameplay collisions")
 	check(environment.get_node("FamaillaLandmarks").z_index<10 and environment.get_node("RouteProps").z_index<10 and environment.get_node("MidgroundBuildings").z_index<10,"Decorative props render behind gameplay actors and platforms")
 	check(environment.get_node("MidgroundBuildings").get_child_count()==1 and environment.get_node("LightPosts").get_child_count()==1,"Sparse complementary props preserve breathing room around baked structures")
@@ -309,7 +309,7 @@ func run_tests() -> void:
 	route_stone_positions.sort()
 	check(route_stone_positions==[1250.0,4450.0] and environment.get_node_or_null("FamaillaLandmarks/CocaKiosk")==null,"Duplicate decorative kiosk is removed while pickup positions remain stable")
 	var route_environment_source := FileAccess.get_file_as_string("res://scripts/core/route_38.gd")
-	check("add_image" not in route_environment_source and "add_prop" not in route_environment_source and "Sprite2D.new" not in route_environment_source,"Route gameplay code no longer constructs static decoration procedurally")
+	check("add_image" not in route_environment_source and "Sprite2D.new" not in route_environment_source,"Static decoration remains scene-based; only grounding/contact shadows are procedural")
 	var environment_scene_source := FileAccess.get_file_as_string("res://scenes/levels/route_38_environment.tscn")
 	check("fusion_fondos" not in environment_scene_source and "fusion_fondosanime" not in environment_scene_source,"Runtime environment has no dependency on either giant fused panorama asset")
 	check(player is CharacterBody2D,"Player uses CharacterBody2D")
@@ -626,14 +626,18 @@ func run_tests() -> void:
 	encounter_director.update_activation(450.0)
 	check(encounter_director.get_active_enemy_count(&"route_wave_01")==1,"First wave enters one enemy at a time")
 	encounter_director.advance_spawns(2.26)
+	check(encounter_director.get_active_enemy_count(&"route_wave_01")==4,"Early wave stops at four simultaneous enemies")
+	# The lifecycle fixture explicitly advances to the advanced sector to admit
+	# the remaining pair before probing defeat/completion of all configured actors.
+	encounter_director.advance_spawns(2.26,5200.0)
 	var first_encounter_enemies: Array[Node] = encounter_director.get_active_enemies(&"route_wave_01")
 	for encounter_enemy in first_encounter_enemies:
 		encounter_enemy.set_physics_process(false)
 	check(started_encounters==[&"route_wave_01"] and first_encounter_enemies.size()==6,"Encounter activates once and creates its denser configured group")
 	encounter_director.update_activation(450.0)
-	check(not encounter_director.activate_encounter(&"route_wave_01",900.0) and encounter_director.get_active_enemy_count(&"route_wave_01")==6 and started_encounters.size()==1,"An active encounter cannot be activated or spawned twice")
+	check(not encounter_director.activate_encounter(&"route_wave_01",900.0,false) and encounter_director.get_active_enemy_count(&"route_wave_01")==6 and started_encounters.size()==1,"An active encounter cannot be activated or spawned twice")
 	check(first_encounter_enemies.all(func(active_enemy): return active_enemy.lane_index==0 and active_enemy.archetype=="hipster"),"Encounter applies configured spawn types on the single combat plane")
-	check(encounter_director.activate_encounter(&"route_wave_04",4700.0),"An independent encounter can activate while another remains active")
+	check(encounter_director.activate_encounter(&"route_wave_04",4700.0,false),"An independent encounter can activate while another remains active")
 	var mixed_encounter_enemies: Array[Node] = encounter_director.get_active_enemies(&"route_wave_04")
 	for encounter_enemy in mixed_encounter_enemies:
 		encounter_enemy.set_physics_process(false)
@@ -663,7 +667,7 @@ func run_tests() -> void:
 	encounter_director.reset_runtime_state(true)
 	await frames(2)
 	check(encounter_director.get_completed_encounter_ids().is_empty() and not encounter_director.is_encounter_activated(&"route_wave_01"),"Encounter runtime state resets deterministically without checkpoint persistence")
-	check(encounter_director.activate_encounter(&"route_wave_04",4700.0),"Reset encounter can be activated again in a new runtime state")
+	check(encounter_director.activate_encounter(&"route_wave_04",4700.0,false),"Reset encounter can be activated again in a new runtime state")
 	var reset_mixed_enemies: Array[Node] = encounter_director.get_active_enemies(&"route_wave_04")
 	var reset_mixed_signature: Array[String] = []
 	for encounter_enemy in reset_mixed_enemies:
@@ -673,7 +677,7 @@ func run_tests() -> void:
 	check(reset_mixed_signature==first_mixed_signature and reset_mixed_enemies.size()==5,"Reset recreates the same encounter composition")
 	encounter_director.reset_runtime_state(true)
 	await frames(2)
-	check(encounter_director.activate_encounter(&"route_drone_01",4100.0),"First Drone encounter activates independently before the Grandote zone")
+	check(encounter_director.activate_encounter(&"route_drone_01",4100.0,false),"First Drone encounter activates independently before the Grandote zone")
 	var drone_enemies: Array[Node] = encounter_director.get_active_enemies(&"route_drone_01")
 	var drone = drone_enemies[0]
 	drone.set_physics_process(false)
@@ -746,7 +750,7 @@ func run_tests() -> void:
 	diagonal_shot.queue_free()
 	encounter_director.reset_runtime_state(true)
 	await frames(2)
-	check(encounter_director.activate_encounter(&"route_drone_02",6100.0),"Five-Drone wave activates later at X=6100")
+	check(encounter_director.activate_encounter(&"route_drone_02",6100.0,false),"Five-Drone wave activates later at X=6100")
 	var second_drone_enemies: Array[Node] = encounter_director.get_active_enemies(&"route_drone_02")
 	check(second_drone_enemies.size()==5 and second_drone_enemies.all(func(actor): return actor.archetype=="drone" and actor.wave_formation and actor.formation_size==5),"Later encounter contains exactly five phase-offset aerial actors and no ground companion")
 	for second_drone in second_drone_enemies:
@@ -811,7 +815,7 @@ func run_tests() -> void:
 	check(elite.ai_state==elite.AIState.RECOVERY and not elite.melee_hitbox.active,"Close punch deactivates its Hitbox for clear recovery")
 	elite.queue_free()
 	await frames(2)
-	check(encounter_director.activate_encounter(&"route_wave_06",7000.0),"EncounterDirector activates the normal heavy-enemy wave after the Drone progression")
+	check(encounter_director.activate_encounter(&"route_wave_06",7000.0,false),"EncounterDirector activates the normal heavy-enemy wave after the Drone progression")
 	var elite_wave_enemies: Array[Node] = encounter_director.get_active_enemies(&"route_wave_06")
 	var elite_reward_start: int = player.score
 	for heavy_enemy in elite_wave_enemies:
@@ -832,7 +836,7 @@ func run_tests() -> void:
 	game_session.checkpoint_completed_encounters.clear()
 	game_session.checkpoint_collected_pickups.clear()
 	game_session.checkpoint_player_state.clear()
-	check(encounter_director.activate_encounter(&"route_wave_01",900.0),"Pre-checkpoint encounter activates for restoration validation")
+	check(encounter_director.activate_encounter(&"route_wave_01",900.0,false),"Pre-checkpoint encounter activates for restoration validation")
 	var checkpoint_completed_enemies: Array[Node] = encounter_director.get_active_enemies(&"route_wave_01")
 	for checkpoint_enemy in checkpoint_completed_enemies:
 		checkpoint_enemy.set_physics_process(false)
@@ -848,7 +852,7 @@ func run_tests() -> void:
 	check(game_session.active_checkpoint==&"route_midpoint" and game_session.respawn_position==Vector2(3600,370),"GameSession stores checkpoint id and respawn position")
 	check(game_session.checkpoint_completed_encounters==[&"route_wave_01"] and game_session.checkpoint_collected_pickups.has(&"checkpoint_pickup_before") and game_session.checkpoint_player_state.tucumanazos==3,"GameSession snapshots encounters, pickups and the non-default Tucumanazo count")
 	check(hud.notice.text=="CHECKPOINT","Checkpoint activation provides minimal HUD feedback")
-	check(encounter_director.activate_encounter(&"route_wave_04",4700.0),"Post-checkpoint active encounter starts for deterministic respawn validation")
+	check(encounter_director.activate_encounter(&"route_wave_04",4700.0,false),"Post-checkpoint active encounter starts for deterministic respawn validation")
 	var interrupted_encounter_enemies: Array[Node] = encounter_director.get_active_enemies(&"route_wave_04")
 	var interrupted_signature: Array[String] = []
 	for checkpoint_enemy in interrupted_encounter_enemies:
@@ -881,7 +885,7 @@ func run_tests() -> void:
 	check(player.character_definition.character_id==game_session.selected_character,"Respawn preserves selected character")
 	check(traffic_director.get_active_vehicle_count()==traffic_before_respawn.size() and traffic_before_respawn.all(func(vehicle: Node): return is_instance_valid(vehicle) and vehicle.is_inside_tree()),"Local respawn preserves active traffic without duplicating or resetting its sequence")
 	check(player.score==local_score_before_respawn and player.coins==local_coins_before_respawn and player.stones==int(local_state_before_respawn.stones) and player.oranges_unlocked==bool(local_state_before_respawn.oranges_unlocked) and game_session.score==local_score_before_respawn and game_session.coins==local_coins_before_respawn,"Local respawn preserves current score, coins, ammo and infinite oranges")
-	check(encounter_director.is_encounter_completed(&"route_wave_01") and not encounter_director.activate_encounter(&"route_wave_01",900.0),"Encounter completed before checkpoint cannot duplicate after respawn")
+	check(encounter_director.is_encounter_completed(&"route_wave_01") and not encounter_director.activate_encounter(&"route_wave_01",900.0,false),"Encounter completed before checkpoint cannot duplicate after respawn")
 	check(encounter_director.is_encounter_activated(&"route_wave_04") and encounter_director.get_active_enemy_count(&"route_wave_04")==remaining_encounter_enemies.size() and remaining_encounter_enemies.all(func(enemy: Node): return is_instance_valid(enemy) and enemy.is_inside_tree()),"Local respawn preserves the interrupted encounter and its living enemies without duplication")
 	check(pre_checkpoint_pickup.used and post_checkpoint_pickup.used and not pre_checkpoint_pickup.get_node("Visual").visible and not post_checkpoint_pickup.get_node("Visual").visible,"Local respawn keeps every already collected pickup consumed")
 	check(player.invulnerability>=1.24 and player.invulnerability<=scene.LOCAL_RESPAWN_INVULNERABILITY,"Local respawn grants the configured 1.25-second movable safety window")
@@ -1481,7 +1485,7 @@ func run_tests() -> void:
 	var closing_finished := [0]
 	elite_flow_scene.demo_closing_started.connect(func(): closing_started[0] += 1)
 	elite_flow_scene.demo_closing_finished.connect(func(): closing_finished[0] += 1)
-	check(elite_flow_encounters.activate_encounter(&"route_wave_06",7000.0),"Reusable Grandote encounter can start in a fresh run")
+	check(elite_flow_encounters.activate_encounter(&"route_wave_06",7000.0,false),"Reusable Grandote encounter can start in a fresh run")
 	var reusable_grandotes: Array[Node] = elite_flow_encounters.get_active_enemies(&"route_wave_06")
 	var elite_flow_reward_start: int = elite_flow_player.score
 	for reusable_grandote in reusable_grandotes:

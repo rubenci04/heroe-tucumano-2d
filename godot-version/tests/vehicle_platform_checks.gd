@@ -39,8 +39,9 @@ func run() -> void:
 		gaps_ok = gaps_ok and positions[index]-positions[index-1]>=700 and positions[index]-positions[index-1]<=800
 	check(gaps_ok,"Vehicle spacing varies conservatively between 700 and 800 px")
 	var bus_stop = route.get_node("Terrain/RoadsideBusStop")
-	check(bus_stop.position.y==350.0 and bus_stop.collision_layer==GameConfig.PLAYER_PLATFORM_LAYER and bus_stop.roof_collision.one_way_collision,"Bus stop stays roadside with a usable projectile-transparent roof")
-	check(is_equal_approx(bus_stop.get_ground_anchor_world_y(),350.0),"Bus stop opaque base uses its roadside ground anchor")
+	var roadside: float = preload("res://scripts/prototype/feel_config.gd").backdrop_ground_y(bus_stop.position.x)
+	check(bus_stop.position.y==roadside and bus_stop.collision_layer==GameConfig.PLAYER_PLATFORM_LAYER and bus_stop.roof_collision.one_way_collision,"Bus stop stays roadside with a usable projectile-transparent roof")
+	check(is_equal_approx(bus_stop.get_ground_anchor_world_y(),roadside),"Bus stop opaque base uses its configured roadside ground anchor")
 	var objects = route.get_node("Objects").get_children()
 	var roof_ids := [&"empanada_750_0",&"empanada_1350_0",&"empanada_2000_0",&"empanada_4100_0",&"empanada_4900_0",&"empanada_5600_0",&"empanada_7000_0",&"sanguche_bus_stop",&"sanguche_6200_0"]
 	check(roof_ids.all(func(id): return objects.any(func(item): return item.pickup_id==id)),"Existing compatible rewards were moved onto vehicles and bus stop")

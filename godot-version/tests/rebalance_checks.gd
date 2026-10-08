@@ -85,10 +85,20 @@ static func run(tree: SceneTree, scene: Node) -> Array[Dictionary]:
 	director.advance_spawns(2.3,1470.0)
 	for actor in director.get_active_enemies(&"route_wave_01"):
 		actor.take_damage(999,&"player")
+	for step in 10:
+		if director.is_encounter_completed(&"route_wave_01"):
+			break
+		director.advance_spawns(1.21,1470.0)
+		for actor in director.get_active_enemies(&"route_wave_01"):
+			actor.take_damage(999,&"player")
+		await tree.frames(1)
+	results.append({"ok":director.is_encounter_completed(&"route_wave_01") and director._pending.is_empty(),"message":"All configured pairs are defeated before the completion rest"})
 	director.update_activation(1850.0)
 	results.append({"ok":not director.is_encounter_activated(&"route_wave_02"),"message":"Completed group leaves a rest before the next wave"})
 	director.advance_spawns(0.81)
 	director.update_activation(1850.0)
+	# Completion rest and the inter-group gap are independent budgets.
+	director.advance_spawns(preload("res://scripts/prototype/feel_config.gd").WAVE_GROUP_DELAY - 0.81 + 0.02)
 	results.append({"ok":director.get_active_enemy_count(&"route_micro_01")==1,"message":"Next registered microencounter starts one entry after the rest"})
 	director.reset_runtime_state(true)
 	director.activate_encounter(&"route_wave_03",3500,true)

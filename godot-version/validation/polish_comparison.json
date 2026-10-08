@@ -1,0 +1,128 @@
+[
+  {
+    "suite": "agent_orb_checks",
+    "baseline_errors": 0,
+    "final_errors": 0,
+    "new_errors": []
+  },
+  {
+    "suite": "background_grounding_checks",
+    "baseline_errors": 0,
+    "final_errors": 0,
+    "new_errors": []
+  },
+  {
+    "suite": "cartoon_revision_checks",
+    "baseline_errors": 0,
+    "final_errors": 0,
+    "new_errors": []
+  },
+  {
+    "suite": "combat_readability_checks",
+    "baseline_errors": 0,
+    "final_errors": 0,
+    "new_errors": []
+  },
+  {
+    "suite": "drone_encounter_checks",
+    "baseline_errors": 0,
+    "final_errors": 0,
+    "new_errors": []
+  },
+  {
+    "suite": "enemy_lifecycle_checks",
+    "baseline_errors": 0,
+    "final_errors": 0,
+    "new_errors": []
+  },
+  {
+    "suite": "grandote_punch_checks",
+    "baseline_errors": 0,
+    "final_errors": 0,
+    "new_errors": []
+  },
+  {
+    "suite": "hipster_coffee_checks",
+    "baseline_errors": 0,
+    "final_errors": 0,
+    "new_errors": []
+  },
+  {
+    "suite": "migration_smoke",
+    "baseline_errors": 16,
+    "final_errors": 16,
+    "new_errors": []
+  },
+  {
+    "suite": "palermitano_boss_checks",
+    "baseline_errors": 0,
+    "final_errors": 0,
+    "new_errors": []
+  },
+  {
+    "suite": "player_progression_qol_checks",
+    "baseline_errors": 0,
+    "final_errors": 0,
+    "new_errors": []
+  },
+  {
+    "suite": "player_vehicle_shot_checks",
+    "baseline_errors": 0,
+    "final_errors": 0,
+    "new_errors": []
+  },
+  {
+    "suite": "route_38_end_to_end",
+    "baseline_errors": 0,
+    "final_errors": 0,
+    "new_errors": []
+  },
+  {
+    "suite": "route_progression",
+    "baseline_errors": 7,
+    "final_errors": 0,
+    "new_errors": []
+  },
+  {
+    "suite": "shared_suite_checks",
+    "baseline_errors": 0,
+    "final_errors": 0,
+    "new_errors": []
+  },
+  {
+    "suite": "super_headbutt_checks",
+    "baseline_errors": 0,
+    "final_errors": 0,
+    "new_errors": []
+  },
+  {
+    "suite": "tesa_set_piece_checks",
+    "baseline_errors": 1,
+    "final_errors": 0,
+    "new_errors": []
+  },
+  {
+    "suite": "vehicle_platform_checks",
+    "baseline_errors": 1,
+    "final_errors": 0,
+    "new_errors": []
+  },
+  {
+    "suite": "vertical_slice_profile",
+    "baseline_errors": 15,
+    "final_errors": 2,
+    "new_errors": []
+  },
+  {
+    "suite": "prototype_feel_checks",
+    "baseline_errors": 0,
+    "final_errors": 0,
+    "new_errors": []
+  },
+  {
+    "suite": "prototype_polish_checks",
+    "baseline_errors": 1,
+    "final_errors": 0,
+    "new_errors": []
+  }
+]

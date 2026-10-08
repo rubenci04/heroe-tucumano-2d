@@ -7,7 +7,7 @@ static func run(tree: SceneTree,scene: Node) -> Array[Dictionary]:
 	route.set_physics_process(false)
 	director.reset_runtime_state(true)
 	director.camera_center_x = NAN
-	director.activate_encounter(&"route_wave_03",3500.0)
+	director.activate_encounter(&"route_wave_03",3500.0,false)
 	var actors: Array = director.get_active_enemies(&"route_wave_03")
 	for actor in actors:
 		actor.set_physics_process(false)
@@ -33,7 +33,7 @@ static func run(tree: SceneTree,scene: Node) -> Array[Dictionary]:
 	await tree.process_frame
 	results.append({"ok":director.get_attack_token_count()==0,"message":"Tree exit releases token"})
 	director.reset_runtime_state(true)
-	director.activate_encounter(&"route_wave_06",6800.0)
+	director.activate_encounter(&"route_wave_06",6800.0,false)
 	actors = director.get_active_enemies(&"route_wave_06")
 	for actor in actors:
 		actor.set_physics_process(false)
@@ -45,13 +45,13 @@ static func run(tree: SceneTree,scene: Node) -> Array[Dictionary]:
 	director.reset_runtime_state(true)
 	results.append({"ok":director.get_attack_token_count()==0,"message":"Restart clears all attack tokens"})
 	director.activate_encounter(&"route_wave_03",3500.0,true)
-	director.activate_encounter(&"route_wave_01",900.0)
+	director.activate_encounter(&"route_wave_01",900.0,false)
 	director.advance_spawns(0.46,3500.0)
 	director.advance_spawns(0.45,3500.0)
 	director.advance_spawns(1.5,3500.0)
-	results.append({"ok":director.get_active_enemy_count(&"route_wave_03")==1 and director._pending.size()==5,"message":"Population cap seven keeps excess entries pending"})
+	results.append({"ok":director.get_active_enemy_count(&"route_wave_03")==1 and director._pending.size()==5,"message":"Configured population cap keeps excess entries pending"})
 	director.reset_runtime_state(true)
-	director.activate_encounter(&"route_drone_02",6100.0)
+	director.activate_encounter(&"route_drone_02",6100.0,false)
 	actors = director.get_active_enemies(&"route_drone_02")
 	for actor in actors:
 		actor.set_physics_process(false)
@@ -69,7 +69,9 @@ static func run(tree: SceneTree,scene: Node) -> Array[Dictionary]:
 	director.advance_spawns(0.43,3500.0)
 	results.append({"ok":director.get_active_enemy_count(&"route_wave_03")==2,"message":"Third entry waits until its 0.90-second absolute timestamp"})
 	director.advance_spawns(0.02,3500.0)
-	results.append({"ok":director.get_active_enemy_count(&"route_wave_03")==3,"message":"Third reinforcement follows the second by 0.45 seconds"})
+	results.append({"ok":director.get_active_enemy_count(&"route_wave_03")==2,"message":"Second group respects the configured 1.2-second gap"})
+	director.advance_spawns(0.31,3500.0)
+	results.append({"ok":director.get_active_enemy_count(&"route_wave_03")==3,"message":"Third reinforcement arrives after the group delay"})
 	director.reset_runtime_state(true)
 	director.update_safety(7700.0,7600.0,800.0)
 	director.activate_encounter(&"route_wave_01",7700.0,true)
@@ -80,13 +82,20 @@ static func run(tree: SceneTree,scene: Node) -> Array[Dictionary]:
 	for actor in actors:
 		actor.set_physics_process(false)
 	results.append({"ok":actors.size()==2 and actors[1].position.x>=8280.0,"message":"Fast Player cannot be overlapped by clamped delayed spawn"})
-	results.append({"ok":not director.activate_encounter(&"route_wave_01"),"message":"Encounter cannot duplicate"})
+	results.append({"ok":not director.activate_encounter(&"route_wave_01",NAN,false),"message":"Encounter cannot duplicate"})
 	actors[0].position.x = 6800.0
 	director.update_safety(7800.0,7600.0,800.0)
 	results.append({"ok":actors[0].is_queued_for_deletion() and not actors[1].is_queued_for_deletion(),"message":"Leash retires only actors far behind, never in front"})
 	director.advance_spawns(2.3,7800.0)
 	for remaining_actor in director.get_active_enemies(&"route_wave_01"):
 		remaining_actor.take_damage(999,&"player")
+	for step in 10:
+		if director.is_encounter_completed(&"route_wave_01"):
+			break
+		director.advance_spawns(1.21,7800.0)
+		for remaining_actor in director.get_active_enemies(&"route_wave_01"):
+			remaining_actor.take_damage(999,&"player")
+		await tree.process_frame
 	await tree.process_frame
 	results.append({"ok":director.is_resting(),"message":"Completion creates breathing pause"})
 	director.update_activation(7800.0)

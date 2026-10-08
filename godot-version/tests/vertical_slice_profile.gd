@@ -17,6 +17,20 @@ func frames(count: int) -> void:
 		await physics_frame
 	await process_frame
 
+func finish_paced_encounter(encounters: Node, id: StringName) -> void:
+	# Every early wave now has pending actors when the four live slots fill.
+	# Drain the full configured wave before testing its completion-dependent event.
+	for step in 30:
+		if encounters.is_encounter_completed(id):
+			return
+		encounters.advance_spawns(0.3)
+		for actor in encounters.get_active_enemies(id):
+			actor.set_physics_process(false)
+			actor.health_component.set_invulnerability(0.0)
+			actor.take_damage(999, &"player")
+		await frames(1)
+	expect(encounters.is_encounter_completed(id), "Paced encounter fixture drains every pending actor: " + String(id))
+
 
 func expect(condition: bool, message: String) -> void:
 	if not condition:
@@ -126,12 +140,7 @@ func run_profile() -> void:
 		player.cancel_tucumanazo()
 		for pre_checkpoint_id: StringName in [&"route_wave_01",&"route_wave_02",&"route_wave_03"]:
 			expect(encounters.activate_encounter(pre_checkpoint_id,NAN,true),"Cycle %d could not activate %s" % [cycle,pre_checkpoint_id])
-			encounters.advance_spawns(2.6)
-			for enemy in encounters.get_active_enemies(pre_checkpoint_id):
-				enemy.set_physics_process(false)
-				enemy.health_component.set_invulnerability(0.0)
-				enemy.take_damage(999,&"player")
-			await frames(1)
+			await finish_paced_encounter(encounters, pre_checkpoint_id)
 			if pre_checkpoint_id == &"route_wave_02":
 				var bus_results: Array = await preload("res://tests/expresbus_checks.gd").run(self,scene,"crossing" if cycle==2 else "",cycle)
 				for bus_result in bus_results:
@@ -142,7 +151,7 @@ func run_profile() -> void:
 		route.set_physics_process(false)
 		snapshot("checkpoint_active",cycle,scene)
 		if cycle == 1:
-			expect(encounters.activate_encounter(&"route_drone_01"),"Cycle 1 could not activate the Drone respawn scenario")
+			expect(encounters.activate_encounter(&"route_drone_01",NAN,false),"Cycle 1 could not activate the Drone respawn scenario")
 			var drone_before_respawn: Array[Node] = encounters.get_active_enemies(&"route_drone_01")
 			player.position = Vector2(4300.0,GameConfig.GROUND_Y)
 			player.lane_index = 0
@@ -173,6 +182,7 @@ func run_profile() -> void:
 			for actor in encounters.get_active_enemies(encounter_id):
 				actor.health_component.set_invulnerability(0.0)
 				actor.take_damage(999,&"player")
+			await finish_paced_encounter(encounters, encounter_id)
 		await frames(3)
 		snapshot("active_encounters",cycle,scene)
 		player.hurtbox.set_receiving_enabled(false)
@@ -200,7 +210,7 @@ func run_profile() -> void:
 			await frames(1)
 		traffic.clear_traffic()
 		# Drain remaining scheduled adds, then honor the pre-boss rest.
-		for drain_step in range(8):
+		for drain_step in range(30):
 			encounters.advance_spawns(0.7,7000.0)
 			for encounter_id: StringName in encounters.get_registered_encounter_ids():
 				for actor in encounters.get_active_enemies(encounter_id):
@@ -215,6 +225,8 @@ func run_profile() -> void:
 		var final_boss = route.boss
 		expect(is_instance_valid(final_boss) and final_boss is PalermitanoBoss,"Cycle %d could not activate Palermitano" % cycle)
 		if is_instance_valid(final_boss):
+			route.boss_director._process(0.0)
+			route.boss_director._process(preload("res://scripts/prototype/feel_config.gd").BOSS_INTRO_DURATION)
 			final_boss.set_physics_process(false)
 			final_boss.boss_state = final_boss.BossState.DECIDE
 			final_boss.begin_pattern(final_boss.Pattern.TRIPLE_COFFEE)

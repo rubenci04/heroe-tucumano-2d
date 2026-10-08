@@ -3,7 +3,7 @@ extends SceneTree
 const CFG = preload("res://scripts/prototype/feel_config.gd")
 var failures: Array[String] = []
 var checks := 0
-var point := 1
+var point := 0
 var scene: Node
 var route: Node
 var camera: Camera2D
@@ -30,6 +30,16 @@ func capture(name: String) -> void:
 	check(root.get_texture().get_image().save_png(directory.path_join(name + ".png")) == OK, "Saved " + name)
 
 func _run() -> void:
+	if point == 0:
+		for index in range(1, 8):
+			point = index
+			await _run_point()
+	else:
+		await _run_point()
+	print("CARTOON_REVISION_TOTAL %d/%d PASS %d FAIL" % [checks-failures.size(), checks, failures.size()])
+	quit(0 if failures.is_empty() else 1)
+
+func _run_point() -> void:
 	root.size = Vector2i(800, 450)
 	scene = load("res://scenes/main.tscn").instantiate()
 	root.add_child(scene)
@@ -196,8 +206,66 @@ func _run() -> void:
 		check(arena.campeona == null, "Arena Campeona fades and is freed")
 		arena.queue_free()
 		await process_frame
+	if point == 7:
+		route.get_node("Terrain").hide()
+		route.get_node("Objects").hide()
+		var director = route.encounter_director
+		director.camera_center_x = NAN
+		for origin in [1000.0, 5200.0]:
+			director.reset_runtime_state(true)
+			await process_frame
+			var entries: Array = []
+			for index in 8:
+				entries.append({"enemy_id": "agente", "x_offset": 500, "lane": 0, "delay": 0})
+			director.configure([{"id": "spacing_probe", "activation": {"type": "player_x_at_least", "value": origin}, "completion": "all_enemies_defeated", "enemies": entries}], func(kind, x, lane):
+				var actor = route.spawn_enemy(kind, x, lane)
+				actor.set_physics_process(false)
+				actor.visual.pause()
+				return actor)
+			director.activate_encounter(&"spacing_probe", origin, true)
+			var cap: int = director.population_limit(origin)
+			check(director.get_active_enemy_count(&"spacing_probe") <= 2, "Initial group at most two")
+			director.advance_spawns(CFG.WAVE_GROUP_DELAY - 0.01, origin)
+			check(director.get_active_enemy_count(&"spacing_probe") == 2, "Next group waits for its delay")
+			for step in 100:
+				director.advance_spawns(0.1, origin)
+				var actors: Array = director.get_active_enemies(&"spacing_probe")
+				check(actors.size() <= cap, "Simultaneous cap %d" % cap)
+				for a in actors.size():
+					for b in range(a + 1, actors.size()):
+						check(absf(actors[a].position.x - actors[b].position.x) >= CFG.WAVE_MIN_SPAWN_DISTANCE, "Spawn separation >= 140")
+			check(director.get_active_enemy_count(&"spacing_probe") == cap and director._pending.size() == 8 - cap, "Capacity blocks excess arrivals")
+			camera.position = Vector2(origin + 500 + (cap - 1) * 70, 225)
+			route.player.position = Vector2(camera.position.x - 340, GameConfig.GROUND_Y)
+			await capture("p7_wave_cap_%d" % cap)
+			var first: Node = director.get_active_enemies(&"spacing_probe")[0]
+			first.queue_free()
+			await process_frame
+			director.advance_spawns(CFG.WAVE_GROUP_DELAY, origin)
+			check(director.get_active_enemy_count(&"spacing_probe") == cap, "A freed slot admits the next enemy")
+			# Large delta still admits only one group per call.
+			director.reset_runtime_state(true)
+			await process_frame
+			director.activate_encounter(&"spacing_probe", origin, true)
+			director.advance_spawns(30, origin)
+			check(director.get_active_enemy_count(&"spacing_probe") <= 4, "Large delta cannot flush every pending group")
+	if point == 8:
+		for view in [["famailla", 400], ["acheral", 1800], ["monteros", 2850], ["villa_quinteros", 5800]]:
+			camera.position = Vector2(view[1], 225)
+			route.player.position = Vector2(view[1] - 100, GameConfig.GROUND_Y)
+			camera.reset_smoothing()
+			scene.get_node("Interface/HUD").set_location(route.current_location(view[1]))
+			scene.get_node("Interface/HUD").show_notice("")
+			await capture("final_" + view[0])
+		camera.position = Vector2(7600, 225)
+		route.player.position = Vector2(7400, GameConfig.GROUND_Y)
+		var final_boss = route.spawn_palermitano(7800, 0)
+		final_boss.set_physics_process(false)
+		route.boss_director._process(0.0)
+		route.boss_director._process(CFG.BOSS_INTRO_DURATION)
+		scene.get_node("Interface/HUD").set_location("Río Seco")
+		await capture("final_jefe")
 	root.get_node("AudioManager").stop_all()
 	scene.queue_free()
 	await process_frame
 	print("CARTOON_POINT_%d %d/%d PASS %d FAIL" % [point, checks-failures.size(), checks, failures.size()])
-	quit(0 if failures.is_empty() else 1)

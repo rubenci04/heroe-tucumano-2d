@@ -114,7 +114,7 @@ func _ready() -> void:
 	ground.collision_layer = GameConfig.WORLD_LAYER
 	ground.collision_mask = 0
 	$Terrain.add_child(ground)
-	CollisionFactory.add_floor(ground,Vector2(8400,12))
+	CollisionFactory.add_floor(ground,Vector2(2.0 * (CFG.WAVE_ENTRY_FLOOR_END - ground.position.x),12))
 	var stationary_by_x: Dictionary = {}
 	for item: Dictionary in STATIONARY_VEHICLES:
 		stationary_by_x[int(item.x)] = _add_stationary_vehicle(item.asset,item.x,item.scale*DECOR_VEHICLE_SCALE)

@@ -248,13 +248,16 @@ func _physics_process(delta: float) -> void:
 	visual.flip_h = facing > 0
 	z_index = 14
 	velocity.y += GameConfig.GRAVITY*delta
-	# Offscreen forward entries may begin beyond the finite floor at the route end.
-	if has_meta("encounter_id") and position.x > GameConfig.WORLD_WIDTH:
-		position.y = GameConfig.GROUND_Y
-		velocity.y = 0.0
-	if uses_ranged_lifecycle() and ai_state in [AIState.ENTER,AIState.REACT,AIState.REPOSITION]:
+	# Spaced arrivals approach on the continuous entrance floor before normal AI.
+	# In particular, Grandote must not idle outside its normal detection range.
+	var entering: bool = get_meta("wave_entry", false) and not _attack_is_visible()
+	if entering:
+		velocity.x = facing * definition.move_speed
+	elif uses_ranged_lifecycle() and ai_state in [AIState.ENTER,AIState.REACT,AIState.REPOSITION]:
+		remove_meta("wave_entry")
 		_advance_ranged_lifecycle(delta,distance)
 	elif ai_state == AIState.CHASE:
+		remove_meta("wave_entry")
 		_update_chase(distance)
 	else:
 		velocity.x = 0.0

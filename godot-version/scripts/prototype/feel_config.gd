@@ -111,6 +111,14 @@ const STRETCH_SMOOTH := 18.0
 # The isolated arena can still use its procedural squash/stretch.
 const ROUTE_POSE_SCALE_VARIATION := 0.0
 const ROUTE_POSE_ROTATION_DEG := 0.0
+# Wave arrivals: world pixels; entrance side selection stays in EncounterDirector.
+const WAVE_MIN_SPAWN_DISTANCE := 140.0
+const WAVE_MAX_EARLY := 4
+const WAVE_MAX_ADVANCED := 6
+const WAVE_ADVANCED_X := 4200.0
+const WAVE_GROUP_SIZE := 2
+const WAVE_GROUP_DELAY := 1.2
+const WAVE_ENTRY_FLOOR_END := 9400.0 # Supports spaced arrivals beyond the camera's last right edge.
 const LAND_SQUASH := 0.22          # aplastamiento al aterrizar
 const LAND_SQUASH_TIME := 0.22
 const LAND_MIN_AIR_TIME := 0.08

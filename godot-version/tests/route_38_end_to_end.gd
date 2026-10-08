@@ -49,6 +49,10 @@ func run() -> void:
 		# wait only for a bus that has actually started its warning/crossing.
 		var waiting_for_expresbus: bool = expresbus.phase in [expresbus.Phase.WARNING, expresbus.Phase.CROSSING]
 		var waiting_for_tesa: bool = tesa.phase in [tesa.Phase.WARNING, tesa.Phase.CROSSING]
+		# At a designed crossing, finish approaching groups before walking beyond
+		# the event sector. The new cap deliberately leaves reinforcements pending.
+		waiting_for_expresbus = waiting_for_expresbus or (expresbus.phase == expresbus.Phase.READY and player.position.x >= expresbus.trigger_x)
+		waiting_for_tesa = waiting_for_tesa or (tesa.phase == tesa.Phase.READY and player.position.x >= tesa.trigger_x)
 		if player.position.x < 7400.0 and not waiting_for_expresbus and not waiting_for_tesa:
 			player.position.x = minf(7400.0,player.position.x+160.0/60.0)
 		player.position.y = GameConfig.GROUND_Y

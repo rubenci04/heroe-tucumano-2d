@@ -58,11 +58,12 @@ func run() -> void:
 	director.update_safety(player.position.x,6500.0,800.0)
 	check(director.activate_encounter(&"route_drone_02",6100.0,true),"Later aerial wave activates at X=6100")
 	var spawn_counts: Array[int] = [director.get_active_enemy_count(&"route_drone_02")]
-	for step in range(4):
+	for step in range(6):
 		director.advance_spawns(0.55,player.position.x)
 		spawn_counts.append(director.get_active_enemy_count(&"route_drone_02"))
 	var wave: Array[Node] = director.get_active_enemies(&"route_drone_02")
-	check(spawn_counts==[1,2,3,4,5] and wave.size()==5,"Five Drones enter one at a time every 0.55 seconds")
+	print("DRONE_GROUP_COUNTS ", spawn_counts)
+	check(spawn_counts==[1,2,2,4,4,4,5] and wave.size()==5,"Five Drones arrive in groups of at most two separated by the configured delay")
 	check(wave.all(func(actor): return actor.get_script().resource_path=="res://scripts/actors/drone.gd" and actor.wave_formation and actor.formation_size==5),"Wave contains five phase-coordinated Drones")
 	var phases: Array[float] = []
 	for index in range(wave.size()):

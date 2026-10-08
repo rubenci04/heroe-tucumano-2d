@@ -1,0 +1,128 @@
+[
+  {
+    "suite": "agent_orb_checks",
+    "exit": 0,
+    "errors": 0,
+    "log": "D:\\proyectos\\tuco_hero2d\\godot-version\\validation\\polish_final_agent_orb_checks.log"
+  },
+  {
+    "suite": "background_grounding_checks",
+    "exit": 0,
+    "errors": 0,
+    "log": "D:\\proyectos\\tuco_hero2d\\godot-version\\validation\\polish_final_background_grounding_checks.log"
+  },
+  {
+    "suite": "cartoon_revision_checks",
+    "exit": 0,
+    "errors": 0,
+    "log": "D:\\proyectos\\tuco_hero2d\\godot-version\\validation\\polish_final_cartoon_revision_checks.log"
+  },
+  {
+    "suite": "combat_readability_checks",
+    "exit": 0,
+    "errors": 0,
+    "log": "D:\\proyectos\\tuco_hero2d\\godot-version\\validation\\polish_final_combat_readability_checks.log"
+  },
+  {
+    "suite": "drone_encounter_checks",
+    "exit": 0,
+    "errors": 0,
+    "log": "D:\\proyectos\\tuco_hero2d\\godot-version\\validation\\polish_final_drone_encounter_checks.log"
+  },
+  {
+    "suite": "enemy_lifecycle_checks",
+    "exit": 0,
+    "errors": 0,
+    "log": "D:\\proyectos\\tuco_hero2d\\godot-version\\validation\\polish_final_enemy_lifecycle_checks.log"
+  },
+  {
+    "suite": "grandote_punch_checks",
+    "exit": 0,
+    "errors": 0,
+    "log": "D:\\proyectos\\tuco_hero2d\\godot-version\\validation\\polish_final_grandote_punch_checks.log"
+  },
+  {
+    "suite": "hipster_coffee_checks",
+    "exit": 0,
+    "errors": 0,
+    "log": "D:\\proyectos\\tuco_hero2d\\godot-version\\validation\\polish_final_hipster_coffee_checks.log"
+  },
+  {
+    "suite": "migration_smoke",
+    "exit": 0,
+    "errors": 16,
+    "log": "D:\\proyectos\\tuco_hero2d\\godot-version\\validation\\polish_final_migration_smoke.log"
+  },
+  {
+    "suite": "palermitano_boss_checks",
+    "exit": 0,
+    "errors": 0,
+    "log": "D:\\proyectos\\tuco_hero2d\\godot-version\\validation\\polish_final_palermitano_boss_checks.log"
+  },
+  {
+    "suite": "player_progression_qol_checks",
+    "exit": 0,
+    "errors": 0,
+    "log": "D:\\proyectos\\tuco_hero2d\\godot-version\\validation\\polish_final_player_progression_qol_checks.log"
+  },
+  {
+    "suite": "player_vehicle_shot_checks",
+    "exit": 0,
+    "errors": 0,
+    "log": "D:\\proyectos\\tuco_hero2d\\godot-version\\validation\\polish_final_player_vehicle_shot_checks.log"
+  },
+  {
+    "suite": "route_38_end_to_end",
+    "exit": 0,
+    "errors": 0,
+    "log": "D:\\proyectos\\tuco_hero2d\\godot-version\\validation\\polish_final_route_38_end_to_end.log"
+  },
+  {
+    "suite": "route_progression",
+    "exit": 0,
+    "errors": 0,
+    "log": "D:\\proyectos\\tuco_hero2d\\godot-version\\validation\\polish_final_route_progression.log"
+  },
+  {
+    "suite": "shared_suite_checks",
+    "exit": 0,
+    "errors": 0,
+    "log": "D:\\proyectos\\tuco_hero2d\\godot-version\\validation\\polish_final_shared_suite_checks.log"
+  },
+  {
+    "suite": "super_headbutt_checks",
+    "exit": 0,
+    "errors": 0,
+    "log": "D:\\proyectos\\tuco_hero2d\\godot-version\\validation\\polish_final_super_headbutt_checks.log"
+  },
+  {
+    "suite": "tesa_set_piece_checks",
+    "exit": 0,
+    "errors": 0,
+    "log": "D:\\proyectos\\tuco_hero2d\\godot-version\\validation\\polish_final_tesa_set_piece_checks.log"
+  },
+  {
+    "suite": "vehicle_platform_checks",
+    "exit": 0,
+    "errors": 0,
+    "log": "D:\\proyectos\\tuco_hero2d\\godot-version\\validation\\polish_final_vehicle_platform_checks.log"
+  },
+  {
+    "suite": "vertical_slice_profile",
+    "exit": 1,
+    "errors": 2,
+    "log": "D:\\proyectos\\tuco_hero2d\\godot-version\\validation\\polish_final_vertical_slice_profile.log"
+  },
+  {
+    "suite": "prototype_feel_checks",
+    "exit": 0,
+    "errors": 0,
+    "log": "D:\\proyectos\\tuco_hero2d\\godot-version\\validation\\polish_final_prototype_feel_checks.log"
+  },
+  {
+    "suite": "prototype_polish_checks",
+    "exit": 0,
+    "errors": 0,
+    "log": "D:\\proyectos\\tuco_hero2d\\godot-version\\validation\\polish_final_prototype_polish_checks.log"
+  }
+]

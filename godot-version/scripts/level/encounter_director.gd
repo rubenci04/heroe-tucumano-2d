@@ -1,5 +1,6 @@
 class_name EncounterDirector
 extends Node
+const CFG = preload("res://scripts/prototype/feel_config.gd")
 
 signal encounter_started(encounter_id: StringName)
 signal encounter_completed(encounter_id: StringName)
@@ -20,6 +21,8 @@ var _pending: Array[Dictionary] = []
 var _rest_remaining := 0.0
 var _attack_tokens: Dictionary = {}
 var _grant_remaining := 0.0
+var _spawn_group := ""
+var _spawn_group_remaining := 0.0
 var camera_center_x := NAN
 var viewport_width := 800.0
 const HOSTILE_PROJECTILE_CAP := 3
@@ -162,28 +165,55 @@ func register_encounter(encounter_data: Dictionary) -> bool:
 
 
 func advance_spawns(delta: float,player_x: float = NAN) -> void:
+	_spawn_group_remaining = maxf(0.0, _spawn_group_remaining - delta)
 	_grant_remaining = maxf(0.0,_grant_remaining-delta)
 	_rest_remaining = maxf(0.0,_rest_remaining-delta)
 	for pending in _pending.duplicate():
 		pending.remaining -= delta
 		if pending.remaining <= 0.0:
-			var population := 0
-			for id in _active_enemies.keys():
-				population += get_active_enemy_count(id)
-			if population >= 7:
-				continue
-			_pending.erase(pending)
 			# A delayed arrival stays ahead if Player ran past its original entry.
 			var entry_origin: float = pending.x if is_nan(player_x) else maxf(pending.x,player_x)
-			_spawn_entry(pending.id,pending.data,entry_origin)
+			if not _can_admit(entry_origin, pending.group):
+				continue
+			_pending.erase(pending)
+			_spawn_entry(pending.id,pending.data,entry_origin,true)
+			_record_group(pending.group)
 
-func _spawn_entry(encounter_id: StringName,spawn_data: Dictionary,activation_x: float) -> void:
+func population_limit(x: float) -> int:
+	return CFG.WAVE_MAX_ADVANCED if x >= CFG.WAVE_ADVANCED_X else CFG.WAVE_MAX_EARLY
+
+func _population() -> int:
+	var population := 0
+	for id in _active_enemies:
+		population += get_active_enemy_count(id)
+	return population
+
+func _can_admit(x: float, group: String) -> bool:
+	return _population() < population_limit(x) and (group == _spawn_group or _spawn_group_remaining <= 0.0)
+
+func _record_group(group: String) -> void:
+	if group != _spawn_group:
+		_spawn_group = group
+		_spawn_group_remaining = CFG.WAVE_GROUP_DELAY
+
+func _spawn_entry(encounter_id: StringName,spawn_data: Dictionary,activation_x: float, spaced: bool = false) -> void:
 	var spawn_x := clampf(activation_x+float(spawn_data.x_offset),spawn_bounds.x,spawn_bounds.y)
 	if not is_nan(camera_center_x):
 		# Never clamp an advancing entry onto Player at the end of the route.
 		spawn_x = maxf(spawn_x,maxf(camera_center_x+viewport_width*0.5+80.0,activation_x+viewport_width*0.6))
+	if spaced:
+		# Move the entry outward on its existing side, never reposition live actors.
+		var side := -1.0 if float(spawn_data.x_offset) < 0 and is_nan(camera_center_x) else 1.0
+		var occupied: Array[float] = []
+		for id in _active_enemies:
+			for actor in get_active_enemies(id):
+				occupied.append(actor.global_position.x)
+		while occupied.any(func(x: float): return absf(x - spawn_x) < CFG.WAVE_MIN_SPAWN_DISTANCE):
+			spawn_x += side * CFG.WAVE_MIN_SPAWN_DISTANCE
 	var enemy = _spawn_enemy.call(String(spawn_data.enemy_id),spawn_x,0)
 	if enemy is Node:
+		if spaced and enemy.get("archetype") != "drone":
+			enemy.set_meta("wave_entry", true)
 		_track_enemy(encounter_id,enemy)
 
 func update_activation(player_x: float) -> void:
@@ -202,13 +232,13 @@ func update_activation(player_x: float) -> void:
 					population += 1
 					aerial_active = aerial_active or actor.get("archetype")=="drone"
 			var aerial_entry: bool = encounter.enemies.any(func(entry): return String(entry.enemy_id).begins_with("drone"))
-			if population>=7 or (population>0 and (aerial_active or aerial_entry)):
+			if population>=population_limit(player_x) or (population>0 and (aerial_active or aerial_entry)):
 				return
 			activate_encounter(encounter_id,player_x,true)
 			return
 
 
-func activate_encounter(encounter_id: StringName, activation_x: float = NAN,staggered: bool = false) -> bool:
+func activate_encounter(encounter_id: StringName, activation_x: float = NAN,staggered: bool = true) -> bool:
 	if not _encounters.has(encounter_id) or _activated.has(encounter_id) or _completed.has(encounter_id) or not _spawn_enemy.is_valid():
 		return false
 	var encounter: Dictionary = _encounters[encounter_id]
@@ -217,12 +247,21 @@ func activate_encounter(encounter_id: StringName, activation_x: float = NAN,stag
 	_activated[encounter_id] = true
 	_active_enemies[encounter_id] = {}
 	encounter_started.emit(encounter_id)
+	var index := 0
 	for spawn_data: Dictionary in encounter.enemies:
 		var delay: float = float(spawn_data.get("delay",0.0)) if staggered else 0.0
-		if delay>0.0:
-			_pending.append({"id":encounter_id,"data":spawn_data,"x":activation_x,"remaining":delay})
+		var group := "%s:%d" % [encounter_id, index / CFG.WAVE_GROUP_SIZE]
+		if staggered:
+			delay = maxf(delay, floorf(float(index) / CFG.WAVE_GROUP_SIZE) * CFG.WAVE_GROUP_DELAY)
+		if staggered and (delay > 0.0 or not _can_admit(activation_x, group)):
+			_pending.append({"id":encounter_id,"data":spawn_data,"x":activation_x,"remaining":delay,"group":group})
 		else:
-			_spawn_entry(encounter_id,spawn_data,activation_x)
+			# Unstaggered activation remains an explicit fixture/debug operation.
+			# update_activation (F5) always uses the paced path.
+			_spawn_entry(encounter_id,spawn_data,activation_x,staggered)
+			if staggered:
+				_record_group(group)
+		index += 1
 	if get_active_enemy_count(encounter_id) == 0:
 		_complete_encounter(encounter_id)
 	return true
@@ -270,6 +309,8 @@ func get_active_enemy_count(encounter_id: StringName) -> int:
 
 
 func reset_runtime_state(remove_spawned_enemies: bool = true) -> void:
+	_spawn_group = ""
+	_spawn_group_remaining = 0.0
 	_resetting = true
 	_attack_tokens.clear()
 	_grant_remaining = 0.0

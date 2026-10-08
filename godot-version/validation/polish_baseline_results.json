@@ -1,0 +1,116 @@
+[
+  {
+    "suite": "agent_orb_checks",
+    "exit": 0,
+    "errors": 0,
+    "log": "D:\\proyectos\\tuco_hero2d\\godot-version\\validation\\polish_baseline_agent_orb_checks.log"
+  },
+  {
+    "suite": "background_grounding_checks",
+    "exit": 0,
+    "errors": 0,
+    "log": "D:\\proyectos\\tuco_hero2d\\godot-version\\validation\\polish_baseline_background_grounding_checks.log"
+  },
+  {
+    "suite": "combat_readability_checks",
+    "exit": 0,
+    "errors": 0,
+    "log": "D:\\proyectos\\tuco_hero2d\\godot-version\\validation\\polish_baseline_combat_readability_checks.log"
+  },
+  {
+    "suite": "drone_encounter_checks",
+    "exit": 0,
+    "errors": 0,
+    "log": "D:\\proyectos\\tuco_hero2d\\godot-version\\validation\\polish_baseline_drone_encounter_checks.log"
+  },
+  {
+    "suite": "enemy_lifecycle_checks",
+    "exit": 0,
+    "errors": 0,
+    "log": "D:\\proyectos\\tuco_hero2d\\godot-version\\validation\\polish_baseline_enemy_lifecycle_checks.log"
+  },
+  {
+    "suite": "grandote_punch_checks",
+    "exit": 0,
+    "errors": 0,
+    "log": "D:\\proyectos\\tuco_hero2d\\godot-version\\validation\\polish_baseline_grandote_punch_checks.log"
+  },
+  {
+    "suite": "hipster_coffee_checks",
+    "exit": 0,
+    "errors": 0,
+    "log": "D:\\proyectos\\tuco_hero2d\\godot-version\\validation\\polish_baseline_hipster_coffee_checks.log"
+  },
+  {
+    "suite": "migration_smoke",
+    "exit": 0,
+    "errors": 16,
+    "log": "D:\\proyectos\\tuco_hero2d\\godot-version\\validation\\polish_baseline_migration_smoke.log"
+  },
+  {
+    "suite": "palermitano_boss_checks",
+    "exit": 0,
+    "errors": 0,
+    "log": "D:\\proyectos\\tuco_hero2d\\godot-version\\validation\\polish_baseline_palermitano_boss_checks.log"
+  },
+  {
+    "suite": "player_progression_qol_checks",
+    "exit": 0,
+    "errors": 0,
+    "log": "D:\\proyectos\\tuco_hero2d\\godot-version\\validation\\polish_baseline_player_progression_qol_checks.log"
+  },
+  {
+    "suite": "player_vehicle_shot_checks",
+    "exit": 0,
+    "errors": 0,
+    "log": "D:\\proyectos\\tuco_hero2d\\godot-version\\validation\\polish_baseline_player_vehicle_shot_checks.log"
+  },
+  {
+    "suite": "route_38_end_to_end",
+    "exit": 0,
+    "errors": 0,
+    "log": "D:\\proyectos\\tuco_hero2d\\godot-version\\validation\\polish_baseline_route_38_end_to_end.log"
+  },
+  {
+    "suite": "route_progression",
+    "exit": 1,
+    "errors": 7,
+    "log": "D:\\proyectos\\tuco_hero2d\\godot-version\\validation\\polish_baseline_route_progression.log"
+  },
+  {
+    "suite": "super_headbutt_checks",
+    "exit": 0,
+    "errors": 0,
+    "log": "D:\\proyectos\\tuco_hero2d\\godot-version\\validation\\polish_baseline_super_headbutt_checks.log"
+  },
+  {
+    "suite": "tesa_set_piece_checks",
+    "exit": 0,
+    "errors": 1,
+    "log": "D:\\proyectos\\tuco_hero2d\\godot-version\\validation\\polish_baseline_tesa_set_piece_checks.log"
+  },
+  {
+    "suite": "vehicle_platform_checks",
+    "exit": 0,
+    "errors": 1,
+    "log": "D:\\proyectos\\tuco_hero2d\\godot-version\\validation\\polish_baseline_vehicle_platform_checks.log"
+  },
+  {
+    "suite": "vertical_slice_profile",
+    "exit": 1,
+    "errors": 15,
+    "log": "D:\\proyectos\\tuco_hero2d\\godot-version\\validation\\polish_baseline_vertical_slice_profile.log"
+  },
+  {
+    "suite": "prototype_feel_checks",
+    "exit": 0,
+    "errors": 0,
+    "log": "D:\\proyectos\\tuco_hero2d\\godot-version\\validation\\polish_baseline_prototype_feel_checks.log"
+  },
+  {
+    "suite": "prototype_polish_checks",
+    "exit": 0,
+    "errors": 1,
+    "log": "D:\\proyectos\\tuco_hero2d\\godot-version\\validation\\polish_baseline_prototype_polish_checks.log"
+  }
+]
