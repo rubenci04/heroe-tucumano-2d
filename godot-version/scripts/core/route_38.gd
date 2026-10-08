@@ -235,7 +235,7 @@ func spawn_enemy(archetype: String,x: float,lane: int) -> CharacterBody2D:
 	enemy.defeated.connect(_on_enemy_defeated)
 	enemy.boss_escaped.connect(boss_escaped.emit)
 	$Enemies.add_child(enemy)
-	_batch.attach(enemy,archetype,BATCH_VISUALS.enemy_aliases(enemy))
+	_batch.attach(enemy,archetype,BATCH_VISUALS.enemy_aliases(enemy),false)
 	_add_contact_shadow(enemy,archetype)
 	feel.watch_enemy(enemy)
 	anim.watch_enemy(enemy)
@@ -310,7 +310,7 @@ func spawn_palermitano(x: float,lane: int) -> CharacterBody2D:
 	boss.defeated.connect(_on_palermitano_defeated,CONNECT_ONE_SHOT)
 	boss.tree_exiting.connect(_on_palermitano_exiting,CONNECT_ONE_SHOT)
 	$Enemies.add_child(boss)
-	_batch.attach(boss,"palermitano",BATCH_VISUALS.boss_aliases())
+	_batch.attach(boss,"palermitano",BATCH_VISUALS.boss_aliases(),false)
 	_add_contact_shadow(boss,"palermitano")
 	feel.watch_enemy(boss)
 	anim.watch_enemy(boss)
@@ -377,6 +377,12 @@ func bind_presentation(hud_ref: Node,camera_ref: Camera2D) -> void:
 	camera_node = camera_ref
 
 
+## Tras elegir o restaurar personaje, el jugador recibe otra vez su SpriteFrames de juego: se vuelven a poner los cuadros nuevos.
+func refresh_player_visuals() -> void:
+	if player.visual.sprite_frames != null:
+		_batch.attach(player,"ciruja",BATCH_VISUALS.CIRUJA_ALIASES)
+
+
 func _spawn_miniboss_grandote(x: float,lane: int) -> CharacterBody2D:
 	if is_instance_valid(miniboss):
 		return miniboss
@@ -389,7 +395,7 @@ func _spawn_miniboss_grandote(x: float,lane: int) -> CharacterBody2D:
 	miniboss.screen_shake_requested.connect(screen_shake_requested.emit)
 	miniboss.tree_exiting.connect(_on_miniboss_exiting,CONNECT_ONE_SHOT)
 	$Enemies.add_child(miniboss)
-	_batch.attach(miniboss,"grandote",BATCH_VISUALS.GRANDOTE_ALIASES)
+	_batch.attach(miniboss,"grandote",BATCH_VISUALS.GRANDOTE_ALIASES,false)
 	_add_contact_shadow(miniboss,"grandote")
 	feel.watch_enemy(miniboss)
 	anim.watch_enemy(miniboss)

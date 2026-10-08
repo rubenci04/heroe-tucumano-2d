@@ -290,6 +290,7 @@ func restart_from_checkpoint() -> void:
 func _restore_checkpoint_run() -> void:
 	game_session.pending_checkpoint_restore = false
 	player.apply_character_definition(game_session.resolve_character_definition(game_session.selected_character))
+	route.refresh_player_visuals()
 	game_session.set_progress(game_session.checkpoint_score,game_session.checkpoint_coins)
 	route.restore_checkpoint_state(game_session.checkpoint_completed_encounters,game_session.checkpoint_collected_pickups)
 	route.restore_checkpoint_level_state(game_session.checkpoint_level_state,game_session.respawn_position.x)
@@ -332,6 +333,7 @@ func _on_character_confirmed(character_id: StringName) -> void:
 		push_error("No se pudo aplicar la definición seleccionada. Se mantiene el personaje actual.")
 		return
 	game_session.set_selected_character(definition.character_id)
+	route.refresh_player_visuals()
 	begin_intro()
 
 func begin_intro() -> bool:

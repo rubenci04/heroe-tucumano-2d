@@ -164,6 +164,7 @@ func run() -> void:
 	check(player.position.x > vehicle.position.x and player.position.y >= route._platform_roof_y(vehicle)-2,"Rush clears one-way roof without wedging or teleporting")
 	await ready_player(7350)
 	var boss = route.spawn_palermitano(7470,0)
+	route.boss_director.skip_intro() # la intro de 2 s bloquea controles: este test mide la pelea
 	boss.set_physics_process(false)
 	await frames(2)
 	var boss_hp: int = boss.health

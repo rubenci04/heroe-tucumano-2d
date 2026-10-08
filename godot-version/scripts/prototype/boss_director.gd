@@ -27,6 +27,7 @@ var _camera_home := Vector2.ZERO
 var _frozen: Array[Node] = []
 var _aura: Node2D
 var _aura_time := 0.0
+var _intro_tween: Tween
 
 
 func setup(boss_node: CharacterBody2D, player_node: CharacterBody2D, camera_node: Camera2D, hud_node: Node, feel_node: Node, enemy_root: Node2D, projectile_root: Node2D) -> void:
@@ -78,6 +79,7 @@ func _start_intro() -> void:
 	# Cámara: se acerca al jefe y vuelve al plano fijo de la arena (queda bloqueada ahí).
 	var focus := _camera_home.lerp(boss.global_position + Vector2(0.0, -60.0), 0.55)
 	var move := create_tween().set_parallel(true)
+	_intro_tween = move
 	move.tween_property(camera, "zoom", Vector2.ONE * CFG.BOSS_INTRO_ZOOM, CFG.BOSS_INTRO_ZOOM_IN).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
 	move.tween_property(camera, "position", focus, CFG.BOSS_INTRO_ZOOM_IN).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
 	var back := move.chain().set_parallel(true)
@@ -88,6 +90,8 @@ func _start_intro() -> void:
 
 
 func _finish_intro() -> void:
+	if _intro_tween != null and _intro_tween.is_valid():
+		_intro_tween.kill()
 	stage = Stage.FIGHT
 	for node in _frozen:
 		if is_instance_valid(node):
@@ -180,3 +184,11 @@ func _on_boss_defeated() -> void:
 		_aura.queue_free()
 	hud.hide_boss_bar(1.2)
 	fight_won.emit()
+
+
+## Termina la intro al instante (pruebas y cortes de escena): el jefe queda activo y la cámara vuelve a la ruta.
+func skip_intro() -> void:
+	if stage == Stage.WAITING:
+		_start_intro()
+	if stage == Stage.INTRO:
+		_finish_intro()

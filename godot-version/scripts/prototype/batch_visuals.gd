@@ -23,13 +23,16 @@ func _ready() -> void:
 
 ## Cambia los cuadros de un actor. aliases: nombre de animación del actor -> carpeta del lote.
 ## El actor conserva sus colisiones; se escala con CHARACTER_SCALE (Ciruja no cambia de escala).
-func attach(actor: Node2D, character: String, aliases: Dictionary) -> bool:
+## scale_actor: true = prototipo (escala el actor y sus rangos de ataque). false = ruta 38: solo visual e hitbox,
+## los rangos y tiempos de ataque no cambian.
+func attach(actor: Node2D, character: String, aliases: Dictionary, scale_actor: bool = true) -> bool:
 	var path := BATCH_FRAMES + character + ".tres"
 	if not ResourceLoader.exists(path):
 		push_warning("Build character frames first: " + path)
 		return false
 	var incoming := load(path) as SpriteFrames
 	var sprite: AnimatedSprite2D = actor.visual
+	release(sprite) # idempotente: se puede volver a llamar tras re-aplicar la definición del jugador
 	if character != "ciruja" and not actor.has_meta("original_visible_height"):
 		CHARACTER_SCALE.remember(actor)
 	var frames: SpriteFrames = sprite.sprite_frames.duplicate(true)
@@ -64,13 +67,18 @@ func attach(actor: Node2D, character: String, aliases: Dictionary) -> bool:
 		if legacy is Dictionary:
 			legacy.clear()
 	# Ciruja conserva escala; el resto toma la altura objetivo de feel_config.
-	CHARACTER_SCALE.apply(actor, character)
+	if scale_actor:
+		CHARACTER_SCALE.apply(actor, character)
+	elif character != "ciruja":
+		_fit_visual(actor, character)
 	if character == "ciruja":
 		_refit_player_body(actor)
 	var entry := {"actor": actor, "sprite": sprite, "character": character}
 	_entries.append(entry)
-	sprite.animation_changed.connect(_anchor.bind(sprite))
-	sprite.frame_changed.connect(_anchor.bind(sprite))
+	if not sprite.has_meta("batch_hooked"):
+		sprite.set_meta("batch_hooked",true)
+		sprite.animation_changed.connect(_anchor.bind(sprite))
+		sprite.frame_changed.connect(_anchor.bind(sprite))
 	_anchor(sprite)
 	if character == "palermitano":
 		actor.health_component.damaged.connect(func(_amount, _health, _source):
@@ -181,16 +189,39 @@ func _anchor(sprite: AnimatedSprite2D) -> void:
 		sprite.position.y = 0.0
 
 
+## Escala solo visual y hitbox nuevo; sin tocar el actor ni sus rangos de ataque.
+func _fit_visual(actor: Node2D, character: String) -> void:
+	var sprite: AnimatedSprite2D = actor.visual
+	var texture := sprite.sprite_frames.get_frame_texture(sprite.animation, 0)
+	sprite.scale = Vector2.ONE * (CFG.target_height(character) / CollisionFactory.opaque_bounds(texture).size.y)
+	sprite.set_meta("batch_visual_scale", sprite.scale.y)
+	var width_ratio: float = actor.definition.collision_width_ratio if actor.get("definition") != null else 0.7
+	_refit_body(actor, texture, sprite.scale.y, width_ratio)
+
+
 func _refit_player_body(player: CharacterBody2D) -> void:
 	# Hitbox de Ciruja sobre la silueta nueva (misma regla que CollisionFactory.add_shape).
-	var old: CollisionShape2D = player.get_node_or_null("CollisionShape2D")
+	var texture: Texture2D = player.visual.sprite_frames.get_frame_texture(player.character_definition.idle_animation, 0)
+	_refit_body(player, texture, player.character_visual_scale, player.collision_width_ratio)
+
+
+## Reemplaza el cuerpo y la zona de contacto/hurtbox por la silueta del cuadro actual.
+func _refit_body(actor: Node2D, texture: Texture2D, image_scale: float, width_ratio: float) -> void:
+	var old: CollisionShape2D = actor.get_node_or_null("CollisionShape2D")
 	if old == null:
 		return
-	var texture: Texture2D = player.visual.sprite_frames.get_frame_texture(player.character_definition.idle_animation, 0)
-	player.remove_child(old)
+	actor.remove_child(old)
 	old.queue_free()
-	var body := CollisionFactory.add_shape(player, texture, player.character_visual_scale, true, player.collision_width_ratio)
-	player.hurtbox.copy_shape_from(body)
+	var body := CollisionFactory.add_shape(actor, texture, image_scale, true, width_ratio)
+	if actor.get("hurtbox") != null:
+		actor.hurtbox.copy_shape_from(body)
+	var contact: Node = actor.get_node_or_null("Contact")
+	if contact != null:
+		var old_contact: CollisionShape2D = contact.get_node_or_null("CollisionShape2D")
+		if old_contact != null:
+			contact.remove_child(old_contact)
+			old_contact.queue_free()
+		CollisionFactory.add_shape(contact, texture, image_scale, true, width_ratio)
 
 
 func _copy_animation(source: SpriteFrames, source_name: StringName, target: SpriteFrames, target_name: StringName) -> void:

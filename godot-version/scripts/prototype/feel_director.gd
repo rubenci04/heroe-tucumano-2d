@@ -81,12 +81,16 @@ func _on_enemy_damaged(enemy: Node, amount: int, source: Variant) -> void:
 
 
 func request_hitstop(frames: int) -> void:
+	if _time_scale_blocked():
+		return
 	_hitstop_frames = maxi(_hitstop_frames, frames)
 	_apply_time_scale()
 
 
 ## Cámara lenta breve en tiempo real (no depende del propio time_scale).
 func slow_motion(scale: float, duration: float) -> void:
+	if _time_scale_blocked():
+		return
 	_slowmo_scale = scale
 	_slowmo_until_ms = Time.get_ticks_msec() + int(duration * 1000.0)
 	_apply_time_scale()
@@ -120,10 +124,15 @@ func _flash(enemy: Node, frames: int) -> void:
 
 ## Solo toca Engine.time_scale mientras hay un efecto propio; al terminar devuelve el valor previo
 ## (así no pisa la cámara lenta del Tucumanazo ni otros efectos del juego).
+## El Tucumanazo tiene su propio hit-stop y captura Engine.time_scale al empezar: mientras esté activo no tocamos el tiempo.
+func _time_scale_blocked() -> bool:
+	return is_instance_valid(player) and (bool(player.get("special_active")) or bool(player.get("_hit_stop_active")))
+
+
 func _apply_time_scale() -> void:
 	var hit_stop := _hitstop_frames > 0
 	var slow_motion_active := Time.get_ticks_msec() < _slowmo_until_ms
-	if hit_stop or slow_motion_active:
+	if (hit_stop or slow_motion_active) and not _time_scale_blocked():
 		if not _time_scale_owned:
 			_time_scale_owned = true
 			_time_scale_base = Engine.time_scale
@@ -137,6 +146,9 @@ func _process(delta: float) -> void:
 	if _hitstop_frames > 0:
 		_hitstop_frames -= 1
 	_apply_time_scale()
+	# Red de seguridad: si nadie es dueño del tiempo y el Tucumanazo no tiene hit-stop, nada puede dejarlo lento.
+	if not _time_scale_owned and Engine.time_scale < 1.0 and not bool(player.get("_hit_stop_active")):
+		Engine.time_scale = 1.0
 	_update_flashes()
 	_update_shake(delta)
 	_update_player_dust(delta)

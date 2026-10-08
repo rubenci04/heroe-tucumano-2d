@@ -37,6 +37,7 @@ func run() -> void:
 	player.set_physics_process(false)
 	player.position = Vector2(7200,GameConfig.GROUND_Y)
 	var boss: PalermitanoBoss = route.spawn_palermitano(7600,0)
+	route.boss_director.skip_intro() # estos tests miden el combate; la intro de 2 s tiene su propio flujo
 	boss.set_physics_process(false)
 	var patterns: Array[int] = []
 	boss.pattern_started.connect(func(pattern: int): patterns.append(pattern))

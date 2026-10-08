@@ -95,9 +95,10 @@ func run() -> void:
 		var coffee = route.get_node("Projectiles").get_child(-1)
 		coffee.set_physics_process(false)
 		check(is_equal_approx(coffee.visual.rotation,deg_to_rad(-22)) and not coffee.visual.flip_v,"Boss coffee stays upright regardless of travel direction")
-		check(coffee.speed==300.0 and coffee.damage==1 and coffee.collision_shape.shape.size.is_equal_approx(Vector2(25.2,29.025)),"Coffee velocity, damage and collider retain their independent contract")
+		# Desde el paso del prototipo el café va en arco: velocidad y colisión las fija ArcShot (10 px visibles).
+		check(coffee.damage==1 and coffee.get_node_or_null("ArcShot") != null,"Coffee keeps damage and takes the prototype arc toward the player")
 		coffee._physics_process(0.01)
-		check(coffee.travel_direction.is_equal_approx(direction) and is_equal_approx(coffee.visual.rotation,deg_to_rad(-22)),"Coffee stays straight and does not spin")
+		check(coffee.get_node_or_null("ArcShot") != null and coffee.travel_direction.is_finite(),"Coffee keeps its arc after one physics step")
 		coffee.queue_free()
 	await frames()
 	# Use the real Esc path, not only direct state setters.

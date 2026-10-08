@@ -63,3 +63,42 @@ Hay dos nombres distintos para el mismo ingenio ("Arcor" y "Providencia"). Esto 
 3. HUD cartoon y pantallas (corrección del "00000").
 4. Jefe Palermitano en Río Seco (intro, barra, fase 2, derrota, corte de nivel).
 5. Verificación: Godot headless con la consola, tests, capturas en `docs/capturas/`.
+
+---
+
+## Estado de los pasos
+
+| Paso | Estado | Commit |
+|------|--------|--------|
+| 0. Plan (este documento) | Hecho | `a3eed02` |
+| 1. Personajes, escala, hitboxes, puntos de lanzamiento, vehículos y cinemática | Hecho | `db5c65e` |
+| 2. Sombras, impactos, cámara lenta, polvo, proyectiles, manchas de café | Hecho | `214ac93` |
+| 3. HUD cartoon compartida y corrección del "00000" | Hecho | `42cf245` |
+| 4. Jefe Palermitano del prototipo en Río Seco | Hecho | `2f1c65c` |
+| 5. Verificación y capturas | Parcial (ver abajo) | — |
+
+## Decisiones tomadas (revisar)
+
+1. **Escala en la ruta 38: solo visual e hitbox.** `batch_visuals.attach(..., scale_actor=false)` deja `actor.scale = 1` y no toca `attack_range` ni `preferred_distance`. Los tiempos de ataque no cambian. El prototipo sigue escalando el actor como antes (`scale_actor=true`). Alturas visibles en la ruta: agente 74 px, hipster 92, grandote 92.5, palermitano 96, según `feel_config`.
+2. **Autos y paradas estacionados ×1.223** (`DECOR_VEHICLE_SCALE` en `route_38.gd`) = 0.95 / 0.777, la escala del auto1 del prototipo sobre la de la ruta. Los pickups no cambian.
+3. **Café en arco y con giro también en el juego completo** (lo pedía el paso 2). Eso cambia velocidad y colisión del café. Los tests `player_progression_qol_checks` y `hipster_coffee_checks` pasaban a verificar el arco en vez de valores fijos.
+4. **Intro de Famailla**: Ciruja, Champion y Palermitano usan los cuadros nuevos. La referencia rota a `assets/campeona empanadas.png` (renombrado a `campeona_empanadas.png`) se reemplazó por `characters/lote2_cuadros/campeona/idle/f_00.png`.
+5. **Campeona**: en la ruta no hay Campeona persistente; solo aparece en la cinemática. No se agregó una segunda instancia.
+6. **Intro del jefe** arranca al aparecer el Palermitano (`trigger_x = -INF`), no al cruzar X=400 como en la arena. Durante la intro la cámara se bloquea (`route.camera_locked`) y `main` vuelve a seguir al jugador al terminar.
+7. **Shake**: el feel delega en la cámara de `main` (`screen_shake_requested`), sin un contenedor propio.
+8. **Time scale**: el feel no toca `Engine.time_scale` mientras el Tucumanazo está activo o en su hit-stop, y tiene una red de seguridad que devuelve 1.0 si nadie es dueño. Esto corrige un bug real: el Super capturaba el 0.02 del hit-stop como "valor previo" y lo dejaba pegado.
+9. **Re-aplicación de cuadros**: `main` reaplica la definición del jugador al elegir personaje y al restaurar checkpoint; después llama a `route.refresh_player_visuals()` para volver a poner los cuadros nuevos.
+
+## Tests (estado al cierre)
+
+- Actualizados por cambios intencionales: `agent_orb_checks` (punto de lanzamiento medido sobre el cuadro nuevo), `player_progression_qol_checks` y `hipster_coffee_checks` (café en arco).
+- Actualizados porque la intro del jefe bloquea controles 2 s: `palermitano_boss_checks`, `super_headbutt_checks`, `route_38_end_to_end` (llaman a `boss_director.skip_intro()`).
+- Pendientes: `enemy_lifecycle_checks` (el primer disparo del Agente sale 2 ticks, 33 ms, antes del mínimo del telegraph; causa no identificada) y `migration_smoke` (contratos de visuales legacy que cambiaron a propósito, y un cuelgue no resuelto en el tramo de diálogo de la intro).
+- No son tests ejecutables con `--script` (no heredan de `SceneTree`, igual que antes de estos cambios): `arcade_pacing_checks`, `expresbus_checks`, `rebalance_checks`.
+
+## Pendiente de decisión del usuario
+
+- Nombre del ingenio: "Ingenio Arcor" (`feel_config.gd` HUD_VICTORY_TEXT; `main.gd` ~l.151 y ~l.439) frente a "Ingenio Providencia" (comentario del fin del nivel 1 en `feel_config.gd`).
+- Si el café en arco y con giro es el comportamiento deseado en la ruta (punto 3).
+- Si la escala del decorado (×1.223) y la de personajes (tabla) quedan así, o se prueba el zoom de cámara ×2 para igualar el encuadre del prototipo.
+- Carteles de localidad: no se encontraron como sprites escalables en la ruta; quedan sin cambios.

@@ -41,7 +41,7 @@ func run() -> void:
 	hipster._advance_attack_state(hipster.definition.telegraph_duration)
 	var first = route.get_node("Projectiles").get_child(-1)
 	check(shots==["hipster_coffee"],"Hipster emits café, never bottle")
-	check(first.speed==115.0 and first.visual.scale==Vector2(0.15,0.15),"Hipster café keeps scale 0.15 at 115 px/s")
+	check(first.get_node_or_null("ArcShot") != null and first.damage==1,"Hipster café is thrown in the prototype arc (10 px visible, see feel_config)")
 	check(first.definition.rotation_speed_degrees==0.0 and is_equal_approx(first.visual.rotation,deg_to_rad(-22.0)),"Coffee remains visually upright with fixed orientation and no flight rotation")
 	hipster._advance_attack_state(0.84)
 	check(shots.size()==1,"Second coffee waits at least 0.85 seconds")

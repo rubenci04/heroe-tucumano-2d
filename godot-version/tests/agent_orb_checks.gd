@@ -46,7 +46,8 @@ func run() -> void:
 	check(shots==["agent_orb"] and orb.kind==&"agent_orb","Agent emits one independent orb, not legacy bullet")
 	check(orb.definition!=load("res://data/projectiles/drone_bolt.tres") and orb.definition.resource_path=="res://data/projectiles/agent_orb.tres","Agent orb is independent from Drone resource")
 	check(orb.speed==170.0 and orb.damage==1 and orb.visual.scale==Vector2(0.85,0.85) and orb.collision_shape.shape.size==Vector2(10,10),"Agent orb has approved independent size, slower speed, damage and collider")
-	check(orb.position.is_equal_approx(agent.global_position+Vector2(-22.0,-58.0)),"Left-facing muzzle is aligned to the firing-frame barrel")
+	# Punto de lanzamiento medido sobre el cuadro nuevo (BATCH_MUZZLE_SOURCE del agente, mirando a la izquierda).
+	check(orb.position.is_equal_approx(agent.visual.to_global(Vector2(110.0-160.0,101.0-240.0))),"Left-facing muzzle is aligned to the batch barrel socket")
 	var start: Vector2 = orb.position
 	var rotation: float = orb.visual.rotation
 	orb._physics_process(0.1)

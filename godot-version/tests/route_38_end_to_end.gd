@@ -118,6 +118,7 @@ func run() -> void:
 			break
 	expect(is_instance_valid(route.boss) and boss_spawn_count==1,"Palermitano activates exactly once after the final route rest",snapshot(route))
 	var boss: PalermitanoBoss = route.boss
+	route.boss_director.skip_intro() # la intro de 2 s queda terminada: este test cubre el ciclo de vida del jefe
 	var closing_started := [0]
 	var closing_finished := [0]
 	scene.demo_closing_started.connect(func(): closing_started[0] += 1)
