@@ -3,6 +3,7 @@ extends CanvasLayer
 ## barra de vida del jefe y cartel central. No toca ui/hud.tscn ni scripts de gameplay.
 
 const CFG = preload("res://scripts/prototype/feel_config.gd")
+const CARTOON = preload("res://scripts/prototype/cartoon_style.gd")
 
 var root: Control
 var boss_panel: Control
@@ -29,23 +30,14 @@ func _ready() -> void:
 func make_label(text: String, size: int, color: Color = CFG.HUD_TEXT_COLOR) -> Label:
 	var label := Label.new()
 	label.text = text
-	label.add_theme_font_size_override("font_size", size)
 	label.add_theme_color_override("font_color", color)
-	label.add_theme_color_override("font_outline_color", CFG.HUD_OUTLINE_COLOR)
-	label.add_theme_constant_override("outline_size", maxi(2, int(size * CFG.HUD_OUTLINE_RATIO)))
-	label.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.45))
-	label.add_theme_constant_override("shadow_offset_y", 3)
+	CARTOON.style_label(label, size)
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return label
 
 
 func _style(fill: Color, border: Color, radius: int, border_width: int) -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = fill
-	style.border_color = border
-	style.set_border_width_all(border_width)
-	style.set_corner_radius_all(radius)
-	return style
+	return CARTOON.panel(fill, border, radius, border_width)
 
 
 func _build_boss_bar() -> void:

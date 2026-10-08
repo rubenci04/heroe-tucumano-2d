@@ -1,4 +1,6 @@
 extends Control
+const CFG = preload("res://scripts/prototype/feel_config.gd")
+const CARTOON = preload("res://scripts/prototype/cartoon_style.gd")
 var notice_time: float = 0.0
 @onready var life_bar: ProgressBar = $LifeBar
 @onready var status: Label = $Status
@@ -33,14 +35,15 @@ var _heat_feedback_paused: bool = false
 
 func _ready() -> void:
 	_apply_cartoon_outline()
+	# Barras de arriba y abajo con el mismo panel marrón cartoon que la HUD prototipo.
+	$TopBar.color = CFG.HUD_PANEL_FILL
+	$BottomBar.color = CFG.HUD_PANEL_FILL
 
 
 ## Todo texto del HUD lleva borde oscuro grueso (estilo cartoon, legible sobre cualquier fondo).
 func _apply_cartoon_outline() -> void:
 	for label: Label in find_children("*","Label",true,false):
-		var size: int = label.get_theme_font_size("font_size")
-		label.add_theme_color_override("font_outline_color",Color(0.14,0.07,0.03))
-		label.add_theme_constant_override("outline_size",maxi(3,int(size*0.3)))
+		CARTOON.style_label(label)
 
 
 func _process(delta: float) -> void:

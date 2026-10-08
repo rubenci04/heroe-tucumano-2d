@@ -97,6 +97,12 @@ func _refill_player() -> void:
 	player.oranges_unlocked = true
 
 
+## Mismo cableado que route_38: sin esto el puntaje queda en 0 (00000) en el HUD y en la pantalla final.
+func _on_enemy_defeated(points: int) -> void:
+	player.score += points
+	player.status_changed.emit()
+
+
 func _on_player_respawn_requested() -> void:
 	player.lives = maxi(player.lives,1)
 	player.respawn_at(PLAYER_START,{})
@@ -109,6 +115,7 @@ func _spawn_enemy(archetype: String,x: float) -> CharacterBody2D:
 	enemy.target = player
 	enemy.position = Vector2(x,GameConfig.GROUND_Y)
 	enemy.shot_requested.connect(_spawn_projectile.bind(enemy))
+	enemy.defeated.connect(_on_enemy_defeated)
 	enemy.ground_wave_requested.connect(_spawn_ground_wave.bind(enemy))
 	enemies.add_child(enemy)
 	batch.attach(enemy, archetype, BATCH_VISUALS.enemy_aliases(enemy))
@@ -125,6 +132,7 @@ func _spawn_boss() -> CharacterBody2D:
 	boss.position = Vector2(ARENA_RIGHT - 15.0, GameConfig.GROUND_Y)
 	boss.arena_bounds = Vector2(ARENA_LEFT + 20.0, ARENA_RIGHT - 15.0)
 	boss.aimed_shot_requested.connect(_spawn_projectile.bind(boss))
+	boss.defeated.connect(_on_enemy_defeated)
 	boss.summon_requested.connect(func(count: int, _lane: int):
 		for _index in count:
 			if boss.get_live_summon_count() < boss.max_live_summons:
