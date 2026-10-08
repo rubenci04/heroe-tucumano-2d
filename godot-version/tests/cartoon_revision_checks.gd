@@ -165,6 +165,37 @@ func _run() -> void:
 			camera.reset_smoothing()
 			scene.get_node("Interface/HUD").set_location(route.current_location(view[1]))
 			await capture("p5_" + view[0])
+	if point == 6:
+		var intro = scene.get_node("IntroFamailla")
+		intro.start(route.player, camera, scene.get_node("Interface/DialogueBox"), &"san_martin")
+		intro.animation_player.stop()
+		intro.fade_layer.visible = false
+		scene.get_node("Interface/DialogueBox").hide()
+		camera.position = Vector2(400, 225)
+		check(intro.champion.position.y == GameConfig.GROUND_Y, "Campeona stands on the route floor")
+		await capture("p6_campeona_grounded")
+		intro.animation_player.play(&"kidnapping")
+		intro.animation_player.advance(2.4)
+		intro._on_animation_finished(&"kidnapping")
+		check(not intro.champion.visible and not intro.kidnapping.visible, "Kidnapping has no lingering actor")
+		intro.cancel()
+		check(not intro.visible and not intro.champion.visible and not intro.kidnapping.visible, "Cancelled/completed intro cleans up every proxy")
+		camera.position = Vector2(400, 225)
+		await capture("p6_campeona_clean_exit")
+		var arena = load("res://scenes/prototype/pixel_arena.tscn").instantiate()
+		root.add_child(arena)
+		await process_frame
+		arena.player.set_physics_process(false)
+		for enemy in arena.enemies.get_children():
+			enemy.set_physics_process(false)
+		arena.car.set_physics_process(false)
+		arena.boss_director.set_process(false)
+		arena._take_campeona()
+		check(arena.campeona.position.y == GameConfig.GROUND_Y, "Arena sequence starts on the floor")
+		await create_timer(CFG.CAMPEONA_STRUGGLE_TIME + CFG.CAMPEONA_DRAG_TIME + 0.2).timeout
+		check(arena.campeona == null, "Arena Campeona fades and is freed")
+		arena.queue_free()
+		await process_frame
 	root.get_node("AudioManager").stop_all()
 	scene.queue_free()
 	await process_frame

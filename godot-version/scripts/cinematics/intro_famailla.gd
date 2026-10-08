@@ -27,6 +27,7 @@ var _camera_smoothing_enabled: bool = true
 
 func _ready() -> void:
 	hide()
+	animation_player.animation_finished.connect(_on_animation_finished)
 	fade_layer.visible = false
 	set_process(false)
 
@@ -65,6 +66,14 @@ func start(player: CharacterBody2D, camera: Camera2D, dialogue: Control, charact
 	set_process(true)
 	animation_player.play(&"RESET")
 	animation_player.advance(0.0)
+	champion.modulate = Color.WHITE
+	kidnapping.modulate = Color.WHITE
+	# NPCs use a foot origin, like the playable route. The kidnapping composite
+	# is anchored by its opaque base instead of its transparent canvas centre.
+	protagonist_proxy.position.y = GameConfig.GROUND_Y
+	champion.position.y = GameConfig.GROUND_Y
+	palermitano.position.y = GameConfig.GROUND_Y
+	kidnapping.offset.y = kidnapping.texture.get_height() * 0.5 - CollisionFactory.opaque_bounds(kidnapping.texture).end.y
 	animation_player.play(&"establish")
 	_dialogue.line_changed.connect(_on_dialogue_line_changed)
 	_dialogue.sequence_finished.connect(_on_dialogue_finished)
@@ -121,6 +130,11 @@ func _on_dialogue_finished(_sequence_id: StringName, skipped: bool) -> void:
 	if active and not _finishing:
 		_finish(skipped,true)
 
+func _on_animation_finished(animation: StringName) -> void:
+	if animation == &"kidnapping":
+		champion.hide()
+		kidnapping.hide()
+
 
 func _finish(skipped: bool, emit_completion: bool) -> void:
 	if not active:
@@ -145,6 +159,9 @@ func _disconnect_dialogue() -> void:
 
 func _cleanup() -> void:
 	animation_player.stop()
+	champion.hide()
+	kidnapping.hide()
+	palermitano.hide()
 	set_process(false)
 	hide()
 	fade_layer.visible = false

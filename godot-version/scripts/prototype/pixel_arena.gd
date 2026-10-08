@@ -176,6 +176,7 @@ func _take_campeona() -> void:
 		return
 	campeona_taken = true
 	var sprite := campeona
+	sprite.position.y = GameConfig.GROUND_Y
 	var camera := $ViewportContainer/SubViewport/World/Camera2D as Camera2D
 	sprite.play(&"forcejeo")
 	var exit_x := camera.position.x + 200.0 + CFG.CAMPEONA_EXIT_MARGIN
@@ -185,6 +186,7 @@ func _take_campeona() -> void:
 		sprite.flip_h = true
 		feel.shake(CFG.CAMPEONA_DRAG_SHAKE, CFG.CAMPEONA_DRAG_TIME))
 	tween.tween_property(sprite, "position:x", exit_x, CFG.CAMPEONA_DRAG_TIME).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tween.parallel().tween_property(sprite, "modulate:a", 0.0, CFG.CAMPEONA_EXIT_FADE_TIME).set_delay(maxf(0.0, CFG.CAMPEONA_DRAG_TIME - CFG.CAMPEONA_EXIT_FADE_TIME))
 	tween.tween_callback(func():
 		batch.release(sprite)
 		sprite.queue_free()

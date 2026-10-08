@@ -260,6 +260,7 @@ const CAMPEONA_STRUGGLE_TIME := 0.9    # s forcejeando en su lugar (animación f
 const CAMPEONA_DRAG_TIME := 1.3        # s siendo arrastrada fuera de pantalla a la derecha
 const CAMPEONA_DRAG_SHAKE := 2.5       # sacudida de cámara mientras la arrastran
 const CAMPEONA_EXIT_MARGIN := 60.0     # px más allá del borde derecho de cámara donde desaparece
+const CAMPEONA_EXIT_FADE_TIME := 0.3
 
 # --- Fase 2 del jefe: transición evidente + patrón distinto ---
 const BOSS_PHASE2_ROAR_ANIM := &"golpe_v2"   # no hay animación de grito: se usa el golpe como rugido
