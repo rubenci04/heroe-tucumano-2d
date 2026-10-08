@@ -251,7 +251,7 @@ func run_tests() -> void:
 	var demo_ending = load("res://data/dialogues/demo_ending.tres")
 	check(demo_ending != null and demo_ending.is_valid() and demo_ending.sequence_id==&"demo_ending_acheral","Demo ending is a valid short data-driven dialogue")
 	var ending_palermitano_lines: Array = demo_ending.entries.filter(func(entry: Dictionary): return String(entry.speaker).begins_with("Empresario palermitano"))
-	check(demo_ending.entries.size()==4 and demo_ending.entries.any(func(entry: Dictionary): return "Ingenio Arcor" in String(entry.text) and "Campeona" in String(entry.text)) and ending_palermitano_lines.all(func(entry: Dictionary): return "ura" not in String(entry.text).to_lower()),"Ending continues the Campeona rescue at Ingenio Arcor while preserving the Palermitano voice")
+	check(demo_ending.entries.size()==4 and demo_ending.entries.any(func(entry: Dictionary): return "Ingenio La Providencia" in String(entry.text) and "Campeona" in String(entry.text)) and ending_palermitano_lines.all(func(entry: Dictionary): return "ura" not in String(entry.text).to_lower()),"Ending continues the Campeona rescue at Ingenio La Providencia while preserving the Palermitano voice")
 	var manifest: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://assets/asset_manifest.json"))
 	check(manifest.images.size() == 71,"Legacy gallery references only the 71 source files still present after the asset renewal")
 	for item: Dictionary in manifest.images:

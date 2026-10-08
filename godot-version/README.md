@@ -18,7 +18,7 @@ Abrí `project.godot` con **Godot 4.7.2** y presioná **F5**. El juego no necesi
 
 ## Alcance
 
-Primer nivel de Famaillá a Río Seco, con escape del jefe al Ingenio Arcor. Nivel 2 dentro de la fábrica pendiente. Se conservan los 100 PNG, 11 efectos, 30 definiciones de actores y 100 poses. Hit/Death son provisionales sobre cuadros existentes. Las empanadas alimentan el contador de monedas.
+Primer nivel de Famaillá a Río Seco, con escape del jefe al Ingenio La Providencia. Nivel 2 dentro de la fábrica pendiente. Se conservan los 100 PNG, 11 efectos, 30 definiciones de actores y 100 poses. Hit/Death son provisionales sobre cuadros existentes. Las empanadas alimentan el contador de monedas.
 
 Ver [migration_report.md](migration_report.md) para cada archivo creado, diferencias con Phaser y resultados de pruebas.
 

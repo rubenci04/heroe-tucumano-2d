@@ -19,7 +19,7 @@ El archivo real **`assets/fusion_fondos.png`** mide 8000×697. Se usa con propor
 
 Orden confirmado: **Famaillá → Acheral → Monteros → León Rougés → Villa Quinteros → Río Seco**. Los umbrales 0, 1400, 2800, 4200, 5400 y 6600 son provisionales de diseño; no representan kilómetros ni garantizan coincidencia exacta con límites pintados en el panorama. Se editan en `scenes/levels/route_38_data.json`.
 
-La batalla final se activa después de x=7300, en Río Seco. Al agotar sus 90 puntos, el jefe concede una recompensa única, escapa corriendo y se anuncia el **Ingenio Arcor**. El interior de la fábrica queda para el nivel 2; no se construyó ni se anuncia como jugable.
+La batalla final se activa después de x=7300, en Río Seco. Al agotar sus 90 puntos, el jefe concede una recompensa única, escapa corriendo y se anuncia el **Ingenio La Providencia**. El interior de la fábrica queda para el nivel 2; no se construyó ni se anuncia como jugable.
 
 ## Animaciones y material disponible
 
@@ -86,7 +86,7 @@ Esta entrega es un prototipo Godot jugable, **no una declaración de paridad com
 6. Jefe: recompensa terminal de 1500, sin los 60 puntos por unidad de daño del HTML. Las monedas reutilizan empanadas.
 7. Umbrales de localidades, colisiones y balance necesitan playtesting. La nueva física corrige carriles, anclajes y límites; no reproduce los bugs originales.
 8. Música, sonidos nuevos, moneda dibujada, tilesets nuevos, shaders personalizados, controles táctiles y gamepad: no agregados.
-9. Interior del Ingenio Arcor (nivel 2), guardado persistente y exportaciones finales: pendientes.
+9. Interior del Ingenio La Providencia (nivel 2), guardado persistente y exportaciones finales: pendientes.
 
 ## Regeneración y conservación
 
@@ -351,7 +351,7 @@ Inventario de entregables y evidencias presentes al generar el informe. Los PNG,
 | `scenes/actors/player.tscn` | CharacterBody2D del hincha con AnimatedSprite2D. Genera su CollisionShape2D al instanciarse. |
 | `scenes/actors/projectile.tscn` | Area2D y AnimatedSprite2D para cinco tipos de proyectil. |
 | `scenes/levels/route_38.tscn` | Nivel con parallax, escenario, suelos, objetos, enemigos, proyectiles y jugador. |
-| `scenes/levels/route_38_data.json` | Localidades en el orden pedido, umbrales editables, seis oleadas, jefe y destino Ingenio Arcor. |
+| `scenes/levels/route_38_data.json` | Localidades en el orden pedido, umbrales editables, seis oleadas, jefe y destino Ingenio La Providencia. |
 | `scenes/main.tscn` | Escena raíz con nivel, Camera2D suave y CanvasLayer de interfaz. |
 | `scripts/actors/enemy.gd` | IA inicial por arquetipo, ataques, contacto, daño, recompensa única y escape del jefe. |
 | `scripts/actors/enemy.gd.uid` | Identificador estable Godot del script scripts/actors/enemy.gd. |

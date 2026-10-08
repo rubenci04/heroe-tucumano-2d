@@ -215,7 +215,7 @@ const HUD_PANEL_BORDER := Color(1.0, 0.72, 0.2)
 const HUD_GAME_OVER_TITLE := "¡CIRUJA CAYÓ!"
 const HUD_GAME_OVER_TEXT := "La Campeona sigue cautiva en manos del Palermitano.\nNo la dejes sola: ¡reintentá!"
 const HUD_VICTORY_TITLE := "¡EL PALERMITANO HUYE AL INGENIO!"
-const HUD_VICTORY_TEXT := "Ciruja sigue tras la Campeona que se llevaron de Famaillá.\nPróximo destino: Ingenio Arcor."
+const HUD_VICTORY_TEXT := "Ciruja sigue tras la Campeona que se llevaron de Famaillá.\nPróximo destino: Ingenio La Providencia."
 const HUD_RESTART_HINT := "R: volver a jugar"
 const HUD_RESULT_DELAY := 1.4          # s entre el último golpe/caída y la pantalla final
 const HUD_HEAD_CROP := 0.46            # alto del recorte de cabeza / alto de la silueta
@@ -308,7 +308,7 @@ const IDLE_WEIGHT_SHIFT := 0.8         # px de desplazamiento lateral del cuerpo
 const IDLE_WEIGHT_TILT_DEG := 0.8      # inclinación leve acompañando el cambio de peso
 
 # --- Fin del nivel 1 (referencia medida; no está conectado a la ruta, que ya cumple el límite) ---
-# fondo_completo.png (8000 px): el cartel/poste "Ingenio Providencia" empieza en x≈7410 y el edificio en ≈7490;
+# fondo_completo.png (8000 px): el cartel/poste "Ingenio La Providencia" empieza en x≈7410 y el edificio en ≈7490;
 # el cartel "RÍO SECO" está en x≈6490. Con el parallax 0.66 de la ruta la cámara solo ve el ingenio si su
 # centro supera ≈ INGENIO_VISIBLE_CAMERA_X; el tope real (WORLD_WIDTH-400 = 7600 y arena del jefe 7000-7950) queda muy debajo.
 const INGENIO_START_BG_X := 7410.0

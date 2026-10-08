@@ -59,7 +59,7 @@ project.godot
 
 **Segundo protagonista.** Atlético/Deca existe como definición y opción visible de contrato, pero `data/characters/atletico.tres` tiene `selectable = false`, sin `SpriteFrames`, retrato ni voz. No habilitarlo ni inventarle/reasignarle arte legacy sin aprobación artística e integración dedicada.
 
-**Enemigos.** Hipster (rango/botella, 3 HP), Agente de seguridad (rango/bala, 5 HP) y Grandote legacy (melee, 10 HP). El empresario palermitano legacy también existe como boss de Ruta 38 (90 HP, café, escape a Ingenio Arcor), pero el cierre técnico actual del slice ocurre tras el miniboss.
+**Enemigos.** Hipster (rango/botella, 3 HP), Agente de seguridad (rango/bala, 5 HP) y Grandote legacy (melee, 10 HP). El empresario palermitano legacy también existe como boss de Ruta 38 (90 HP, café, escape a Ingenio La Providencia), pero el cierre técnico actual del slice ocurre tras el miniboss.
 
 **Miniboss.** El Grandote tiene escena y script propios, barra HUD y tres patrones no solapables: charge, punch y ground slam. Su derrota concede 1200 puntos, completa su encuentro una vez, limpia la arena y dispara el cierre.
 
@@ -132,7 +132,7 @@ godot-version/
 - Música original y evaluación auditiva de SFX; controles/gamepad con dispositivo real.
 - Playtest de balance, duración, hit feel, Tucumanazo y hardware mínimo.
 - Animaciones finales Hit/Death, Cascotazo V2 y mapeo de fall/land/victory/Tucumanazo.
-- Campaña posterior, Ingenio Arcor, guardado, multijugador, builds/exportación y los sistemas avanzados de tráfico/IA quedan fuera.
+- Campaña posterior, Ingenio La Providencia, guardado, multijugador, builds/exportación y los sistemas avanzados de tráfico/IA quedan fuera.
 - Algunos documentos de migración describen el antiguo boss final de Río Seco; el estado de demo vigente es el cierre tras El Grandote. Antes de reactivar el boss legacy, reconciliar diseño, `route_38.gd`, encuentros y aceptación.
 
 ## NEXT AGENT NOTES

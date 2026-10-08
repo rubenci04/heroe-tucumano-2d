@@ -602,7 +602,7 @@
 		"x": 7600,
 		"trigger_x": 7425,
 		"location": "Río Seco",
-		"escape_destination": "Ingenio Arcor",
+		"escape_destination": "Ingenio La Providencia",
 		"next_level": "Interior de la fábrica (pendiente)"
 	}
 }

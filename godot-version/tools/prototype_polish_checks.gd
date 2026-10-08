@@ -100,7 +100,7 @@ func _run() -> void:
 		var wave: Dictionary = data.encounters.filter(func(item): return item.id == id)[0]
 		check(wave.enemies.size() == 6 and is_equal_approx(wave.enemies[-1].delay, 2.25), "Early presence with stagger intact: " + id)
 	var ending = load("res://data/dialogues/demo_ending.tres")
-	check(ending.entries.any(func(entry): return "Ingenio Arcor" in entry.text and "Campeona" in entry.text), "Ending keeps rescue unfinished")
+	check(ending.entries.any(func(entry): return "Ingenio La Providencia" in entry.text and "Campeona" in entry.text), "Ending keeps rescue unfinished")
 	var environment = load("res://scenes/levels/route_38_environment.tscn").instantiate()
 	check(not environment.get_node("DistantBackground/MountainsB").flip_h, "Sky not mirrored")
 	environment.free()

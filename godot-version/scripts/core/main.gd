@@ -153,7 +153,7 @@ func _finish_demo_closing() -> void:
 	_sync_session_from_player()
 	hud.show_result(
 		"¡EL PALERMITANO HUYE AL INGENIO!",
-		"Ciruja sigue tras la Campeona que se llevaron de Famaillá.\nPRÓXIMO DESTINO: INGENIO ARCOR · CONTINUARÁ…\nPuntaje: %d · Monedas: %d\nR: reiniciar · Esc/B: salir" % [player.score,player.coins]
+		"Ciruja sigue tras la Campeona que se llevaron de Famaillá.\nPRÓXIMO DESTINO: INGENIO LA PROVIDENCIA · CONTINUARÁ…\nPuntaje: %d · Monedas: %d\nR: reiniciar · Esc/B: salir" % [player.score,player.coins]
 	)
 	change_state(GAME_SESSION.DemoState.RESULT)
 	demo_closing_finished.emit()

@@ -32,16 +32,9 @@ Regla de arte: cartoon ilustrado, no pixel art. No se tocan PNG.
 - Se mantienen los textos del juego completo (`main.gd` ~l.150, ~l.388, ~l.439). No se usan los de `feel_config.gd` (`HUD_GAME_OVER_TEXT`, `HUD_VICTORY_TEXT`), que son del prototipo.
 - Los textos finales del juego completo ya muestran `Puntaje` y `Monedas`, así que el fix del punto 10 corrige también la pantalla final del prototipo.
 
-## Nombre "Ingenio Arcor" (decisión pendiente del usuario)
+## Nombre del ingenio
 
-El nombre aparece en estos lugares y hay que decidir cuál queda:
-
-- `scripts/prototype/feel_config.gd` → `HUD_VICTORY_TEXT`: "Próximo destino: Ingenio Arcor."
-- `scripts/core/main.gd` ~l.151: "PRÓXIMO DESTINO: INGENIO ARCOR · CONTINUARÁ…"
-- `scripts/core/main.gd` ~l.439: "EL PALERMITANO HUYE AL INGENIO" + "Nivel 2: interior de la fábrica · Próximamente"
-- `scripts/prototype/feel_config.gd` (comentarios del fin del nivel 1): "Ingenio Providencia" (nombre del cartel de `fondo_completo.png`)
-
-Hay dos nombres distintos para el mismo ingenio ("Arcor" y "Providencia"). Esto queda sin cambiar hasta que decidas.
+Decidido: "Ingenio La Providencia" en todo el proyecto (HUD_VICTORY_TEXT, main.gd, diálogos, datos de ruta, docs y comentarios). Ya no queda "Arcor".
 
 ## Ajustes de escala a probar (recomendación previa)
 
@@ -98,7 +91,7 @@ Hay dos nombres distintos para el mismo ingenio ("Arcor" y "Providencia"). Esto 
 
 ## Pendiente de decisión del usuario
 
-- Nombre del ingenio: "Ingenio Arcor" (`feel_config.gd` HUD_VICTORY_TEXT; `main.gd` ~l.151 y ~l.439) frente a "Ingenio Providencia" (comentario del fin del nivel 1 en `feel_config.gd`).
+- (resuelto) Nombre del ingenio: "Ingenio La Providencia".
 - Si el café en arco y con giro es el comportamiento deseado en la ruta (punto 3).
 - Si la escala del decorado (×1.223) y la de personajes (tabla) quedan así, o se prueba el zoom de cámara ×2 para igualar el encuadre del prototipo.
 - Carteles de localidad: no se encontraron como sprites escalables en la ruta; quedan sin cambios.
