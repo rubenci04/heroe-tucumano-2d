@@ -1,9 +1,9 @@
 [gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scripts/cinematics/intro_famailla.gd" id="1"]
-[ext_resource type="SpriteFrames" path="res://assets/animations/player.tres" id="2"]
-[ext_resource type="Texture2D" path="res://assets/campeona empanadas.png" id="3"]
-[ext_resource type="SpriteFrames" path="res://assets/animations/hipster.tres" id="4"]
+[ext_resource type="SpriteFrames" path="res://assets/animations/generated/ciruja.tres" id="2"]
+[ext_resource type="Texture2D" path="res://characters/lote2_cuadros/campeona/idle/f_00.png" id="3"]
+[ext_resource type="SpriteFrames" path="res://assets/animations/generated/palermitano.tres" id="4"]
 [ext_resource type="Texture2D" path="res://assets/secuestro_campeona.png" id="5"]
 [ext_resource type="Resource" path="res://data/dialogues/intro_famailla_san_martin.tres" id="6"]
 
@@ -90,19 +90,22 @@ position = Vector2(400, 225)
 position = Vector2(150, 328)
 scale = Vector2(0.42, 0.42)
 sprite_frames = ExtResource("2")
-animation = &"Idle"
+animation = &"ajustar_gorra"
+offset = Vector2(0, -112)
 
 [node name="Champion" type="Sprite2D" parent="Actors"]
 position = Vector2(430, 330)
-scale = Vector2(0.58, 0.58)
+scale = Vector2(0.368, 0.368)
+offset = Vector2(0, -112)
 texture = ExtResource("3")
 
 [node name="Palermitano" type="AnimatedSprite2D" parent="Actors"]
 position = Vector2(650, 330)
-scale = Vector2(0.5, 0.5)
+scale = Vector2(0.53, 0.53)
 sprite_frames = ExtResource("4")
-animation = &"hipster_run"
-autoplay = "hipster_run"
+animation = &"correr"
+autoplay = "correr"
+offset = Vector2(0, -112)
 
 [node name="Kidnapping" type="Sprite2D" parent="Actors"]
 visible = false

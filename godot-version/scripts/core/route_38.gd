@@ -24,6 +24,7 @@ const GENERIC_PLATFORM = preload("res://scenes/actors/generic_platform.tscn")
 const ENCOUNTER_DIRECTOR = preload("res://scripts/level/encounter_director.gd")
 const TRAFFIC_DIRECTOR = preload("res://scripts/level/traffic_director.gd")
 const CHECKPOINT_SCENE = preload("res://scenes/level/checkpoint.tscn")
+const BATCH_VISUALS = preload("res://scripts/prototype/batch_visuals.gd")
 var checkpoint_records: Array = []
 var last_safe_position := Vector2(80.0,370.0)
 const SAFE_POSITION_MAX_AGE_DISTANCE := 96.0
@@ -57,13 +58,20 @@ const STATIONARY_VEHICLES: Array[Dictionary] = [
 	{"asset":"camioneta3","x":6200.0,"scale":0.550},
 	{"asset":"camioneta4","x":6900.0,"scale":0.609}
 ]
+# Autos y paradas estacionadas: 0.95 / 0.777 = escala del auto1 del prototipo sobre el de la ruta.
+# Ciruja mide lo mismo en ambas versiones (escala 0.42), así que el decorado sube en la misma proporción.
+const DECOR_VEHICLE_SCALE := 1.223
 var _last_location: String = ""
 var _drone_wave_spawn_index := 0
 @onready var player: CharacterBody2D = $Player
 @onready var encounter_director: ENCOUNTER_DIRECTOR = $EncounterDirector
 @onready var traffic_director: TRAFFIC_DIRECTOR = $TrafficDirector
+var _batch: BATCH_VISUALS
 
 func _ready() -> void:
+	_batch = BATCH_VISUALS.new()
+	add_child(_batch)
+	_batch.attach(player,"ciruja",BATCH_VISUALS.CIRUJA_ALIASES)
 	data = JSON.parse_string(FileAccess.get_file_as_string("res://scenes/levels/route_38_data.json"))
 	if not encounter_director.configure(data.encounters,spawn_encounter_actor):
 		push_error("Route38 no pudo registrar todos los encuentros configurados")
@@ -81,8 +89,8 @@ func _ready() -> void:
 	CollisionFactory.add_floor(ground,Vector2(8400,12))
 	var stationary_by_x: Dictionary = {}
 	for item: Dictionary in STATIONARY_VEHICLES:
-		stationary_by_x[int(item.x)] = _add_stationary_vehicle(item.asset,item.x,item.scale)
-	var bus_stop := add_generic_platform("RoadsideBusStop",load("res://assets/parada_colectivo2.png"),2700.0,0,0.50,110.0,-78.0,true)
+		stationary_by_x[int(item.x)] = _add_stationary_vehicle(item.asset,item.x,item.scale*DECOR_VEHICLE_SCALE)
+	var bus_stop := add_generic_platform("RoadsideBusStop",load("res://assets/parada_colectivo2.png"),2700.0,0,0.50*DECOR_VEHICLE_SCALE,110.0,-78.0,true)
 	bus_stop.position.y = 350.0
 	bus_stop.z_index = 9
 	add_pickup("orange_tree","arbol_naranjas",520,0,0.85,345)
@@ -195,11 +203,13 @@ func spawn_enemy(archetype: String,x: float,lane: int) -> CharacterBody2D:
 	enemy.lane_index = 0
 	enemy.target = player
 	enemy.position = Vector2(x,GameConfig.GROUND_Y)
-	enemy.shot_requested.connect(shot_requested.emit)
+	enemy.shot_requested.connect(func(o: Vector2,l: int,d: int,k: String,t: String) -> void:
+		shot_requested.emit(BATCH_VISUALS.muzzle_origin(enemy,o),l,d,k,t))
 	enemy.ground_wave_requested.connect(_spawn_grandote_ground_wave)
 	enemy.defeated.connect(_on_enemy_defeated)
 	enemy.boss_escaped.connect(boss_escaped.emit)
 	$Enemies.add_child(enemy)
+	_batch.attach(enemy,archetype,BATCH_VISUALS.enemy_aliases(enemy))
 	return enemy
 
 
@@ -247,6 +257,7 @@ func spawn_palermitano(x: float,lane: int) -> CharacterBody2D:
 	boss.defeated.connect(_on_palermitano_defeated,CONNECT_ONE_SHOT)
 	boss.tree_exiting.connect(_on_palermitano_exiting,CONNECT_ONE_SHOT)
 	$Enemies.add_child(boss)
+	_batch.attach(boss,"palermitano",BATCH_VISUALS.boss_aliases())
 	traffic_director.set_enabled(false,true)
 	boss_spawned.emit(boss.health_component,"EL PALERMITANO")
 	boss_arena_changed.emit(true,BOSS_ARENA_BOUNDS.x,BOSS_ARENA_BOUNDS.y)
@@ -309,6 +320,7 @@ func _spawn_miniboss_grandote(x: float,lane: int) -> CharacterBody2D:
 	miniboss.screen_shake_requested.connect(screen_shake_requested.emit)
 	miniboss.tree_exiting.connect(_on_miniboss_exiting,CONNECT_ONE_SHOT)
 	$Enemies.add_child(miniboss)
+	_batch.attach(miniboss,"grandote",BATCH_VISUALS.GRANDOTE_ALIASES)
 	traffic_director.set_enabled(false,true)
 	miniboss_active = true
 	_miniboss_feedback_active = true

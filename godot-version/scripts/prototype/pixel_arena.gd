@@ -8,7 +8,7 @@ const VEHICLE_SCENE = preload("res://scenes/actors/vehicle.tscn")
 const FEEL_DIRECTOR = preload("res://scripts/prototype/feel_director.gd")
 const CIRUJA_SKIN = preload("res://scripts/prototype/ciruja_skin.gd")
 const PROCEDURAL_ANIM = preload("res://scripts/prototype/procedural_anim.gd")
-const CHARACTER_SCALE = preload("res://scripts/prototype/character_scale.gd")
+const BATCH_VISUALS = preload("res://scripts/prototype/batch_visuals.gd")
 const BOSS_SCENE = preload("res://scenes/actors/palermitano_boss.tscn")
 const GROUND_WAVE_SCENE = preload("res://scenes/actors/grandote_ground_wave.tscn")
 const CONTACT_SHADOW = preload("res://scripts/prototype/contact_shadow.gd")
@@ -22,8 +22,7 @@ const STAIN_MANAGER = preload("res://scripts/prototype/stain_manager.gd")
 const ARENA_LEFT := 200.0
 const ARENA_RIGHT := 600.0
 const PLAYER_START := Vector2(260.0,370.0)
-const BATCH_FRAMES := "res://assets/animations/generated/"
-var batch_visuals: Array[AnimatedSprite2D] = []
+var batch: Node
 
 @onready var world: Node2D = $ViewportContainer/SubViewport/World
 @onready var player: CharacterBody2D = $ViewportContainer/SubViewport/World/Player
@@ -44,6 +43,8 @@ var campeona_taken := false
 
 func _ready() -> void:
 	INPUT_SETUP.configure()
+	batch = BATCH_VISUALS.new()
+	add_child(batch)
 	backdrop = PROTOTYPE_BACKDROP.new()
 	world.add_child(backdrop)
 	backdrop.setup(player,ARENA_LEFT,($ViewportContainer/SubViewport/World/Camera2D as Camera2D).position.x)
@@ -51,9 +52,7 @@ func _ready() -> void:
 	add_child(feel)
 	feel.setup(world,$ViewportContainer,player)
 	feel.arena_bounds = Vector2(ARENA_LEFT + 20.0,ARENA_RIGHT - 15.0)
-	_apply_batch_frames(player, "ciruja", {
-		&"Run": &"correr", &"Punch": &"pinazo", &"Headbutt": &"embestida", &"Death": &"muerte"
-	})
+	batch.attach(player, "ciruja", BATCH_VISUALS.CIRUJA_ALIASES)
 	# Keep the previous skin fallback only when no new batch resource is present.
 	if not player.visual.has_meta("batch_ground_y"):
 		CIRUJA_SKIN.apply(player)
@@ -112,23 +111,7 @@ func _spawn_enemy(archetype: String,x: float) -> CharacterBody2D:
 	enemy.shot_requested.connect(_spawn_projectile.bind(enemy))
 	enemy.ground_wave_requested.connect(_spawn_ground_wave.bind(enemy))
 	enemies.add_child(enemy)
-	CHARACTER_SCALE.remember(enemy)
-	if archetype == "agente":
-		_apply_batch_frames(enemy, "agente", {
-			enemy.definition.run_animation: &"correr", enemy.definition.attack_animation: &"disparar",
-			&"Punch": &"punio", &"Death": &"muerte"
-		})
-	elif archetype == "hipster":
-		_apply_batch_frames(enemy, "hipster", {
-			enemy.definition.run_animation: &"avanzar_idle", enemy.definition.attack_animation: &"tirar_cafe",
-			&"Death": &"caida"
-		})
-	elif archetype == "grandote":
-		_apply_batch_frames(enemy, "grandote", {
-			enemy.definition.run_animation: &"correr", enemy.definition.attack_animation: &"punio",
-			&"grandote_ground_slam": &"golpe_piso", &"Death": &"muerte"
-		})
-	CHARACTER_SCALE.apply(enemy, archetype)
+	batch.attach(enemy, archetype, BATCH_VISUALS.enemy_aliases(enemy))
 	_add_contact_shadow(enemy, archetype)
 	feel.watch_enemy(enemy)
 	anim.watch_enemy(enemy)
@@ -147,12 +130,7 @@ func _spawn_boss() -> CharacterBody2D:
 			if boss.get_live_summon_count() < boss.max_live_summons:
 				boss.register_summon(_spawn_enemy("agente", ARENA_RIGHT - 45.0)))
 	enemies.add_child(boss)
-	CHARACTER_SCALE.remember(boss)
-	_apply_batch_frames(boss, "palermitano", {
-		&"boss_run": &"correr", &"boss_idle": &"idle", &"boss_punch": &"golpe_v2" if CFG.BOSS_CHAIN_ANIMATED else &"idle",
-		&"boss_joke": &"idle_v2", &"boss_order": &"idle_v2", &"Death": &"derrota"
-	})
-	CHARACTER_SCALE.apply(boss, "palermitano")
+	batch.attach(boss, "palermitano", BATCH_VISUALS.boss_aliases())
 	_add_contact_shadow(boss, "palermitano")
 	feel.watch_enemy(boss)
 	anim.watch_enemy(boss)
@@ -160,9 +138,6 @@ func _spawn_boss() -> CharacterBody2D:
 		boss.pattern_started.connect(func(pattern: int):
 			if pattern == boss.Pattern.CHAIN:
 				boss.visual.play(&"golpe" if boss.chain_activations % 2 == 0 else &"golpe_v2"))
-	boss.health_component.damaged.connect(func(_amount, _health, _source):
-		if boss.boss_state in [boss.BossState.DECIDE, boss.BossState.RECOVERY]:
-			boss.visual.play(&"golpes_recibidos"))
 	return boss
 
 
@@ -177,74 +152,13 @@ func _spawn_ground_wave(origin: Vector2, lane: int, direction: int, emitter: Nod
 	wave.body_entered.connect(func(body: Node): wave.call_deferred("try_hit_body", body))
 
 
-func _apply_batch_frames(actor: Node, character: String, aliases: Dictionary) -> void:
-	var path := BATCH_FRAMES + character + ".tres"
-	if not ResourceLoader.exists(path):
-		push_warning("Build character frames first: " + path)
-		return
-	var incoming := load(path) as SpriteFrames
-	var sprite: AnimatedSprite2D = actor.visual
-	sprite.set_meta("batch_character", character)
-	sprite.set_meta("legacy_offsets", (actor._visual_frame_offsets if character == "ciruja" else actor._visual_offset_profiles).duplicate(true))
-	var frames: SpriteFrames = sprite.sprite_frames.duplicate(true)
-	# Keep every folder available under its source name; aliases bridge existing states.
-	for name in incoming.get_animation_names():
-		_copy_animation(incoming, name, frames, name)
-	for name in aliases:
-		if incoming.has_animation(aliases[name]):
-			_copy_animation(incoming, aliases[name], frames, name)
-	# Ciruja: idle = f_00 de ajustar_gorra (parado, neutro). Agente: primera pose de Run.
-	if incoming.has_animation(&"correr"):
-		var idle_name: StringName = actor.character_definition.idle_animation if character == "ciruja" else &"Idle"
-		if not frames.has_animation(idle_name):
-			frames.add_animation(idle_name)
-		frames.clear(idle_name)
-		var idle_texture := incoming.get_frame_texture(&"correr", 0)
-		if character == "ciruja" and incoming.has_animation(CFG.IDLE_SOURCE_ANIMATION):
-			idle_texture = incoming.get_frame_texture(CFG.IDLE_SOURCE_ANIMATION, CFG.IDLE_SOURCE_FRAME)
-		frames.add_frame(idle_name, idle_texture)
-		frames.set_animation_speed(idle_name, 1.0)
-		frames.set_animation_loop(idle_name, true)
-	var current := sprite.animation
-	sprite.sprite_frames = frames
-	sprite.play(current)
-	sprite.set_meta("batch_ground_y", float(incoming.get_meta("ground_y")))
-	sprite.set_meta("batch_visual_scale", sprite.scale.y)
-	sprite.set_meta("batch_reference_height", CollisionFactory.opaque_bounds(incoming.get_frame_texture(aliases.values()[0], 0)).size.y)
-	# Retain the original actor colliders and scale; this is a prototype visual swap.
-	if character == "ciruja":
-		actor._visual_frame_offsets.clear()
-	else:
-		actor._visual_offset_profiles.clear()
-	batch_visuals.append(sprite)
-	sprite.animation_changed.connect(_anchor_batch_visual.bind(sprite))
-	sprite.frame_changed.connect(_anchor_batch_visual.bind(sprite))
-	_anchor_batch_visual(sprite)
-
-
-func _copy_animation(source: SpriteFrames, source_name: StringName, target: SpriteFrames, target_name: StringName) -> void:
-	if not target.has_animation(target_name):
-		target.add_animation(target_name)
-	target.clear(target_name)
-	target.set_animation_speed(target_name, source.get_animation_speed(source_name))
-	target.set_animation_loop(target_name, source.get_animation_loop(source_name))
-	for index in source.get_frame_count(source_name):
-		target.add_frame(target_name, source.get_frame_texture(source_name, index), source.get_frame_duration(source_name, index))
-
-
 func _spawn_campeona() -> void:
 	var sprite := AnimatedSprite2D.new()
 	sprite.name = "CampeonaBatch"
-	sprite.sprite_frames = load(BATCH_FRAMES + "campeona.tres") as SpriteFrames
 	sprite.position = Vector2(ARENA_LEFT + 25.0, GameConfig.GROUND_Y)
 	world.add_child(sprite)
-	sprite.set_meta("batch_ground_y", float(sprite.sprite_frames.get_meta("ground_y")))
-	sprite.set_meta("batch_static_actor", true)
-	sprite.play(&"idle")
-	CHARACTER_SCALE.apply_npc(sprite, "campeona")
+	batch.attach_npc(sprite, "campeona", &"idle")
 	_add_contact_shadow(sprite, "campeona")
-	batch_visuals.append(sprite)
-	_anchor_batch_visual(sprite)
 	campeona = sprite
 
 
@@ -264,7 +178,7 @@ func _take_campeona() -> void:
 		feel.shake(CFG.CAMPEONA_DRAG_SHAKE, CFG.CAMPEONA_DRAG_TIME))
 	tween.tween_property(sprite, "position:x", exit_x, CFG.CAMPEONA_DRAG_TIME).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	tween.tween_callback(func():
-		batch_visuals.erase(sprite)
+		batch.release(sprite)
 		sprite.queue_free()
 		campeona = null)
 
@@ -282,27 +196,10 @@ func _add_contact_shadow(actor: Node2D, character: String) -> void:
 func _process(_delta: float) -> void:
 	if player.state == player.State.DEATH:
 		player.visual.rotation = 0.0 # New death poses already contain the fall.
+	# Pose, volteo y anclaje de los cuadros nuevos: BATCH_VISUALS (compartido con la ruta 38).
 	for enemy in enemies.get_children():
-		if enemy.get("boss_state") != null and enemy.active:
-			if enemy.boss_state == enemy.BossState.DECIDE:
-				var idle: StringName = &"idle_v2" if enemy.last_pattern == enemy.Pattern.SUMMON_AGENTS else &"idle"
-				if enemy.visual.animation != &"golpes_recibidos" or not enemy.visual.is_playing():
-					enemy.visual.play(idle)
 		if enemy.get("archetype") == "hipster":
-			enemy.visual.flip_h = enemy.facing < 0 # New scooter artwork faces right.
 			_update_hipster_attack(enemy)
-		if enemy.get("archetype") == "grandote" and enemy.active_attack_kind == enemy.AttackKind.GROUND_SLAM:
-			# Existing slam gameplay has 13 legacy poses; map its stages onto seven new poses.
-			if enemy.ai_state == enemy.AIState.TELEGRAPH:
-				var progress: float = 1.0 - enemy._state_remaining / enemy.GRANDOTE_SLAM_DEFINITION.startup_duration
-				enemy.visual.frame = clampi(int(progress * 4.0), 0, 3)
-			elif enemy.ai_state == enemy.AIState.ATTACK:
-				enemy.visual.frame = 4
-			elif enemy.ai_state == enemy.AIState.RECOVERY:
-				enemy.visual.frame = 5 if enemy._state_remaining > enemy.GRANDOTE_SLAM_DEFINITION.recovery_duration * 0.5 else 6
-	for sprite in batch_visuals:
-		if is_instance_valid(sprite):
-			_anchor_batch_visual(sprite)
 
 
 func _update_hipster_attack(enemy: Node) -> void:
@@ -317,28 +214,6 @@ func _update_hipster_attack(enemy: Node) -> void:
 	enemy.set_meta("batch_preparing", preparing)
 
 
-func _anchor_batch_visual(sprite: AnimatedSprite2D) -> void:
-	var texture := sprite.sprite_frames.get_frame_texture(sprite.animation, sprite.frame)
-	if texture == null:
-		return # animation_changed can fire before Godot resets the previous frame index.
-	var is_batch := texture.resource_path.begins_with("res://characters/") or texture.resource_path.begins_with("res://assets/characters/")
-	var feet_y := float(sprite.get_meta("batch_ground_y")) if is_batch else CollisionFactory.opaque_bounds(texture).end.y
-	var base_scale: float = sprite.get_meta("batch_visual_scale", sprite.scale.y)
-	if not is_batch:
-		var first := sprite.sprite_frames.get_frame_texture(sprite.animation, 0)
-		base_scale *= float(sprite.get_meta("batch_reference_height", 190.0)) / CollisionFactory.opaque_bounds(first).size.y
-	sprite.scale = Vector2.ONE * base_scale * Vector2(sprite.get_meta("pose_multiplier", Vector2.ONE))
-	# Centered sprite: canvas y=240 maps to actor origin, including rotation/stretch.
-	sprite.offset = Vector2(0.0, texture.get_height() * 0.5 - feet_y)
-	if not is_batch:
-		var offsets: Array = sprite.get_meta("legacy_offsets", {}).get(sprite.animation, [])
-		if sprite.frame < offsets.size():
-			var saved = offsets[sprite.frame]
-			sprite.offset.x = saved.x if saved is Vector2 else float(saved[0])
-	if not sprite.has_meta("batch_static_actor"):
-		sprite.position.y = 0.0
-
-
 func _spawn_car() -> void:
 	car = VEHICLE_SCENE.instantiate()
 	car.configure(&"auto1",0.95,0,-1,120.0)
@@ -348,16 +223,7 @@ func _spawn_car() -> void:
 
 func _spawn_projectile(origin: Vector2,_lane: int,direction: Variant,kind: String,team: String, emitter: Node2D = null) -> void:
 	if is_instance_valid(emitter):
-		origin = emitter.global_position + (origin - emitter.global_position) * emitter.scale
-		var sockets: Dictionary = preload("res://scripts/prototype/feel_config.gd").BATCH_MUZZLE_SOURCE
-		var character: String = emitter.get_meta("prototype_character", "")
-		if sockets.has(character):
-			# Source pixels follow the visual transform, including its procedural recoil.
-			var socket: Vector2 = sockets[character] - Vector2(160, 240)
-			var mirrored: bool = emitter.facing < 0 if character == "hipster" else emitter.facing > 0
-			if mirrored:
-				socket.x = -socket.x
-			origin = emitter.visual.to_global(socket)
+		origin = BATCH_VISUALS.muzzle_origin(emitter, origin)
 	var projectile = PROJECTILE_SCENE.instantiate()
 	projectile.position = origin
 	projectile.lane_index = 0

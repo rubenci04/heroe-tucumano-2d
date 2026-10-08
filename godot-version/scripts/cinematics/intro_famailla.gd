@@ -51,7 +51,7 @@ func start(player: CharacterBody2D, camera: Camera2D, dialogue: Control, charact
 	_player_visual_was_visible = _player.visual.visible
 	_player.visual.hide()
 	protagonist_proxy.sprite_frames = _player.visual.sprite_frames
-	protagonist_proxy.animation = _player.character_definition.idle_animation
+	protagonist_proxy.animation = &"ajustar_gorra" # cuadros nuevos de Ciruja: idle = f_00 de ajustar_gorra
 	protagonist_proxy.play()
 	active = true
 	_finishing = false
