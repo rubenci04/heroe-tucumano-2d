@@ -8,7 +8,12 @@ const CHARACTER_SCALE = preload("res://scripts/prototype/character_scale.gd")
 const BATCH_FRAMES := "res://assets/animations/generated/"
 const FEET_Y := 240.0  # y de los pies en el lienzo 320x256 de los cuadros nuevos
 
-const CIRUJA_ALIASES := {&"Run": &"correr", &"Punch": &"pinazo", &"Headbutt": &"embestida", &"Death": &"muerte"}
+const CIRUJA_ALIASES := {
+	&"Run": &"correr", &"Punch": &"pinazo", &"Headbutt": &"embestida", &"Death": &"muerte",
+	# No throw exists in the new batch: preserve its neutral silhouette instead of
+	# switching to a legacy canvas with a different character height/foot anchor.
+	&"Throw Orange": &"idle", &"Throw Stone": &"idle",
+}
 const GRANDOTE_ALIASES := {
 	&"grandote_run": &"correr", &"grandote_punch": &"punio", &"grandote_ground_slam": &"golpe_piso", &"Death": &"muerte",
 }

@@ -110,6 +110,10 @@ const BREATH_AMOUNT := 0.025       # variación de escala (0.025 = 2.5%)
 const JUMP_STRETCH := 0.14         # estiramiento vertical al subir (a velocidad de salto completa)
 const FALL_STRETCH := 0.06         # estiramiento al caer
 const STRETCH_SMOOTH := 18.0
+# Route actors use a fixed visual scale at every Y, lane and throw height.
+# The isolated arena can still use its procedural squash/stretch.
+const ROUTE_POSE_SCALE_VARIATION := 0.0
+const ROUTE_POSE_ROTATION_DEG := 0.0
 const LAND_SQUASH := 0.22          # aplastamiento al aterrizar
 const LAND_SQUASH_TIME := 0.22
 const LAND_MIN_AIR_TIME := 0.08

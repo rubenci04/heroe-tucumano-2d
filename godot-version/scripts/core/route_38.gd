@@ -91,6 +91,8 @@ func _ready() -> void:
 	feel.setup(self,func(intensity: float,duration: float) -> void: screen_shake_requested.emit(intensity,duration),player)
 	feel.arena_bounds = Vector2(40.0,GameConfig.WORLD_WIDTH-40.0)
 	anim = PROCEDURAL_ANIM.new()
+	anim.scale_variation = CFG.ROUTE_POSE_SCALE_VARIATION
+	anim.rotation_limit_degrees = CFG.ROUTE_POSE_ROTATION_DEG
 	add_child(anim)
 	anim.setup(self,player)
 	anim.fx = feel.fx

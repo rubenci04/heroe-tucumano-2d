@@ -24,6 +24,8 @@ var _p_idle := 0.0
 var _time := 0.0
 var _enemies := {}   # enemy -> {pose, tween, base_pos, base_scale}
 var fx: Node2D   # capa de partículas (feel_fx) para el polvo de caída
+var scale_variation := 1.0
+var rotation_limit_degrees := 180.0
 
 
 func setup(world_node: Node2D, player_node: CharacterBody2D) -> void:
@@ -133,6 +135,8 @@ func _foot_y(v: AnimatedSprite2D) -> float:
 
 ## Aplica escala/rotación/desplazamiento manteniendo los pies en el mismo punto.
 func _apply(v: AnimatedSprite2D, base_pos: Vector2, base_scale: Vector2, mult: Vector2, rot: float, shift_x: float) -> void:
+	mult = Vector2(clampf(mult.x, 1.0 - scale_variation, 1.0 + scale_variation), clampf(mult.y, 1.0 - scale_variation, 1.0 + scale_variation))
+	rot = clampf(rot, -deg_to_rad(rotation_limit_degrees), deg_to_rad(rotation_limit_degrees))
 	var new_scale := base_scale * mult
 	v.scale = new_scale
 	v.set_meta("pose_multiplier", mult)

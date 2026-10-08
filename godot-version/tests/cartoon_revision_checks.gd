@@ -58,6 +58,44 @@ func _run() -> void:
 			check("/ciruja/idle/" in sprite.sprite_frames.get_frame_texture(idle, index).resource_path, "Neutral idle source %d" % index)
 		check(sprite.sprite_frames.has_animation(&"ajustar_gorra"), "Cap adjustment remains available")
 		await capture("p1_idle")
+	if point == 2:
+		var player = route.player
+		player.play_animation(player.character_definition.idle_animation)
+		player.visual.pause()
+		var base_height: float = CollisionFactory.opaque_bounds(player.visual.sprite_frames.get_frame_texture(player.visual.animation, 0)).size.y * player.character_visual_scale
+		var heights: Array[float] = []
+		for y in [370.0, 330.0, 290.0]:
+			# Continuous travel to each throwing height, never rescale or teleport in gameplay.
+			var start: float = player.position.y
+			for frame in 30:
+				player.position.y = lerpf(start, y, (frame + 1.0) / 30.0)
+				route.anim._update_player(1.0 / 60.0)
+				route._batch._anchor(player.visual)
+				check(player.visual.scale.is_equal_approx(Vector2.ONE * player.character_visual_scale), "Fixed player scale while changing Y")
+			player.oranges_unlocked = true
+			player.shot_cooldown = 0
+			player.throw_projectile("orange", Vector2.RIGHT)
+			player.play_animation(player.action_animation)
+			player.visual.pause()
+			check("/ciruja/idle/" in player.visual.sprite_frames.get_frame_texture(player.visual.animation, 0).resource_path, "Throw preserves the new silhouette")
+			var shot = route.get_node("Projectiles").get_child(-1)
+			shot.set_physics_process(false)
+			var height: float = CollisionFactory.opaque_bounds(player.visual.sprite_frames.get_frame_texture(player.visual.animation, player.visual.frame)).size.y * player.visual.scale.y
+			heights.append(height)
+			check(absf(height / base_height - 1.0) <= 0.03, "Throw height stays within 3% at Y=" + str(y))
+			await capture("p2_orange_y_%d" % int(y))
+			shot.queue_free()
+		check(heights.max() / heights.min() <= 1.03, "Three visible throw heights differ by at most 3%")
+		for character in ["agente", "hipster", "grandote"]:
+			var enemy = route.spawn_enemy(character, 400, 0)
+			enemy.set_physics_process(false)
+			var fixed: Vector2 = enemy.visual.scale
+			for y in [370.0, 330.0, 290.0]:
+				enemy.position.y = y
+				route.anim._update_enemy(enemy, route.anim._enemies[enemy])
+				route._batch._anchor(enemy.visual)
+				check(enemy.scale == Vector2.ONE and enemy.visual.scale.is_equal_approx(fixed), "Enemy scale independent of Y: " + character)
+			enemy.queue_free()
 	root.get_node("AudioManager").stop_all()
 	scene.queue_free()
 	await process_frame
