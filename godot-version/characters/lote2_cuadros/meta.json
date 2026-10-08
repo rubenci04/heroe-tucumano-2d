@@ -1,6 +1,12 @@
 {
  "_escala_ciruja": 0.2513,
  "ciruja": {
+  "idle": {
+   "cuadros": 8,
+   "fps": 6,
+   "bucle": true,
+   "canvas": [320, 256]
+  },
   "correr": {
    "cuadros": 8,
    "fps": 12,

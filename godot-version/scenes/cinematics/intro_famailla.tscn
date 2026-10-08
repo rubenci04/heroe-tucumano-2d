@@ -90,7 +90,7 @@ position = Vector2(400, 225)
 position = Vector2(150, 328)
 scale = Vector2(0.42, 0.42)
 sprite_frames = ExtResource("2")
-animation = &"ajustar_gorra"
+animation = &"idle"
 offset = Vector2(0, -112)
 
 [node name="Champion" type="Sprite2D" parent="Actors"]

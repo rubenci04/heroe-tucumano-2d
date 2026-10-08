@@ -299,9 +299,8 @@ const STAIN_STEAM_RISE := 16.0         # px/s
 const STAIN_STEAM_LIFE := 1.0
 const STAIN_STEAM_COLOR := Color(0.95, 0.93, 0.9, 0.3)
 
-# --- Idle de Ciruja (cuadro f_00 de ajustar_gorra + respiro y cambio de peso por código) ---
-const IDLE_SOURCE_ANIMATION := &"ajustar_gorra"
-const IDLE_SOURCE_FRAME := 0
+# --- Idle neutro de Ciruja: ocho cuadros, brazos abajo ---
+const IDLE_SOURCE_ANIMATION := &"idle"
 const IDLE_BLEND_SPEED := 8.0          # suavizado al entrar/salir del idle (sin saltos)
 const IDLE_WEIGHT_HZ := 0.35           # ciclos/s del cambio de peso
 const IDLE_WEIGHT_SHIFT := 0.8         # px de desplazamiento lateral del cuerpo

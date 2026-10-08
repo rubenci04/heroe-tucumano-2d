@@ -42,7 +42,7 @@ func attach(actor: Node2D, character: String, aliases: Dictionary, scale_actor: 
 	for name in aliases:
 		if incoming.has_animation(aliases[name]):
 			_copy_animation(incoming, aliases[name], frames, name)
-	# Idle = f_00 de ajustar_gorra (Ciruja, parado y neutro) o primera pose de correr (resto).
+	# Ciruja usa todo el bucle neutro; ajustar_gorra sigue disponible como gesto eventual.
 	if incoming.has_animation(&"correr"):
 		var idle_name: StringName = actor.character_definition.idle_animation if character == "ciruja" else &"Idle"
 		if not frames.has_animation(idle_name):
@@ -50,10 +50,11 @@ func attach(actor: Node2D, character: String, aliases: Dictionary, scale_actor: 
 		frames.clear(idle_name)
 		var idle_texture := incoming.get_frame_texture(&"correr", 0)
 		if character == "ciruja" and incoming.has_animation(CFG.IDLE_SOURCE_ANIMATION):
-			idle_texture = incoming.get_frame_texture(CFG.IDLE_SOURCE_ANIMATION, CFG.IDLE_SOURCE_FRAME)
-		frames.add_frame(idle_name, idle_texture)
-		frames.set_animation_speed(idle_name, 1.0)
-		frames.set_animation_loop(idle_name, true)
+			_copy_animation(incoming, CFG.IDLE_SOURCE_ANIMATION, frames, idle_name)
+		else:
+			frames.add_frame(idle_name, idle_texture)
+			frames.set_animation_speed(idle_name, 1.0)
+			frames.set_animation_loop(idle_name, true)
 	var current := sprite.animation
 	sprite.sprite_frames = frames
 	sprite.play(current)

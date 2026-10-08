@@ -167,7 +167,7 @@ func _build_player_panel() -> void:
 ## Cabeza de Ciruja recortada de su primer cuadro (sin imágenes nuevas): parte alta de la silueta opaca.
 func _head_texture() -> Texture2D:
 	var frames: SpriteFrames = player.visual.sprite_frames
-	for animation in [&"ajustar_gorra", &"correr", &"Idle"]:
+	for animation in [&"idle", &"Idle", &"correr"]:
 		if frames.has_animation(animation) and frames.get_frame_count(animation) > 0:
 			var texture := frames.get_frame_texture(animation, 0)
 			var bounds := CollisionFactory.opaque_bounds(texture)

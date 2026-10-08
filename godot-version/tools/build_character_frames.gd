@@ -73,6 +73,10 @@ func _settings(directory: String, character: String, animation: String) -> Dicti
 	return {}
 
 func _scan(directory: String) -> void:
+	# Only character/animation folders belong to the batch. Ignore nested archive copies.
+	if directory != source and directory.trim_prefix(source + "/").split("/").size() > 2:
+		print("IGNORED nested package: ", directory)
+		return
 	var regex := RegEx.new()
 	regex.compile("^f_([0-9]+)\\.png$")
 	var frames: Array = []
