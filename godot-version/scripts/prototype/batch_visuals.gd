@@ -187,6 +187,9 @@ func _anchor(sprite: AnimatedSprite2D) -> void:
 	if texture == null:
 		return # animation_changed puede llegar antes de que Godot reinicie el cuadro.
 	var feet_y := float(sprite.get_meta("batch_ground_y"))
+	if not texture.resource_path.begins_with("res://characters/"):
+		# Unreplaced legacy actions have different canvas sizes; anchor their opaque feet.
+		feet_y = CollisionFactory.opaque_bounds(texture).end.y
 	var base_scale: float = sprite.get_meta("batch_visual_scale", sprite.scale.y)
 	sprite.scale = Vector2.ONE * base_scale * Vector2(sprite.get_meta("pose_multiplier", Vector2.ONE))
 	# Sprite centrado: y=240 del lienzo cae sobre el origen del actor (pies sobre el suelo de la ruta).

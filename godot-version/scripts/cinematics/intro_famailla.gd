@@ -1,5 +1,6 @@
 class_name IntroFamailla
 extends Node2D
+const CFG = preload("res://scripts/prototype/feel_config.gd")
 
 signal completed(skipped: bool)
 
@@ -53,6 +54,10 @@ func start(player: CharacterBody2D, camera: Camera2D, dialogue: Control, charact
 	protagonist_proxy.sprite_frames = _player.visual.sprite_frames
 	protagonist_proxy.animation = _player.character_definition.idle_animation
 	protagonist_proxy.play()
+	# Same visible proportions as the route, with feet at the sprite's origin.
+	champion.scale = Vector2.ONE * CFG.target_height("campeona") / CollisionFactory.opaque_bounds(champion.texture).size.y
+	var boss_texture := palermitano.sprite_frames.get_frame_texture(&"idle", 0)
+	palermitano.scale = Vector2.ONE * CFG.target_height("palermitano") / CollisionFactory.opaque_bounds(boss_texture).size.y
 	active = true
 	_finishing = false
 	show()

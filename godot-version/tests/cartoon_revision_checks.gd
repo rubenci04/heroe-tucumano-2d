@@ -96,6 +96,44 @@ func _run() -> void:
 				route._batch._anchor(enemy.visual)
 				check(enemy.scale == Vector2.ONE and enemy.visual.scale.is_equal_approx(fixed), "Enemy scale independent of Y: " + character)
 			enemy.queue_free()
+	if point == 3:
+		route.get_node("Terrain").hide()
+		route.get_node("Objects").hide()
+		route.anim.set_process(false)
+		route.player.play_animation(route.player.character_definition.idle_animation)
+		route.player.visual.pause()
+		route.player.position.x = 90
+		var actors: Array = [route.player]
+		for item in [["agente", 205], ["hipster", 345], ["grandote", 490]]:
+			var enemy = route.spawn_enemy(item[0], item[1], 0)
+			enemy.set_physics_process(false)
+			enemy.visual.pause()
+			actors.append(enemy)
+		var boss = route.spawn_palermitano(625, 0)
+		boss.set_physics_process(false)
+		route.boss_director.set_process(false)
+		boss.visual.pause()
+		actors.append(boss)
+		var champion := AnimatedSprite2D.new()
+		champion.position = Vector2(740, GameConfig.GROUND_Y)
+		route.add_child(champion)
+		route._batch.attach_npc(champion, "campeona", &"idle")
+		champion.pause()
+		for actor in actors:
+			var character: String = actor.get_meta("prototype_character")
+			var sprite: AnimatedSprite2D = actor.visual
+			route._batch._anchor(sprite)
+			var height: float = CollisionFactory.opaque_bounds(sprite.sprite_frames.get_frame_texture(sprite.animation, sprite.frame)).size.y * sprite.scale.y
+			print("ROUTE_HEIGHT %s %.2f target %.2f" % [character, height, CFG.target_height(character)])
+			check(absf(height - CFG.target_height(character)) <= 4, "Visible height: " + character)
+			check(actor.scale == Vector2.ONE, "Actor scale remains one: " + character)
+			var body: CollisionShape2D = actor.get_node("CollisionShape2D")
+			check(body.shape.size == actor.hurtbox.collision_shape.shape.size, "Body and hurtbox match: " + character)
+			check(absf(body.position.y + body.shape.size.y / 2) < 0.01, "Collision anchored at feet: " + character)
+		var champion_height: float = CollisionFactory.opaque_bounds(champion.sprite_frames.get_frame_texture(champion.animation, 0)).size.y * champion.scale.y
+		check(absf(champion_height - 76.0) < 0.01, "Campeona height is 76")
+		check(route.STATIONARY_VEHICLES[0].scale == 0.777 and route.DECOR_VEHICLE_SCALE == 1.223, "Stationary vehicle scale unchanged")
+		await capture("p3_proportions")
 	root.get_node("AudioManager").stop_all()
 	scene.queue_free()
 	await process_frame

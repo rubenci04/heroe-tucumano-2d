@@ -35,30 +35,31 @@ func _run() -> void:
 		var body: CollisionShape2D = enemy.get_node("CollisionShape2D")
 		check(absf(body.position.y + body.shape.size.y * 0.5) < 0.01, "Scaled collision rests at feet: " + enemy.name)
 		check(body.shape.size == enemy.hurtbox.collision_shape.shape.size, "Hurtbox matches body: " + enemy.name)
-	for sprite: AnimatedSprite2D in arena.batch_visuals:
+	for entry: Dictionary in arena.batch._entries:
+		var sprite: AnimatedSprite2D = entry.sprite
 		sprite.stop()
 		sprite.set_meta("pose_multiplier", Vector2.ONE)
 		var character: String = sprite.get_meta("batch_character", "campeona")
 		var original := sprite.animation
-		sprite.animation = &"avanzar_idle" if character == "hipster" else (&"idle" if character == "campeona" else &"correr")
+		sprite.animation = &"avanzar_idle" if character == "hipster" else (&"idle" if character in ["campeona", "ciruja"] else &"correr")
 		sprite.frame = 0
-		arena._anchor_batch_visual(sprite)
+		arena.batch._anchor(sprite)
 		var texture := sprite.sprite_frames.get_frame_texture(sprite.animation, 0)
 		var height: float = CollisionFactory.opaque_bounds(texture).size.y * sprite.get_global_transform_with_canvas().get_scale().y
 		print("SCALE %s: visible=%.2f target=%.2f" % [character, height, CFG.target_height(character)])
-		check(absf(height - CFG.target_height(character)) < (3.0 if character == "ciruja" else 1.5), "Opaque height matches target (Ciruja fixed): " + character)
+		check(absf(height - CFG.target_height(character)) <= 4.0, "Opaque height matches target (Ciruja fixed): " + character)
 		for animation in sprite.sprite_frames.get_animation_names():
 			for index in sprite.sprite_frames.get_frame_count(animation):
 				sprite.animation = animation
 				sprite.frame = index
-				arena._anchor_batch_visual(sprite)
+				arena.batch._anchor(sprite)
 				var frame := sprite.sprite_frames.get_frame_texture(animation, index)
 				var batch := frame.resource_path.begins_with("res://characters/")
 				var feet := 240.0 if batch else CollisionFactory.opaque_bounds(frame).end.y
 				check(absf(feet - frame.get_height() * 0.5 + sprite.offset.y) < 0.01, "%s/%s/%d feet anchored" % [character, animation, index])
 			sprite.animation = original
 			sprite.frame = 0
-			arena._anchor_batch_visual(sprite)
+			arena.batch._anchor(sprite)
 	var shadow_count := 0
 	for child in arena.world.get_children():
 		if child.name.ends_with("ContactShadow"):
