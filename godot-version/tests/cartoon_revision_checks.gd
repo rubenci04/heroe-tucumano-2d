@@ -149,6 +149,22 @@ func _run() -> void:
 			check(shot.visual.has_node("ReadableOutline"), "Dark outline: " + kind)
 			x += 100
 		await capture("p4_projectiles")
+	if point == 5:
+		var environment = route.get_node("Environment")
+		for group in ["FamaillaLandmarks", "RouteProps", "LightPosts"]:
+			for prop: Sprite2D in environment.get_node(group).get_children():
+				var bounds := CollisionFactory.opaque_bounds(prop.texture)
+				var base_y := prop.global_position.y + (bounds.end.y - prop.texture.get_height() * 0.5 + prop.offset.y) * prop.global_scale.y
+				check(absf(base_y - CFG.backdrop_ground_y(prop.global_position.x)) < 0.01, "Opaque base grounded: " + prop.name)
+				check(prop.has_node("PropContactShadow"), "Contact shadow: " + prop.name)
+		var stop = route.get_node("Terrain/RoadsideBusStop")
+		check(stop.get_ground_anchor_world_y() == CFG.backdrop_ground_y(stop.position.x) and stop.has_node("PropContactShadow"), "Bus stop grounded with contact shadow")
+		for view in [["famailla", 400], ["famailla_poste", 950], ["acheral", 1800], ["monteros", 2850], ["monteros_poste", 3400], ["villa_quinteros", 5800]]:
+			camera.position = Vector2(view[1], 225)
+			route.player.position = Vector2(view[1] - 100, GameConfig.GROUND_Y)
+			camera.reset_smoothing()
+			scene.get_node("Interface/HUD").set_location(route.current_location(view[1]))
+			await capture("p5_" + view[0])
 	root.get_node("AudioManager").stop_all()
 	scene.queue_free()
 	await process_frame

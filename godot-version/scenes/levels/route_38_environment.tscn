@@ -7,6 +7,7 @@
 [ext_resource type="Texture2D" uid="uid://bexhs1pkfqc0c" path="res://assets/cañas_solas.png" id="reeds"]
 [ext_resource type="Texture2D" uid="uid://fr5rcrqc3rgp" path="res://assets/suelo_ruta.png" id="road"]
 [ext_resource type="Texture2D" uid="uid://cd8bp1wwwtnw" path="res://assets/cartel_famailla.png" id="sign"]
+[ext_resource type="Texture2D" path="res://assets/gruta_virgen.png" id="virgen"]
 [ext_resource type="Texture2D" uid="uid://ducutjcaqt5nf" path="res://assets/fondo_cerros.png" id="sky"]
 [ext_resource type="Shader" path="res://shaders/seamless_tile.gdshader" id="seamless"]
 
@@ -125,3 +126,8 @@ z_index = -2
 position = Vector2(950, 264.625)
 scale = Vector2(0.75, 0.75)
 texture = ExtResource("post")
+
+[node name="Virgencita" type="Sprite2D" parent="RouteProps"]
+position = Vector2(1800, 340)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("virgen")

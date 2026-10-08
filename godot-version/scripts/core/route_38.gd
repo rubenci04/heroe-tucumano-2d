@@ -119,7 +119,8 @@ func _ready() -> void:
 	for item: Dictionary in STATIONARY_VEHICLES:
 		stationary_by_x[int(item.x)] = _add_stationary_vehicle(item.asset,item.x,item.scale*DECOR_VEHICLE_SCALE)
 	var bus_stop := add_generic_platform("RoadsideBusStop",load("res://assets/parada_colectivo2.png"),2700.0,0,0.50*DECOR_VEHICLE_SCALE,110.0,-78.0,true)
-	bus_stop.position.y = 350.0
+	bus_stop.position.y = CFG.backdrop_ground_y(bus_stop.position.x)
+	preload("res://scripts/level/route_environment.gd").add_prop_shadow(bus_stop, CollisionFactory.opaque_bounds(bus_stop.platform_texture).size.x * bus_stop.image_scale, bus_stop.position.y)
 	bus_stop.z_index = 9
 	add_pickup("orange_tree","arbol_naranjas",520,0,0.85,345)
 	for x in [1250,4450]:

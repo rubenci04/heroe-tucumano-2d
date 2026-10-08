@@ -235,6 +235,22 @@ const BACKDROP_SKY_BOTTOM_Y := 395.0   # borde inferior del cielo (queda tapado 
 const BACKDROP_PANORAMA_REGION := Rect2(100.0, 440.0, 1600.0, 260.0)
 const BACKDROP_PANORAMA_SCALE := 0.84
 const BACKDROP_PANORAMA_BOTTOM_Y := 372.0
+# Opaque prop bases on the verge (world units, same surface visible in F5).
+const BACKDROP_FAMAILLA_GROUND_Y := 340.0
+const BACKDROP_ACHERAL_GROUND_Y := 340.0
+const BACKDROP_MONTEROS_GROUND_Y := 340.0
+const BACKDROP_LEON_ROUGES_GROUND_Y := 340.0
+const BACKDROP_VILLA_QUINTEROS_GROUND_Y := 340.0
+const BACKDROP_RIO_SECO_GROUND_Y := 340.0
+const BACKDROP_PROP_SHADOW_MIN_WIDTH := 12.0
+
+static func backdrop_ground_y(x: float) -> float:
+	if x >= 6600: return BACKDROP_RIO_SECO_GROUND_Y
+	if x >= 5400: return BACKDROP_VILLA_QUINTEROS_GROUND_Y
+	if x >= 4200: return BACKDROP_LEON_ROUGES_GROUND_Y
+	if x >= 2800: return BACKDROP_MONTEROS_GROUND_Y
+	if x >= 1400: return BACKDROP_ACHERAL_GROUND_Y
+	return BACKDROP_FAMAILLA_GROUND_Y
 const HUD_TITLE_SIZE := 48
 const HUD_TITLE_SIZE_LONG := 36        # para títulos largos, que no entran a 48 en 800 px
 const HUD_TITLE_SHORT_CHARS := 20
