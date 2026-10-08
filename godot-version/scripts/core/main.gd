@@ -3,6 +3,9 @@ signal flow_state_changed(previous_state: int, current_state: int)
 
 const INPUT_SETUP = preload("res://scripts/core/input_setup.gd")
 const PROJECTILE_SCENE = preload("res://scenes/actors/projectile.tscn")
+const CFG = preload("res://scripts/prototype/feel_config.gd")
+const PROJECTILE_FX = preload("res://scripts/prototype/projectile_fx.gd")
+const ARC_SHOT = preload("res://scripts/prototype/arc_shot.gd")
 const GAME_SESSION = preload("res://scripts/core/game_session.gd")
 const DEMO_ENDING = preload("res://data/dialogues/demo_ending.tres")
 
@@ -377,6 +380,21 @@ func _spawn_projectile(origin: Vector2,lane: int,direction: Variant,kind: String
 		projectile.impact_confirmed.connect(player.register_valid_hit)
 	projectile.z_index = 20
 	route.get_node("Projectiles").add_child(projectile)
+	_decorate_projectile(projectile,origin,direction,kind,team)
+
+## Presencia del proyectil (estela, sombra, arco, chispas, fogonazo): mismos scripts que la arena prototipo.
+func _decorate_projectile(projectile: Node2D,origin: Vector2,direction: Variant,kind: String,team: String) -> void:
+	var emitter: Node2D = route.shot_emitter
+	var emitter_character: String = emitter.get_meta("prototype_character","") if is_instance_valid(emitter) else ""
+	if team == "player":
+		route.feel.watch_projectile(projectile)
+	PROJECTILE_FX.decorate(projectile,kind,emitter_character)
+	if team == "enemy" and kind in CFG.ARC_KINDS and is_instance_valid(player):
+		ARC_SHOT.attach(projectile,player.global_position+CFG.ARC_AIM_OFFSET,kind).landed.connect(route.stains.add_stain)
+	if emitter_character == "agente":
+		var shot_direction: Vector2 = direction if direction is Vector2 else Vector2(float(direction),0.0)
+		route.feel.fx.muzzle_flash(origin,shot_direction,CFG.ENEMY_MUZZLE_SIZE)
+		route.feel.fx.casing(origin,shot_direction)
 
 func _on_player_died() -> void:
 	route.finish_bus_set_pieces("player_death")

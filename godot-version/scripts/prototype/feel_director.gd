@@ -8,6 +8,8 @@ const FLASH_SHADER := "shader_type canvas_item;\nuniform float amount : hint_ran
 
 var fx: Node2D
 var shake_target: Control
+## Si el juego tiene su propio shake de cámara, se le delega (intensidad, duración) en vez de mover shake_target.
+var shake_handler := Callable()
 var player: CharacterBody2D
 ## Límites X dentro de los que el knockback puede mover a un enemigo.
 var arena_bounds := Vector2(0.0, 1.0e6)
@@ -20,14 +22,20 @@ var _slowmo_scale := 1.0
 var _flash_frames := {}
 var _knock := {}   # enemy -> velocidad X de empuje (px/s)
 var _flash_shader: Shader
+var _time_scale_owned := false   # true solo mientras un efecto nuestro (hit-stop o cámara lenta) cambia Engine.time_scale
+var _time_scale_base := 1.0
 var _dust_timer := 0.0
 var _was_on_floor := true
 var _air_time := 0.0
 
 
-func setup(world: Node2D, container: Control, player_node: CharacterBody2D) -> void:
+## container: Control de la arena (sacude su posición) o Callable(intensidad, duración) del juego.
+func setup(world: Node2D, container: Variant, player_node: CharacterBody2D) -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	shake_target = container
+	if container is Callable:
+		shake_handler = container
+	else:
+		shake_target = container
 	player = player_node
 	fx = FX.new()
 	world.add_child(fx)
@@ -85,6 +93,9 @@ func slow_motion(scale: float, duration: float) -> void:
 
 
 func shake(intensity: float, duration: float) -> void:
+	if shake_handler.is_valid():
+		shake_handler.call(intensity, duration)
+		return
 	var remaining := _shake_intensity * clampf(_shake_time / maxf(_shake_total, 0.001), 0.0, 1.0)
 	if intensity >= remaining:
 		_shake_intensity = intensity
@@ -107,13 +118,19 @@ func _flash(enemy: Node, frames: int) -> void:
 	_flash_frames[enemy] = frames
 
 
+## Solo toca Engine.time_scale mientras hay un efecto propio; al terminar devuelve el valor previo
+## (así no pisa la cámara lenta del Tucumanazo ni otros efectos del juego).
 func _apply_time_scale() -> void:
-	if _hitstop_frames > 0:
-		Engine.time_scale = CFG.HITSTOP_TIME_SCALE
-	elif Time.get_ticks_msec() < _slowmo_until_ms:
-		Engine.time_scale = _slowmo_scale
-	else:
-		Engine.time_scale = 1.0
+	var hit_stop := _hitstop_frames > 0
+	var slow_motion_active := Time.get_ticks_msec() < _slowmo_until_ms
+	if hit_stop or slow_motion_active:
+		if not _time_scale_owned:
+			_time_scale_owned = true
+			_time_scale_base = Engine.time_scale
+		Engine.time_scale = CFG.HITSTOP_TIME_SCALE if hit_stop else _slowmo_scale
+	elif _time_scale_owned:
+		_time_scale_owned = false
+		Engine.time_scale = _time_scale_base
 
 
 func _process(delta: float) -> void:
@@ -148,6 +165,8 @@ func _update_flashes() -> void:
 
 
 func _update_shake(delta: float) -> void:
+	if shake_target == null:
+		return
 	if _shake_time > 0.0:
 		_shake_time -= delta
 		var k := clampf(_shake_time / maxf(_shake_total, 0.001), 0.0, 1.0)
@@ -176,4 +195,5 @@ func _update_player_dust(delta: float) -> void:
 
 
 func _exit_tree() -> void:
-	Engine.time_scale = 1.0
+	if _time_scale_owned:
+		Engine.time_scale = _time_scale_base

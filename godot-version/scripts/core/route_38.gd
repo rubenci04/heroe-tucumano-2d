@@ -25,6 +25,11 @@ const ENCOUNTER_DIRECTOR = preload("res://scripts/level/encounter_director.gd")
 const TRAFFIC_DIRECTOR = preload("res://scripts/level/traffic_director.gd")
 const CHECKPOINT_SCENE = preload("res://scenes/level/checkpoint.tscn")
 const BATCH_VISUALS = preload("res://scripts/prototype/batch_visuals.gd")
+const CFG = preload("res://scripts/prototype/feel_config.gd")
+const FEEL_DIRECTOR = preload("res://scripts/prototype/feel_director.gd")
+const PROCEDURAL_ANIM = preload("res://scripts/prototype/procedural_anim.gd")
+const STAIN_MANAGER = preload("res://scripts/prototype/stain_manager.gd")
+const CONTACT_SHADOW = preload("res://scripts/prototype/contact_shadow.gd")
 var checkpoint_records: Array = []
 var last_safe_position := Vector2(80.0,370.0)
 const SAFE_POSITION_MAX_AGE_DISTANCE := 96.0
@@ -67,11 +72,27 @@ var _drone_wave_spawn_index := 0
 @onready var encounter_director: ENCOUNTER_DIRECTOR = $EncounterDirector
 @onready var traffic_director: TRAFFIC_DIRECTOR = $TrafficDirector
 var _batch: BATCH_VISUALS
+var feel: Node          # impactos, hit-stop, muertes con peso y fx (scripts/prototype)
+var anim: Node          # animación procedural: respiración, retroceso y caídas
+var stains: Node        # manchas de café en el piso
+var shot_emitter: Node2D  # emisor del disparo en curso; lo lee main para decorar el proyectil
 
 func _ready() -> void:
 	_batch = BATCH_VISUALS.new()
 	add_child(_batch)
 	_batch.attach(player,"ciruja",BATCH_VISUALS.CIRUJA_ALIASES)
+	feel = FEEL_DIRECTOR.new()
+	add_child(feel)
+	feel.setup(self,func(intensity: float,duration: float) -> void: screen_shake_requested.emit(intensity,duration),player)
+	feel.arena_bounds = Vector2(40.0,GameConfig.WORLD_WIDTH-40.0)
+	anim = PROCEDURAL_ANIM.new()
+	add_child(anim)
+	anim.setup(self,player)
+	anim.fx = feel.fx
+	stains = STAIN_MANAGER.new()
+	add_child(stains)
+	stains.setup(self,player,feel.fx)
+	_add_contact_shadow(player,"ciruja")
 	data = JSON.parse_string(FileAccess.get_file_as_string("res://scenes/levels/route_38_data.json"))
 	if not encounter_director.configure(data.encounters,spawn_encounter_actor):
 		push_error("Route38 no pudo registrar todos los encuentros configurados")
@@ -204,13 +225,37 @@ func spawn_enemy(archetype: String,x: float,lane: int) -> CharacterBody2D:
 	enemy.target = player
 	enemy.position = Vector2(x,GameConfig.GROUND_Y)
 	enemy.shot_requested.connect(func(o: Vector2,l: int,d: int,k: String,t: String) -> void:
-		shot_requested.emit(BATCH_VISUALS.muzzle_origin(enemy,o),l,d,k,t))
+		_relay_shot(enemy,o,l,d,k,t))
 	enemy.ground_wave_requested.connect(_spawn_grandote_ground_wave)
 	enemy.defeated.connect(_on_enemy_defeated)
 	enemy.boss_escaped.connect(boss_escaped.emit)
 	$Enemies.add_child(enemy)
 	_batch.attach(enemy,archetype,BATCH_VISUALS.enemy_aliases(enemy))
+	_add_contact_shadow(enemy,archetype)
+	feel.watch_enemy(enemy)
+	anim.watch_enemy(enemy)
 	return enemy
+
+
+## Emisor del disparo en curso (para decorar el proyectil en main) y punto de lanzamiento medido.
+func _relay_shot(emitter: Node2D,origin: Vector2,lane: int,direction: Variant,kind: String,team: String) -> void:
+	var muzzle := BATCH_VISUALS.muzzle_origin(emitter,origin)
+	shot_emitter = emitter
+	if direction is Vector2:
+		aimed_shot_requested.emit(muzzle,lane,direction,kind,team)
+	else:
+		shot_requested.emit(muzzle,lane,int(direction),kind,team)
+	shot_emitter = null
+
+
+func _add_contact_shadow(actor: Node2D,character: String) -> void:
+	var shadow := CONTACT_SHADOW.new()
+	shadow.name = character.capitalize() + "ContactShadow"
+	shadow.actor = actor
+	shadow.visible_height = CFG.target_height(character)
+	shadow.ground_y = GameConfig.GROUND_Y
+	shadow.z_index = -1
+	add_child(shadow)
 
 
 func spawn_encounter_actor(archetype: String,x: float,lane: int) -> Node2D:
@@ -234,9 +279,11 @@ func spawn_drone(x: float,lane: int,formation_index: int = 0,formation_size: int
 	drone.lane_index = 0
 	drone.target = player
 	drone.position = Vector2(x,GameConfig.GROUND_Y-drone.flight_height)
-	drone.shot_requested.connect(aimed_shot_requested.emit)
+	drone.shot_requested.connect(func(o: Vector2,l: int,d: Vector2,k: String,t: String) -> void:
+		_relay_shot(drone,o,l,d,k,t))
 	drone.defeated.connect(_on_enemy_defeated)
 	$Enemies.add_child(drone)
+	feel.watch_enemy(drone)
 	return drone
 
 
@@ -251,13 +298,17 @@ func spawn_palermitano(x: float,lane: int) -> CharacterBody2D:
 	boss.target = player
 	boss.arena_bounds = BOSS_ARENA_BOUNDS
 	boss.position = Vector2(x,GameConfig.GROUND_Y)
-	boss.aimed_shot_requested.connect(aimed_shot_requested.emit)
+	boss.aimed_shot_requested.connect(func(o: Vector2,l: int,d: Vector2,k: String,t: String) -> void:
+		_relay_shot(boss,o,l,d,k,t))
 	boss.summon_requested.connect(_on_boss_summon_requested)
 	boss.screen_shake_requested.connect(screen_shake_requested.emit)
 	boss.defeated.connect(_on_palermitano_defeated,CONNECT_ONE_SHOT)
 	boss.tree_exiting.connect(_on_palermitano_exiting,CONNECT_ONE_SHOT)
 	$Enemies.add_child(boss)
 	_batch.attach(boss,"palermitano",BATCH_VISUALS.boss_aliases())
+	_add_contact_shadow(boss,"palermitano")
+	feel.watch_enemy(boss)
+	anim.watch_enemy(boss)
 	traffic_director.set_enabled(false,true)
 	boss_spawned.emit(boss.health_component,"EL PALERMITANO")
 	boss_arena_changed.emit(true,BOSS_ARENA_BOUNDS.x,BOSS_ARENA_BOUNDS.y)
@@ -321,6 +372,9 @@ func _spawn_miniboss_grandote(x: float,lane: int) -> CharacterBody2D:
 	miniboss.tree_exiting.connect(_on_miniboss_exiting,CONNECT_ONE_SHOT)
 	$Enemies.add_child(miniboss)
 	_batch.attach(miniboss,"grandote",BATCH_VISUALS.GRANDOTE_ALIASES)
+	_add_contact_shadow(miniboss,"grandote")
+	feel.watch_enemy(miniboss)
+	anim.watch_enemy(miniboss)
 	traffic_director.set_enabled(false,true)
 	miniboss_active = true
 	_miniboss_feedback_active = true

@@ -58,6 +58,11 @@ func attach(actor: Node2D, character: String, aliases: Dictionary) -> bool:
 	sprite.set_meta("batch_ground_y", FEET_Y)
 	sprite.set_meta("batch_visual_scale", sprite.scale.y)
 	actor.set_meta("prototype_character", character)
+	# Los offsets por cuadro del juego viejo pisarían el anclaje a los pies: se vacían.
+	for legacy_property in ["_visual_frame_offsets", "_visual_offset_profiles"]:
+		var legacy = actor.get(legacy_property)
+		if legacy is Dictionary:
+			legacy.clear()
 	# Ciruja conserva escala; el resto toma la altura objetivo de feel_config.
 	CHARACTER_SCALE.apply(actor, character)
 	if character == "ciruja":
