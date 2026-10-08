@@ -29,6 +29,7 @@ var demo_closing_complete: bool = false
 var game_over: bool = false
 var local_respawn_pending: bool = false
 const LOCAL_RESPAWN_INVULNERABILITY := 1.25
+const DEBUG_BOSS_TELEPORT_X := 7300.0 # Río Seco, antes de trigger_x (7425) del jefe
 
 @onready var game_session: Node = get_node("/root/GameSession")
 @onready var route = $Route38
@@ -169,6 +170,15 @@ func _update_camera_shake(delta: float) -> void:
 	if shake_remaining <= 0.0:
 		camera.offset = Vector2.ZERO
 
+# Solo builds de desarrollo (F9): no toca checkpoints, puntaje ni HUD.
+func _debug_teleport_to_boss() -> void:
+	if finished or game_over or current_state != GAME_SESSION.DemoState.GAMEPLAY or get_tree().paused:
+		return
+	player.lives = player.character_definition.starting_lives
+	player.health_component.restore_full()
+	player.position.x = DEBUG_BOSS_TELEPORT_X
+	player.velocity = Vector2.ZERO
+
 func _unhandled_input(event: InputEvent) -> void:
 	if current_state == GAME_SESSION.DemoState.CHARACTER_SELECT:
 		return
@@ -180,6 +190,9 @@ func _unhandled_input(event: InputEvent) -> void:
 				restart_game()
 		elif event.is_action_pressed("select_cancel") or event.is_action_pressed("pause"):
 			exit_demo()
+		return
+	if OS.is_debug_build() and event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F9:
+		_debug_teleport_to_boss()
 		return
 	if event.is_action_pressed("asset_gallery"):
 		if gallery.visible:

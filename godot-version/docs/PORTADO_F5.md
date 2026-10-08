@@ -95,3 +95,8 @@ Decidido: "Ingenio La Providencia" en todo el proyecto (HUD_VICTORY_TEXT, main.g
 - Si el café en arco y con giro es el comportamiento deseado en la ruta (punto 3).
 - Si la escala del decorado (×1.223) y la de personajes (tabla) quedan así, o se prueba el zoom de cámara ×2 para igualar el encuadre del prototipo.
 - Carteles de localidad: no se encontraron como sprites escalables en la ruta; quedan sin cambios.
+
+## Depuración y estado de tests
+
+- **F9** (solo builds de desarrollo, `OS.is_debug_build()`): teletransporta a Ciruja a x=7300 (Río Seco, antes del jefe) con vidas y vida llenas. Sin HUD, sin tocar checkpoints ni puntaje; inactiva en builds exportadas.
+- **Hay 4 tests en rojo conocidos** que se dejan como están (por ejemplo `enemy_lifecycle_checks` y `migration_smoke`, ver arriba). Verificación headless del juego completo: sin errores nuevos.
