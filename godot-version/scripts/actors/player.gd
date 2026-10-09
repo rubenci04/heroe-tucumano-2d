@@ -16,6 +16,7 @@ const TUCUMANAZO_COUNTER_COMPONENT = preload("res://scripts/components/special_m
 const TUCUMANAZO_DEFINITION = preload("res://scripts/data/tucumanazo_definition.gd")
 const TUCUMANAZO_WAVE_VISUAL = preload("res://scripts/actors/tucumanazo_wave_visual.gd")
 const DEFAULT_CHARACTER_DEFINITION: CHARACTER_DEFINITION = preload("res://data/characters/san_martin.tres")
+const CFG = preload("res://scripts/prototype/feel_config.gd")
 const ANIMATION_MANIFEST_PATH := "res://data/animation_manifest.json"
 
 enum State { IDLE, RUN, JUMP, THROW, COLLECT, HIT, DEATH, SUPER_STARTUP, SUPER_RUSH, SUPER_FINISH, SUPER_RECOVERY }
@@ -495,6 +496,12 @@ func throw_projectile(kind: String,aim_override: Vector2 = Vector2.ZERO) -> void
 		stones -= 1
 	action_animation = character_definition.throw_stone_animation if kind == "stone" else character_definition.throw_orange_animation
 	action_time = 0.25
+	# Corriendo: animación de correr y lanzar (cuadros nuevos). Arranca ya, y el movimiento horizontal no se corta.
+	if is_on_floor() and absf(velocity.x) > 1.0 and visual.sprite_frames.has_animation(CFG.CIRUJA_RUN_THROW):
+		action_animation = CFG.CIRUJA_RUN_THROW
+		action_time = float(visual.sprite_frames.get_frame_count(CFG.CIRUJA_RUN_THROW)) / maxf(visual.sprite_frames.get_animation_speed(CFG.CIRUJA_RUN_THROW),1.0)
+		visual.play(CFG.CIRUJA_RUN_THROW)
+		visual.frame = 0
 	shot_cooldown = 0.25
 	var shot_direction := get_shot_direction() if aim_override.is_zero_approx() else resolve_shot_direction(aim_override,not is_on_floor(),facing)
 	shot_requested.emit(global_position+get_muzzle_offset(shot_direction),lane_index,shot_direction,kind,team)
@@ -752,7 +759,10 @@ func _emit_hud_status() -> void:
 
 func play_animation(animation_name: StringName) -> void:
 	if visual.animation != animation_name:
+		var leaving_run_throw: bool = visual.animation == CFG.CIRUJA_RUN_THROW
 		visual.play(animation_name)
+		if leaving_run_throw and animation_name == character_definition.run_animation:
+			visual.set_frame_and_progress(mini(CFG.CIRUJA_RUN_RESUME_FRAME,visual.sprite_frames.get_frame_count(animation_name)-1),0.0) # sin salto visual
 		_apply_visual_frame_offset()
 
 func _load_visual_frame_offsets() -> void:

@@ -90,9 +90,13 @@ func run() -> void:
 	director._active_enemies[&"fixture_stray"] = {}
 	director._track_enemy(&"fixture_stray",stray)
 	stray.set_physics_process(false) # inmóvil: solo el rescate puede traerlo
-	for i in range(int(60.0*(director.OFFSCREEN_LIMIT+1.0))):
+	var worst_stray := 0.0
+	for i in range(int(60.0*(director.OFFSCREEN_LIMIT+4.0))): # el rescate se mide por el tiempo fuera de cuadro acumulado por el director
 		await physics_frame
-	expect(absf(stray.global_position.x-camera_center()) <= 400.0,"Un enemigo inalcanzable vuelve al borde visible en ≤ 4 s",{"x":stray.global_position.x,"cam":camera_center()})
+		worst_stray = maxf(worst_stray,float(stray.get_meta("offscreen_time",0.0)))
+		if absf(stray.global_position.x-camera_center()) <= 400.0:
+			break
+	expect(worst_stray <= director.OFFSCREEN_LIMIT+0.1 and absf(stray.global_position.x-camera_center()) <= 400.0,"Un enemigo inalcanzable vuelve al borde visible en ≤ 4 s",{"x":stray.global_position.x,"cam":camera_center(),"ctrl":player.controls_enabled,"boss":is_instance_valid(route.boss),"t":stray.get_meta("offscreen_time",-1),"tracked":director.get_active_enemies(&"fixture_stray").size(),"closing":route.demo_closing})
 	# Disparo desde fuera de cuadro: descartado.
 	stray.global_position.x = camera_center()+700.0
 	var before: int = route.get_node("Projectiles").get_child_count()

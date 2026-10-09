@@ -13,9 +13,14 @@ const BATCH_MUZZLE_SOURCE := {"agente": Vector2(110, 101), "hipster": Vector2(14
 # release_frame: cuadro en el que el proyectil sale (brazo extendido); hand: mano en píxeles de ese cuadro, mirando a la derecha.
 # La animación arranca un tick de física después del pedido de disparo.
 const CIRUJA_THROW_START_LAG := 1.0 / 60.0 + 0.003
+# Corriendo (correr_lanzar, cuadros nuevos, 24 fps): run_release_frame = cuadro de salida, run_hand = mano en píxeles de ese
+# cuadro. La animación arranca en el mismo tick del disparo (sin START_LAG): latencia = run_release_frame / 24 s.
+# run_resume_frame: cuadro del ciclo "correr" al que se vuelve al terminar, para que no haya salto visual.
+const CIRUJA_RUN_THROW := &"correr_lanzar"
+const CIRUJA_RUN_RESUME_FRAME := 7
 const CIRUJA_THROW := {
-	"orange": {"release_frame": 6, "hand": Vector2(125, 98)},
-	"stone": {"release_frame": 5, "hand": Vector2(119, 107)},
+	"orange": {"release_frame": 6, "hand": Vector2(125, 98), "run_release_frame": 2, "run_hand": Vector2(228, 140)},
+	"stone": {"release_frame": 5, "hand": Vector2(119, 107), "run_release_frame": 2, "run_hand": Vector2(228, 140)},
 }
 
 # Altura objetivo del Hipster (jinete + monopatín) en px. Tocala acá; hitbox y punto de lanzamiento escalan solos.

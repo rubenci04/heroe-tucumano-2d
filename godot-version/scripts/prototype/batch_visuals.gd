@@ -369,9 +369,13 @@ static func _frame_point_local(sprite: AnimatedSprite2D, texture: Texture2D, poi
 static func throw_release_delay(player: Node2D, kind: String) -> float:
 	var info = CFG.CIRUJA_THROW.get(kind)
 	var state := _throw_state(player, kind)
-	if info == null or state == &"" or player.visual.get_meta("batch_origins", {}).get(state, Origin.MISSING) != Origin.OLD:
+	if info == null or state == &"":
 		return 0.0
 	var frames: SpriteFrames = player.visual.sprite_frames
+	if state == CFG.CIRUJA_RUN_THROW:
+		return float(info.run_release_frame) / maxf(frames.get_animation_speed(state), 1.0)
+	if player.visual.get_meta("batch_origins", {}).get(state, Origin.MISSING) != Origin.OLD:
+		return 0.0
 	return float(info.release_frame) / maxf(frames.get_animation_speed(state), 1.0) + CFG.CIRUJA_THROW_START_LAG
 
 
@@ -384,10 +388,11 @@ static func throw_hand_origin(player: Node2D, kind: String, fallback: Vector2, d
 	if info == null or state == &"" or absf(aim.y) > 0.3:
 		return fallback
 	var sprite: AnimatedSprite2D = player.visual
-	var texture := sprite.sprite_frames.get_frame_texture(state, int(info.release_frame))
-	if texture == null or texture.resource_path.begins_with(NEW_ROOT):
+	var running: bool = state == CFG.CIRUJA_RUN_THROW
+	var texture := sprite.sprite_frames.get_frame_texture(state, int(info.run_release_frame if running else info.release_frame))
+	if texture == null or (texture.resource_path.begins_with(NEW_ROOT) and not running):
 		return fallback
-	return sprite.to_global(_frame_point_local(sprite, texture, info.hand))
+	return sprite.to_global(_frame_point_local(sprite, texture, info.run_hand if running else info.hand))
 
 
 static func _throw_state(player: Node2D, kind: String) -> StringName:
@@ -396,6 +401,8 @@ static func _throw_state(player: Node2D, kind: String) -> StringName:
 		return &""
 	var state: StringName = definition.throw_stone_animation if kind == "stone" else definition.throw_orange_animation
 	var frames: SpriteFrames = player.visual.sprite_frames
+	if player.get("action_animation") == CFG.CIRUJA_RUN_THROW and frames != null and frames.has_animation(CFG.CIRUJA_RUN_THROW):
+		return CFG.CIRUJA_RUN_THROW
 	return state if frames != null and frames.has_animation(state) else &""
 
 
