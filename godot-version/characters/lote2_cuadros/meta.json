@@ -13,6 +13,24 @@
    "bucle": false,
    "canvas": [320, 256]
   },
+  "agacharse": {
+   "cuadros": 5,
+   "fps": 24,
+   "bucle": false,
+   "canvas": [320, 256]
+  },
+  "agachado": {
+   "cuadros": 4,
+   "fps": 8,
+   "bucle": true,
+   "canvas": [320, 256]
+  },
+  "levantarse": {
+   "cuadros": 4,
+   "fps": 16,
+   "bucle": false,
+   "canvas": [320, 256]
+  },
   "correr": {
    "cuadros": 8,
    "fps": 12,

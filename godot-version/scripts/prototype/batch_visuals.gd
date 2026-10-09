@@ -396,6 +396,8 @@ static func throw_hand_origin(player: Node2D, kind: String, fallback: Vector2, d
 
 
 static func _throw_state(player: Node2D, kind: String) -> StringName:
+	if player.get("crouching") == true:
+		return &"" # agachado: el proyectil sale de inmediato
 	var definition = player.get("character_definition")
 	if definition == null:
 		return &""

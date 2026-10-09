@@ -78,6 +78,14 @@ var collection_remaining: float = 0.0
 var collection_reward_granted: bool = false
 var _collection_pickup: Node
 var action_animation: StringName = &"Idle"
+## Agacharse: NONE -> DOWN (agacharse) -> HELD (agachado, bucle) -> UP (levantarse) -> NONE.
+enum CrouchPhase { NONE, DOWN, HELD, UP }
+var crouch_phase: int = CrouchPhase.NONE
+var crouching: bool:
+	get: return crouch_phase == CrouchPhase.DOWN or crouch_phase == CrouchPhase.HELD
+var _crouch_timer: float = 0.0
+var _hurtbox_crouched: bool = false
+var _hurtbox_base: Dictionary = {}
 ## Compatibilidad de lectura para saves/tests antiguos; el cambio de carril está retirado.
 var changing_lane: bool = false
 var lane_progress: float = 0.0
@@ -223,11 +231,12 @@ func _physics_process(delta: float) -> void:
 		visual.modulate = Color.WHITE
 	visual.modulate.a = 0.4 if invulnerability > 0.0 and int(invulnerability*12.0)%2 == 0 else 1.0
 	var axis: float = Input.get_axis("move_left","move_right") if controls_enabled and hit_time <= 0.0 and not special_active and not collection_active and not punch_active else 0.0
+	_update_crouch(delta,axis)
 	if special_active:
 		facing = special_direction
 		velocity.x = special_direction*minf(special_rush_speed,maxf(0.0,tucumanazo_definition.rush_distance-special_rush_distance)/maxf(delta,0.001)) if special_phase == SpecialPhase.RUSH else 0.0
 	elif hit_time <= 0.0:
-		velocity.x = axis * (fury_speed if fury_time > 0.0 else walk_speed)
+		velocity.x = axis * (fury_speed if fury_time > 0.0 else walk_speed) * (CFG.CROUCH_SPEED_MULT if crouching else 1.0)
 	if not is_zero_approx(axis):
 		facing = -1 if axis < 0.0 else 1
 	visual.flip_h = facing < 0
@@ -275,6 +284,9 @@ func _physics_process(delta: float) -> void:
 	elif hit_time > 0.0:
 		state = State.HIT
 		play_animation(character_definition.hit_animation)
+	elif crouch_phase != CrouchPhase.NONE:
+		state = State.IDLE
+		play_animation(CFG.CROUCH_ANIMATIONS[crouch_phase])
 	elif action_time > 0.0:
 		state = State.THROW
 		play_animation(action_animation)
@@ -287,6 +299,73 @@ func _physics_process(delta: float) -> void:
 	else:
 		state = State.IDLE
 		play_animation(character_definition.idle_animation)
+
+func _set_crouch_phase_safe() -> void:
+	crouch_phase = CrouchPhase.NONE
+	_apply_crouch_hurtbox(false)
+
+func _update_crouch(delta: float,axis: float) -> void:
+	var available := visual.sprite_frames != null and visual.sprite_frames.has_animation(&"agachado")
+	var can := available and controls_enabled and is_on_floor() and hit_time <= 0.0 and not special_active and not collection_active and not punch_active and state != State.DEATH
+	var down := can and Input.is_action_pressed("aim_down")
+	var leave := not can or Input.is_action_just_pressed("jump") # saltar cancela el agachado
+	_crouch_timer = maxf(0.0,_crouch_timer-delta)
+	match crouch_phase:
+		CrouchPhase.NONE:
+			if down and is_zero_approx(axis) and not leave:
+				_set_crouch_phase(CrouchPhase.DOWN)
+		CrouchPhase.DOWN:
+			if leave:
+				_set_crouch_phase(CrouchPhase.NONE)
+			elif not down:
+				_set_crouch_phase(CrouchPhase.UP)
+			elif _crouch_timer <= 0.0:
+				_set_crouch_phase(CrouchPhase.HELD)
+		CrouchPhase.HELD:
+			if leave:
+				_set_crouch_phase(CrouchPhase.NONE)
+			elif not down:
+				_set_crouch_phase(CrouchPhase.UP)
+		CrouchPhase.UP:
+			if leave or not is_zero_approx(axis):
+				_set_crouch_phase(CrouchPhase.NONE)
+			elif down:
+				_set_crouch_phase(CrouchPhase.DOWN)
+			elif _crouch_timer <= 0.0:
+				_set_crouch_phase(CrouchPhase.NONE)
+
+func _set_crouch_phase(phase: int) -> void:
+	crouch_phase = phase
+	if phase == CrouchPhase.DOWN or phase == CrouchPhase.UP:
+		var animation: StringName = CFG.CROUCH_ANIMATIONS[phase]
+		_crouch_timer = visual.sprite_frames.get_frame_count(animation)/maxf(visual.sprite_frames.get_animation_speed(animation),1.0)
+	_apply_crouch_hurtbox(phase == CrouchPhase.DOWN or phase == CrouchPhase.HELD)
+
+## Agachado la hurtbox baja a CROUCH_HURTBOX_RATIO de la altura, con los pies fijos: los disparos altos pasan por encima.
+func _apply_crouch_hurtbox(on: bool) -> void:
+	# También el cuerpo: los proyectiles detectan al jugador por su colisión y luego por la hurtbox.
+	var nodes: Array[CollisionShape2D] = [hurtbox.collision_shape]
+	var body_node := get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if body_node != null:
+		nodes.append(body_node)
+	if on and not _hurtbox_crouched:
+		_hurtbox_base.clear()
+		for index in nodes.size():
+			var rect := nodes[index].shape as RectangleShape2D
+			if rect == null:
+				continue
+			_hurtbox_base[index] = {"size": rect.size, "y": nodes[index].position.y}
+			var height := rect.size.y*CFG.CROUCH_HURTBOX_RATIO
+			nodes[index].position.y += (rect.size.y-height)*0.5
+			rect.size.y = height
+		_hurtbox_crouched = true
+	elif not on and _hurtbox_crouched:
+		for index in _hurtbox_base:
+			var rect := nodes[index].shape as RectangleShape2D
+			if rect != null:
+				rect.size = _hurtbox_base[index].size
+				nodes[index].position.y = _hurtbox_base[index].y
+		_hurtbox_crouched = false
 
 func begin_lane_change(destination: int) -> void:
 	# API legacy intencionalmente inerte durante la migración de saves/tests.
@@ -470,9 +549,12 @@ static func resolve_shot_direction(raw_direction: Vector2,_airborne: bool,fallba
 	return discrete.normalized()
 
 func get_shot_direction() -> Vector2:
+	var aim_y := Input.get_axis("aim_up","aim_down")
+	if is_on_floor():
+		aim_y = minf(aim_y,0.0) # apuntar abajo solo vale en el aire (↓ en el piso es agacharse)
 	var raw_direction := Vector2(
 		Input.get_axis("move_left","move_right"),
-		Input.get_axis("aim_up","aim_down")
+		aim_y
 	)
 	return resolve_shot_direction(raw_direction,not is_on_floor(),facing)
 
@@ -503,8 +585,13 @@ func throw_projectile(kind: String,aim_override: Vector2 = Vector2.ZERO) -> void
 		visual.play(CFG.CIRUJA_RUN_THROW)
 		visual.frame = 0
 	shot_cooldown = 0.25
+	if crouching:
+		action_time = 0.0 # agachado se mantiene en pantalla: se lanza sin cambiar de animación
 	var shot_direction := get_shot_direction() if aim_override.is_zero_approx() else resolve_shot_direction(aim_override,not is_on_floor(),facing)
-	shot_requested.emit(global_position+get_muzzle_offset(shot_direction),lane_index,shot_direction,kind,team)
+	var muzzle := global_position+get_muzzle_offset(shot_direction)
+	if crouching:
+		muzzle.y += CFG.CROUCH_MUZZLE_DROP
+	shot_requested.emit(muzzle,lane_index,shot_direction,kind,team)
 	AudioManager.play_effect("disparo_cascote" if kind == "stone" else "disparo_naranja")
 	_emit_status_changed()
 
@@ -622,6 +709,7 @@ func get_respawn_state() -> Dictionary:
 
 
 func respawn_at(respawn_position: Vector2, saved_state: Dictionary,invulnerability_duration: float = -1.0) -> void:
+	_set_crouch_phase_safe()
 	cancel_punch()
 	cancel_collection()
 	cancel_tucumanazo()

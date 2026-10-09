@@ -1,5 +1,6 @@
 class_name Drone
 extends Node2D
+const CFG = preload("res://scripts/prototype/feel_config.gd")
 
 signal shot_requested(origin: Vector2, lane: int, direction: Vector2, kind: String, team: String)
 signal defeated(points: int)
@@ -200,6 +201,8 @@ func _emit_locked_shot() -> void:
 
 
 func _target_point() -> Vector2:
+	if target.get("crouching") == true:
+		return target.global_position+Vector2(0.0,CFG.CROUCH_DRONE_AIM_Y)
 	return target.global_position+Vector2(0.0,-35.0)
 
 

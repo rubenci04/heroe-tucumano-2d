@@ -1,0 +1,86 @@
+{
+ "ciruja": {
+  "agacharse": {
+   "cuadros": 5,
+   "fps": 24,
+   "bucle": false,
+   "canvas": [
+    320,
+    256
+   ],
+   "origen_video": "cro",
+   "indices": [
+    72,
+    74,
+    76,
+    78,
+    80
+   ],
+   "nota": "",
+   "alto_px": [
+    144,
+    169
+   ],
+   "fila_pies": [
+    235,
+    240
+   ],
+   "deriva_color_max": 3.3,
+   "cuadros_recortados": 0
+  },
+  "agachado": {
+   "cuadros": 4,
+   "fps": 8,
+   "bucle": true,
+   "canvas": [
+    320,
+    256
+   ],
+   "origen_video": "cro",
+   "indices": [
+    84,
+    96,
+    108,
+    120
+   ],
+   "nota": "",
+   "alto_px": [
+    146,
+    148
+   ],
+   "fila_pies": [
+    240,
+    240
+   ],
+   "deriva_color_max": 0.3,
+   "cuadros_recortados": 0
+  },
+  "levantarse": {
+   "cuadros": 4,
+   "fps": 16,
+   "bucle": false,
+   "canvas": [
+    320,
+    256
+   ],
+   "origen_video": "cro",
+   "indices": [
+    160,
+    164,
+    166,
+    168
+   ],
+   "nota": "",
+   "alto_px": [
+    147,
+    156
+   ],
+   "fila_pies": [
+    239,
+    240
+   ],
+   "deriva_color_max": 6.6,
+   "cuadros_recortados": 0
+  }
+ }
+}
