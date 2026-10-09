@@ -2,4 +2,5 @@
 Thumbs.db
 desktop.ini
 *.mp4
-godot-version/.godot/  _archivo/**/*.zip
+godot-version/.godot/
+_archivo/**/*.zip
