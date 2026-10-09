@@ -153,7 +153,9 @@ func _physics_process(delta: float) -> void:
 	$ExpresbusSetPiece.advance(delta,self)
 	$TesaSetPiece.advance(delta,self)
 	var camera := get_viewport().get_camera_2d()
-	encounter_director.update_safety(player.position.x,camera.get_screen_center_position().x if camera else player.position.x,get_viewport_rect().size.x)
+	var camera_x: float = camera.get_screen_center_position().x if camera else player.position.x
+	# Cámara en su tope: el jugador se adelanta al centro de cámara.
+	encounter_director.update_safety(player.position.x,camera_x,get_viewport_rect().size.x,player.position.x-camera_x > 4.0,delta)
 	if not _is_bus_set_piece_running():
 		encounter_director.advance_spawns(delta,player.position.x)
 		encounter_director.update_activation(player.position.x)
@@ -247,6 +249,9 @@ func spawn_enemy(archetype: String,x: float,lane: int) -> CharacterBody2D:
 
 ## Emisor del disparo en curso (para decorar el proyectil en main) y punto de lanzamiento medido.
 func _relay_shot(emitter: Node2D,origin: Vector2,lane: int,direction: Variant,kind: String,team: String) -> void:
+	# Regla: nadie dispara ni lanza fuera del encuadre visible (margen 40 px).
+	if not _emitter_in_view(emitter):
+		return
 	var muzzle := BATCH_VISUALS.muzzle_origin(emitter,origin)
 	shot_emitter = emitter
 	if direction is Vector2:
@@ -254,6 +259,13 @@ func _relay_shot(emitter: Node2D,origin: Vector2,lane: int,direction: Variant,ki
 	else:
 		shot_requested.emit(muzzle,lane,int(direction),kind,team)
 	shot_emitter = null
+
+
+func _emitter_in_view(emitter: Node2D) -> bool:
+	var camera := get_viewport().get_camera_2d()
+	if camera == null or not is_instance_valid(emitter):
+		return true
+	return absf(emitter.global_position.x-camera.get_screen_center_position().x) <= get_viewport_rect().size.x*0.5+40.0
 
 
 func _add_contact_shadow(actor: Node2D,character: String) -> void:

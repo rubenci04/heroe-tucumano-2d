@@ -29,6 +29,11 @@ const HOSTILE_PROJECTILE_CAP := 3
 const DRONE_WAVE_PROJECTILE_CAP := 2
 const DRONE_ATTACK_CAP := 1
 const DRONE_GLOBAL_GRANT_GAP := 0.75
+const OFFSCREEN_MARGIN := 40.0
+const OFFSCREEN_LIMIT := 4.0
+const CAMERA_CAP_OFFSCREEN_LIMIT := 1.0
+const EDGE_INSET := 30.0
+const VOID_Y := 900.0
 
 func actor_visual_rect(enemy: Node2D) -> Rect2:
 	var visual: AnimatedSprite2D = enemy.get_node("Visual")
@@ -124,11 +129,13 @@ func is_resting() -> bool:
 func add_rest(seconds: float) -> void:
 	_rest_remaining = maxf(_rest_remaining,seconds)
 
-func update_safety(player_x: float,center_x: float,width: float) -> void:
+func update_safety(player_x: float,center_x: float,width: float,camera_capped: bool = false,delta: float = 1.0/60.0) -> void:
 	camera_center_x = center_x
 	viewport_width = width
 	for encounter_id in _active_enemies.keys():
 		for enemy in get_active_enemies(encounter_id):
+			if _rescue_stray(encounter_id,enemy,center_x,width,camera_capped,delta):
+				continue
 			if enemy.has_method("cancel_offscreen_attack") and not is_attack_visible(enemy):
 				enemy.cancel_offscreen_attack()
 			# No dead band behind the camera: a stationary patrol there never returns
@@ -137,6 +144,34 @@ func update_safety(player_x: float,center_x: float,width: float) -> void:
 				release_attack(enemy)
 				_remove_enemy_reference(encounter_id,enemy.get_instance_id())
 				enemy.queue_free() # No reward; only retire well behind BOTH Player and camera.
+
+
+## Ningún encuentro depende de actores inalcanzables: un enemigo que cae al vacío se descarta (sin recompensa ni cupo);
+## uno que pasa más de OFFSCREEN_LIMIT s fuera de cuadro (1 s si la cámara está en su tope) vuelve al borde visible.
+func _rescue_stray(encounter_id: StringName,enemy: Node2D,center_x: float,width: float,camera_capped: bool,delta: float) -> bool:
+	if enemy.global_position.y > VOID_Y:
+		release_attack(enemy)
+		_remove_enemy_reference(encounter_id,enemy.get_instance_id())
+		enemy.queue_free()
+		return true
+	if enemy.get("archetype") == "drone":
+		return false
+	var half := width*0.5
+	var dx := enemy.global_position.x-center_x
+	if absf(dx) <= half+OFFSCREEN_MARGIN:
+		enemy.set_meta("offscreen_time",0.0)
+		return false
+	var elapsed: float = float(enemy.get_meta("offscreen_time",0.0))+delta
+	enemy.set_meta("offscreen_time",elapsed)
+	if elapsed < (CAMERA_CAP_OFFSCREEN_LIMIT if camera_capped and dx > 0.0 else OFFSCREEN_LIMIT):
+		return false
+	release_attack(enemy)
+	if enemy.has_method("cancel_offscreen_attack"):
+		enemy.cancel_offscreen_attack()
+	enemy.global_position.x = center_x+signf(dx)*(half-EDGE_INSET)
+	enemy.velocity = Vector2.ZERO
+	enemy.set_meta("offscreen_time",0.0)
+	return false
 
 
 func configure(encounters: Array, spawn_enemy: Callable, bounds: Vector2 = Vector2(40.0,7900.0)) -> bool:
