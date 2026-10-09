@@ -69,6 +69,7 @@ const STATIONARY_VEHICLES: Array[Dictionary] = [
 # Ciruja mide lo mismo en ambas versiones (escala 0.42), así que el decorado sube en la misma proporción.
 const DECOR_VEHICLE_SCALE := 1.223
 var _last_location: String = ""
+var _squad_spawn_index := 0
 var _drone_wave_spawn_index := 0
 @onready var player: CharacterBody2D = $Player
 @onready var encounter_director: ENCOUNTER_DIRECTOR = $EncounterDirector
@@ -297,6 +298,11 @@ func spawn_encounter_actor(archetype: String,x: float,lane: int) -> Node2D:
 		return spawn_drone(x,lane)
 	if data.get("vehicle_types",{}).has(archetype):
 		return spawn_agent_vehicle(archetype,x)
+	if data.get("squad_types",{}).has(archetype):
+		var squad_config: Dictionary = data.squad_types[archetype]
+		var squad_index := _squad_spawn_index%int(squad_config.get("size",3))
+		_squad_spawn_index += 1
+		return spawn_drone(x,lane,squad_index,int(squad_config.get("size",3)),squad_config)
 	return spawn_enemy(archetype,x,lane)
 
 
@@ -331,10 +337,16 @@ func _on_agent_vehicle_destroyed(vehicle: Node2D) -> void:
 		var offset := (float(index)-float(count-1)*0.5)*34.0
 		add_pickup("empanada","empanada",vehicle.position.x+offset,0,0.14,-1.0,StringName("agentveh_%d_%d" % [vehicle.get_instance_id(),index]))
 
-func spawn_drone(x: float,lane: int,formation_index: int = 0,formation_size: int = 1) -> Node2D:
+func spawn_drone(x: float,lane: int,formation_index: int = 0,formation_size: int = 1,squad_config: Dictionary = {}) -> Node2D:
 	if demo_closing:
 		return null
 	var drone = DRONE.instantiate()
+	if not squad_config.is_empty():
+		# Escuadrón (data.squad_types): altura de vuelo propia y menos vida (1–2 golpes), mismo arte de dron.
+		drone.flight_height = float(squad_config.get("height",145.0))
+		var squad_definition = drone.enemy_definition.duplicate()
+		squad_definition.max_health = int(squad_config.get("health",2))
+		drone.enemy_definition = squad_definition
 	drone.formation_index = formation_index
 	drone.formation_size = formation_size
 	drone.formation_phase = TAU*float(formation_index)/float(maxi(1,formation_size))
