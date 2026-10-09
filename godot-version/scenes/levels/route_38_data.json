@@ -812,17 +812,17 @@
 	"squad_types": {
 		"_nota": "Escuadrones de drones (mismo arte que el dron): altura de vuelo en px sobre el piso, vida en golpes, size = tamaño de la formación (fase del patrón). Disparan solo dentro del encuadre (margen 40 px).",
 		"drone_squad_low": {
-			"height": 105,
+			"height": 90,
 			"health": 2,
 			"size": 3
 		},
 		"drone_squad_mid": {
-			"height": 150,
+			"height": 125,
 			"health": 2,
 			"size": 3
 		},
 		"drone_squad_high": {
-			"height": 195,
+			"height": 158,
 			"health": 1,
 			"size": 3
 		}
