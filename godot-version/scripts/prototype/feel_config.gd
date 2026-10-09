@@ -166,9 +166,10 @@ const DEATH_DUST := {
 const DEATH_DUST_DEFAULT := {"count": 8, "spread": 22.0}
 const DEATH_DUST_AT := 0.55            # fracción de la animación de muerte en que el cuerpo toca el suelo
 const DEATH_DUST_FALLBACK_AT := 0.45   # idem con la caída por tweens (sin cuadros de muerte)
-const DEATH_LINGER := 1.0              # s que el cuerpo queda en el suelo antes de desvanecerse
-const DEATH_LINGER_HEAVY := 1.8        # idem para Grandote y jefe
-const DEATH_FADE := 0.55
+const DEATH_LINGER := 0.8              # s que el cuerpo queda en el suelo antes de parpadear y desvanecerse
+const DEATH_LINGER_HEAVY := 1.2        # idem para Grandote y jefe (cuerpo + parpadeo ≤ 2 s)
+const DEATH_FADE := 0.6                # parpadeo final mientras se desvanece
+const DEATH_BLINK_HZ := 10.0
 const GROUND_DUST_LIFE := 0.5
 const GROUND_DUST_SPEED := 38.0
 const GROUND_DUST_SIZE := 2.6
@@ -316,8 +317,8 @@ const ARC_TRAIL_WIDTH_MULT := 0.5      # la estela se afina con el vaso más chi
 const ARC_HITBOX_MIN := 6.0            # lado mínimo de la hitbox en px
 
 # --- Mancha de café / botella en el piso ---
-const STAIN_DURATION := 5.0            # s que dura la mancha (incluye el desvanecido final)
-const STAIN_FADE_TIME := 1.0           # s finales en que se desvanece
+const STAIN_DURATION := 2.0            # s que dura la mancha (incluye el parpadeo final)
+const STAIN_FADE_TIME := 0.7           # s finales en que parpadea y se desvanece
 const STAIN_MAX := 4                   # manchas simultáneas; la más vieja se borra
 const STAIN_RADIUS := Vector2(24.0, 6.0)   # radios x/y de la elipse (perspectiva del piso)
 const STAIN_OFFSET_Y := -5.0           # sube la mancha sobre el piso visible (la cámara corta a y=375)

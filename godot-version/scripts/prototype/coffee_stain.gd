@@ -51,6 +51,8 @@ func _process(delta: float) -> void:
 func _draw() -> void:
 	var grow := clampf(age / 0.12, 0.2, 1.0)
 	var alpha := _fade()
+	if alpha < 1.0 and int(age * 14.0) % 2 == 1:
+		alpha *= 0.35 # parpadeo final
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE * grow)
 	draw_colored_polygon(_outline, _tinted(CFG.STAIN_FILL, alpha))
 	draw_colored_polygon(_inner, _tinted(CFG.STAIN_INNER, alpha))

@@ -241,5 +241,8 @@ func _linger_and_fade(body: CanvasItem, linger: float) -> void:
 		return
 	var fade := body.create_tween()
 	fade.tween_interval(linger)
-	fade.tween_property(body, "modulate:a", 0.0, CFG.DEATH_FADE)
+	# Parpadeo final: el cuerpo alterna opaco/tenue mientras baja su opacidad y se libera.
+	fade.tween_method(func(t: float) -> void:
+		if is_instance_valid(body):
+			body.modulate.a = (1.0 - t) * (1.0 if int(t * CFG.DEATH_FADE * CFG.DEATH_BLINK_HZ * 2.0) % 2 == 0 else 0.3), 0.0, 1.0, CFG.DEATH_FADE)
 	fade.tween_callback(body.queue_free)
