@@ -229,7 +229,7 @@ func _physics_process(delta: float) -> void:
 		visual.modulate = Color(1,0.25,0.25)
 	else:
 		visual.modulate = Color.WHITE
-	visual.modulate.a = 0.4 if invulnerability > 0.0 and int(invulnerability*12.0)%2 == 0 else 1.0
+	visual.modulate.a = CFG.INVULNERABILITY_BLINK_ALPHA if invulnerability > 0.0 and int(invulnerability*12.0)%2 == 0 else 1.0
 	var axis: float = Input.get_axis("move_left","move_right") if controls_enabled and hit_time <= 0.0 and not special_active and not collection_active and not punch_active else 0.0
 	_update_crouch(delta,axis)
 	if special_active:

@@ -30,7 +30,6 @@ func run() -> void:
 	player = route.player
 	player.oranges_unlocked = true
 	player.stones = 99
-	player.health_component.set_invulnerability(100000.0)
 	route.encounter_director._rest_remaining = 1000000.0
 	player.position.x = 1500.0
 	Input.action_press("move_right")

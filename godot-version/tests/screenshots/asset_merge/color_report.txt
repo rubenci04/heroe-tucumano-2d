@@ -1,0 +1,3 @@
+Run f2 lum=0.405 rel=0.0% OK
+correr_lanzar f2 lum=0.403 rel=-0.6% OK
+correr_lanzar f4 lum=0.404 rel=-0.4% OK

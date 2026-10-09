@@ -16,6 +16,9 @@ const CIRUJA_THROW_START_LAG := 1.0 / 60.0 + 0.003
 # Corriendo (correr_lanzar, cuadros nuevos, 24 fps): run_release_frame = cuadro de salida, run_hand = mano en píxeles de ese
 # cuadro. La animación arranca en el mismo tick del disparo (sin START_LAG): latencia = run_release_frame / 24 s.
 # run_resume_frame: cuadro del ciclo "correr" al que se vuelve al terminar, para que no haya salto visual.
+# Parpadeo de invulnerabilidad: alpha de los cuadros "apagados" (0,4 hacía ver a Ciruja casi transparente).
+const INVULNERABILITY_BLINK_ALPHA := 0.6
+
 # Agacharse (tecla ↓ en el piso, sin moverse).
 const CROUCH_ANIMATIONS := {1: &"agacharse", 2: &"agachado", 3: &"levantarse"} # Player.CrouchPhase DOWN / HELD / UP
 const CROUCH_HURTBOX_RATIO := 0.6   # altura de la hurtbox agachado (pies fijos)
