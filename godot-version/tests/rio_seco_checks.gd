@@ -82,6 +82,10 @@ func run() -> void:
 	expect(offscreen_shots.is_empty(),"No hay proyectiles enemigos nacidos fuera de cámara",{"shots":offscreen_shots})
 
 	# Rescate: enemigo spawneado lejos, jugador en el tope de cámara, nadie lo mata.
+	# La cámara lenta de las muertes dura tiempo REAL (Time.get_ticks_msec) y escala el delta: si la última muerte de la
+	# travesía la dispara justo antes, el reloj del rescate corre más lento (causa del 2/11 inestable). Se anula para ser determinista.
+	route.feel._slowmo_until_ms = 0
+	Engine.time_scale = 1.0
 	player.position = Vector2(7400.0,GameConfig.GROUND_Y)
 	for i in 30:
 		await physics_frame
@@ -96,7 +100,7 @@ func run() -> void:
 		worst_stray = maxf(worst_stray,float(stray.get_meta("offscreen_time",0.0)))
 		if absf(stray.global_position.x-camera_center()) <= 400.0:
 			break
-	expect(worst_stray <= director.OFFSCREEN_LIMIT+0.1 and absf(stray.global_position.x-camera_center()) <= 400.0,"Un enemigo inalcanzable vuelve al borde visible en ≤ 4 s",{"x":stray.global_position.x,"cam":camera_center(),"ctrl":player.controls_enabled,"boss":is_instance_valid(route.boss),"t":stray.get_meta("offscreen_time",-1),"tracked":director.get_active_enemies(&"fixture_stray").size(),"closing":route.demo_closing})
+	expect(worst_stray <= director.OFFSCREEN_LIMIT+0.1 and absf(stray.global_position.x-camera_center()) <= 400.0,"Un enemigo inalcanzable vuelve al borde visible en ≤ 4 s",{"x":stray.global_position.x,"cam":camera_center(),"ctrl":player.controls_enabled,"boss":is_instance_valid(route.boss),"t":stray.get_meta("offscreen_time",-1),"tracked":director.get_active_enemies(&"fixture_stray").size(),"closing":route.demo_closing,"ts":Engine.time_scale,"worst":worst_stray})
 	# Disparo desde fuera de cuadro: descartado.
 	stray.global_position.x = camera_center()+700.0
 	var before: int = route.get_node("Projectiles").get_child_count()
