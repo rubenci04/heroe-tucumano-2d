@@ -7,6 +7,12 @@
    "bucle": true,
    "canvas": [320, 256]
   },
+  "correr_lanzar": {
+   "cuadros": 7,
+   "fps": 24,
+   "bucle": false,
+   "canvas": [320, 256]
+  },
   "correr": {
    "cuadros": 8,
    "fps": 12,
