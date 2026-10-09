@@ -155,7 +155,7 @@ func _physics_process(delta: float) -> void:
 	var camera := get_viewport().get_camera_2d()
 	var camera_x: float = camera.get_screen_center_position().x if camera else player.position.x
 	# Cámara en su tope: el jugador se adelanta al centro de cámara.
-	encounter_director.update_safety(player.position.x,camera_x,get_viewport_rect().size.x,player.position.x-camera_x > 4.0,delta)
+	encounter_director.update_safety(player.position.x,camera_x,_view_width(camera),player.position.x-camera_x > 4.0,delta)
 	if not _is_bus_set_piece_running():
 		encounter_director.advance_spawns(delta,player.position.x)
 		encounter_director.update_activation(player.position.x)
@@ -261,6 +261,10 @@ func _relay_shot(emitter: Node2D,origin: Vector2,lane: int,direction: Variant,ki
 	shot_emitter = null
 
 
+## Ancho visible en mundo: el viewport dividido por el zoom de la cámara de la ruta.
+func _view_width(camera: Camera2D) -> float:
+	return get_viewport_rect().size.x/(camera.zoom.x if camera else 1.0)
+
 func _emitter_in_view(emitter: Node2D) -> bool:
 	# Encuadre del director (update_safety, el mismo que ve el resto del encuentro) o de la cámara activa;
 	# en juego son la misma cámara. Sin ninguna, no hay encuadre que respetar.
@@ -270,7 +274,7 @@ func _emitter_in_view(emitter: Node2D) -> bool:
 	var margin: float = encounter_director.OFFSCREEN_MARGIN
 	if not is_nan(encounter_director.camera_center_x) and absf(emitter.global_position.x-encounter_director.camera_center_x) <= encounter_director.viewport_width*0.5+margin:
 		return true
-	return camera != null and absf(emitter.global_position.x-camera.get_screen_center_position().x) <= get_viewport_rect().size.x*0.5+margin
+	return camera != null and absf(emitter.global_position.x-camera.get_screen_center_position().x) <= _view_width(camera)*0.5+margin
 
 
 func _add_contact_shadow(actor: Node2D,character: String) -> void:

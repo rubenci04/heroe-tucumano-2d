@@ -163,7 +163,7 @@ func _ranged_entry_visible() -> bool:
 		return _attack_is_visible()
 	var camera := get_viewport().get_camera_2d()
 	var center_x: float = camera.get_screen_center_position().x if camera else target.global_position.x
-	return absf(global_position.x-center_x) <= get_viewport_rect().size.x*0.5-24.0
+	return absf(global_position.x-center_x) <= get_viewport_rect().size.x/(camera.zoom.x if camera else 1.0)*0.5-24.0
 
 
 func _reposition_velocity(distance: float) -> float:

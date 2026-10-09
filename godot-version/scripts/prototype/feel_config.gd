@@ -224,6 +224,14 @@ const PROJECTILE_SHADOW_MIN_SCALE := 0.4
 # --- Jefe Palermitano ---
 const BOSS_TRIGGER_X := 400.0          # Ciruja cruza esta X y arranca la intro
 const BOSS_INTRO_DURATION := 2.0       # s con cámara bloqueada, nombre y barra apareciendo
+# Encuadre de la ruta (main.gd). Zoom elegido en docs/INVENTARIO_ASSETS.md / informe de encuadre.
+const VIEW_WIDTH := 800.0
+const VIEW_HEIGHT := 450.0
+const ROUTE_CAMERA_ZOOM := 1.4
+const ROUTE_ARENA_CAMERA_ZOOM := 1.0     # arenas de jefe: son más anchas que la vista con zoom
+const ROUTE_ZOOM_SPEED := 1.2            # zoom/s al entrar y salir de una arena
+const ROUTE_PLAYER_SCREEN_X := 0.38      # fracción del ancho donde queda el jugador mirando a la derecha (0,62 mirando a la izquierda)
+const ROUTE_LOOKAHEAD_SPEED := 0.6       # fracción de pantalla por segundo al cambiar de lado
 const BOSS_INTRO_ZOOM := 1.25
 const BOSS_INTRO_ZOOM_IN := 0.5        # s en acercarse al jefe
 const BOSS_INTRO_ZOOM_OUT := 0.45      # s en volver al plano fijo de la arena

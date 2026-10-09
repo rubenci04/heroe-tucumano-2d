@@ -40,7 +40,7 @@ func advance(delta: float,route: Node) -> void:
 	var player: Node2D = route.player
 	var camera := get_viewport().get_camera_2d()
 	var camera_x: float = camera.get_screen_center_position().x if camera else player.position.x
-	warning_position = Vector2(camera_x+365.0,GameConfig.GROUND_Y-62.0)
+	warning_position = Vector2(camera_x+get_viewport_rect().size.x/(camera.zoom.x if camera else 1.0)*0.5-35.0,GameConfig.GROUND_Y-62.0)
 	if phase == Phase.READY:
 		if player.position.x < trigger_x or player.position.x >= sector_end_x:
 			return

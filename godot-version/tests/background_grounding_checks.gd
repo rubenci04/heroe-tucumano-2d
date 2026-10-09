@@ -31,7 +31,8 @@ func run() -> void:
 		check(atlas != null and atlas.atlas.resource_path=="res://assets/fondo_completo.png" and atlas.region==expected_regions[index],"Panorama region %d uses the expected non-destructive third" % index)
 		check(segments[index].scale==Vector2(0.84,0.84) and is_equal_approx(segments[index].position.y,-232.76),"Panorama region %d keeps uniform scale and baseline" % index)
 	check(is_equal_approx(segments[0].position.x+expected_regions[0].size.x*0.84,segments[1].position.x) and is_equal_approx(segments[1].position.x+expected_regions[1].size.x*0.84,segments[2].position.x),"Panorama regions meet at exact scaled boundaries")
-	check(panorama.scroll_scale==Vector2(0.66,0.0) and panorama.repeat_size==Vector2.ZERO,"Panorama keeps coherent parallax without repetition")
+	# Vertical 1.0 (antes 0.0): el fondo queda fijo al mundo cuando la cámara se acerca y baja (ROUTE_CAMERA_ZOOM); con zoom 1.0 el encuadre es idéntico.
+	check(panorama.scroll_scale==Vector2(0.66,1.0) and panorama.repeat_size==Vector2.ZERO,"Panorama keeps coherent parallax without repetition")
 	var stationary: Array[Node] = get_nodes_in_group("stationary_vehicles")
 	check(stationary.size()==9 and stationary.all(func(vehicle): return is_equal_approx(vehicle.get_ground_anchor_world_y(),GameConfig.GROUND_Y)),"All stationary vehicle wheel anchors touch the gameplay surface")
 	check(stationary.all(func(vehicle): return vehicle.get_node("CollisionShape2D").one_way_collision),"All stationary roofs remain one-way after grounding")

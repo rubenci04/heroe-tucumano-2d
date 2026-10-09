@@ -33,7 +33,7 @@ script = ExtResource("environment")
 
 [node name="DistantBackground" type="Parallax2D" parent="." unique_id=317980110]
 z_index = -20
-scroll_scale = Vector2(0.08, 0)
+scroll_scale = Vector2(0.08, 1)
 repeat_size = Vector2(1592.22, 0)
 repeat_times = 3
 
@@ -56,7 +56,7 @@ centered = false
 
 [node name="MainPanorama" type="Parallax2D" parent="." unique_id=1234422360]
 z_index = -15
-scroll_scale = Vector2(0.66, 0)
+scroll_scale = Vector2(0.66, 1)
 
 [node name="FondoA" type="Sprite2D" parent="MainPanorama"]
 position = Vector2(0, -232.76)
@@ -88,7 +88,7 @@ texture = ExtResource("reeds")
 
 [node name="BackLane" type="Parallax2D" parent="RoadLayers" unique_id=529259031]
 z_index = -5
-scroll_scale = Vector2(1, 0)
+scroll_scale = Vector2(1, 1)
 repeat_size = Vector2(658, 0)
 repeat_times = 3
 

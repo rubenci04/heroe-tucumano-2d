@@ -25,6 +25,8 @@ var shake_intensity: float = 0.0
 var shake_elapsed: float = 0.0
 var camera_follow_min_x: float = 400.0
 var camera_follow_max_x: float = GameConfig.WORLD_WIDTH-400.0
+var _arena_active := false
+var _screen_anchor: float = CFG.ROUTE_PLAYER_SCREEN_X # posición horizontal del jugador en pantalla (0..1), suavizada
 var demo_closing: bool = false
 var demo_closing_complete: bool = false
 var game_over: bool = false
@@ -76,6 +78,7 @@ func _ready() -> void:
 	pause_menu.get_node("Options/RestartCheckpoint").pressed.connect(func(): pause_menu.get_node("ConfirmRestart").popup_centered())
 	pause_menu.get_node("ConfirmRestart").confirmed.connect(restart_from_checkpoint)
 	_restore_player_progress()
+	camera.zoom = Vector2.ONE
 	camera.position = Vector2(400,225)
 	camera.reset_smoothing()
 	if game_session.pending_checkpoint_restore:
@@ -87,8 +90,31 @@ func _process(delta: float) -> void:
 	if current_state != GAME_SESSION.DemoState.GAMEPLAY:
 		return
 	if not route.camera_locked:
-		camera.position.x = clampf(player.position.x,camera_follow_min_x,camera_follow_max_x)
+		_update_route_camera(delta)
 	_update_camera_shake(delta)
+
+## Encuadre de la ruta: zoom ROUTE_CAMERA_ZOOM (más cerca, estilo Metal Slug), jugador anclado a ROUTE_PLAYER_SCREEN_X con
+## look-ahead suave hacia donde mira. En las arenas de jefe vuelve a ROUTE_ARENA_CAMERA_ZOOM (la arena es más ancha que la vista).
+var route_zoom_override := 0.0 # solo capturas/pruebas de encuadre
+
+func _route_zoom() -> float:
+	if route_zoom_override > 0.0 and not _arena_active:
+		return route_zoom_override
+	return CFG.ROUTE_ARENA_CAMERA_ZOOM if _arena_active else CFG.ROUTE_CAMERA_ZOOM
+
+func _view_half_width() -> float:
+	return CFG.VIEW_WIDTH/camera.zoom.x*0.5
+
+func _update_route_camera(delta: float,snap: bool = false) -> void:
+	var target_zoom := _route_zoom()
+	camera.zoom = Vector2.ONE*(target_zoom if snap else move_toward(camera.zoom.x,target_zoom,CFG.ROUTE_ZOOM_SPEED*delta))
+	var half := _view_half_width()
+	var wanted := CFG.ROUTE_PLAYER_SCREEN_X if player.facing >= 0 else 1.0-CFG.ROUTE_PLAYER_SCREEN_X
+	_screen_anchor = wanted if snap else move_toward(_screen_anchor,wanted,CFG.ROUTE_LOOKAHEAD_SPEED*delta)
+	var min_x := maxf(half,camera_follow_min_x-400.0+half)
+	var max_x := minf(GameConfig.WORLD_WIDTH-half,camera_follow_max_x+400.0-half)
+	camera.position.x = clampf(player.position.x+(0.5-_screen_anchor)*half*2.0,min_x,max_x)
+	camera.position.y = CFG.VIEW_HEIGHT-CFG.VIEW_HEIGHT*0.5/camera.zoom.x # piso visible: el borde inferior queda en y=450
 
 func _start_camera_shake(intensity: float,duration: float) -> void:
 	shake_intensity = maxf(intensity,0.0)
@@ -99,6 +125,7 @@ func _start_camera_shake(intensity: float,duration: float) -> void:
 		camera.offset = Vector2.ZERO
 
 func _on_boss_arena_changed(active: bool,left_bound: float,right_bound: float) -> void:
+	_arena_active = active
 	if active:
 		camera_follow_min_x = maxf(400.0,left_bound+400.0)
 		camera_follow_max_x = minf(GameConfig.WORLD_WIDTH-400.0,right_bound-400.0)
@@ -315,7 +342,8 @@ func _restore_checkpoint_run() -> void:
 	change_state(GAME_SESSION.DemoState.GAMEPLAY,true)
 	AudioManager.request_music(AudioManager.MUSIC_GAMEPLAY)
 	_sync_session_from_player()
-	camera.position.x = clampf(player.position.x,camera_follow_min_x,camera_follow_max_x)
+	_screen_anchor = CFG.ROUTE_PLAYER_SCREEN_X
+	_update_route_camera(0.0,true)
 	camera.reset_smoothing()
 
 
@@ -476,7 +504,7 @@ func _on_player_respawn_requested() -> void:
 		player.controls_enabled = current_state == GAME_SESSION.DemoState.GAMEPLAY
 		route.last_safe_position = respawn_position
 	_sync_session_from_player()
-	camera.position.x = clampf(player.position.x,400.0,GameConfig.WORLD_WIDTH-400.0)
+	_update_route_camera(0.0,true)
 	camera.reset_smoothing()
 	hud.show_notice("CONTINUÁ")
 
