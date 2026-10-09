@@ -44,6 +44,10 @@ var health: int:
 var max_health: int:
 	get:
 		return health_component.max_health
+## Compatibilidad con probes de ruta que leen ai_state de todos los actores: el ciclo del vehículo.
+var ai_state: int:
+	get:
+		return phase
 
 
 func _ready() -> void:

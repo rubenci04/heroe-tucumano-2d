@@ -46,7 +46,7 @@ func run() -> void:
 	var checkpoint = route.get_node("Checkpoint")
 	check(route.checkpoint_records.size()==2,"Two data-driven checkpoints exist in addition to the start")
 	check(not route._checkpoint_is_safe(route.checkpoint_records[0]),"Automatic checkpoint waits for prerequisites and a safe break")
-	var completed: Array[StringName] = [&"route_wave_01",&"route_micro_01",&"route_micro_02",&"route_wave_02"]
+	var completed: Array[StringName] = [&"route_wave_01",&"route_micro_01",&"route_micro_02",&"route_wave_02",&"route_vehicle_acheral",&"route_vehicle_monteros",&"route_squad_monteros"] # + encuentros nuevos (vehículos/escuadrón) anteriores a route_wave_03
 	route.encounter_director.restore_completed_encounters(completed)
 	route.get_node("ExpresbusSetPiece").phase = ExpresbusSetPiece.Phase.FINISHED
 	route.get_node("ExpresbusSetPiece").spawn_count = 1

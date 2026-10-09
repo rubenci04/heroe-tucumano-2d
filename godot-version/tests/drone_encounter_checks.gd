@@ -50,7 +50,9 @@ func run() -> void:
 	var completed_before_wave: Array[StringName] = [
 		&"route_wave_01",&"route_micro_01",&"route_micro_02",&"route_wave_02",
 		&"route_wave_03",&"route_micro_03",&"route_drone_01",&"route_micro_04",
-		&"route_wave_04",&"route_micro_05"
+		&"route_wave_04",&"route_micro_05",
+		# encuentros nuevos (vehículos de agentes y escuadrones) anteriores a la oleada aérea de Río Seco
+		&"route_vehicle_acheral",&"route_vehicle_monteros",&"route_squad_monteros",&"route_squad_quinteros",&"route_vehicle_quinteros"
 	]
 	director.restore_completed_encounters(completed_before_wave)
 	await process_frame

@@ -614,7 +614,7 @@ func run_tests() -> void:
 	var encounter_director = route.encounter_director
 	check(route.get_node_or_null("LaneReadability")==null,"Retired lane readability overlay is absent from the linear route")
 	var registered_encounters: Array[StringName] = encounter_director.get_registered_encounter_ids()
-	check(registered_encounters.size()==13 and registered_encounters[0]==&"route_wave_01" and registered_encounters.has(&"route_drone_01") and registered_encounters.has(&"route_drone_02") and not registered_encounters.has(&"route_drone_03") and registered_encounters[-1]==&"route_wave_06" and not encounter_director.has_encounter(&"route_miniboss_grandote"),"Route registers the isolated Drone tutorial and one later five-Drone wave")
+	check(registered_encounters.size()==19 and registered_encounters[0]==&"route_wave_01" and registered_encounters.has(&"route_drone_01") and registered_encounters.has(&"route_drone_02") and not registered_encounters.has(&"route_drone_03") and registered_encounters[-1]==&"route_squad_rio_seco" and not encounter_director.has_encounter(&"route_miniboss_grandote"),"Route registers the isolated Drone tutorial and one later five-Drone wave")
 	var encounter_source := FileAccess.get_file_as_string("res://scripts/core/route_38.gd")
 	check("data.waves" not in encounter_source and "activated_waves" not in encounter_source,"Route delegates wave activation state to EncounterDirector")
 	var started_encounters: Array[StringName] = []
