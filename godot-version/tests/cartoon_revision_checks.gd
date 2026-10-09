@@ -85,9 +85,11 @@ func _run_point() -> void:
 			player.oranges_unlocked = true
 			player.shot_cooldown = 0
 			player.throw_projectile("orange", Vector2.RIGHT)
+			# El lanzamiento usa los cuadros VIEJOS normalizados y el proyectil sale en el cuadro de la mano.
+			await create_timer(0.3).timeout
 			player.play_animation(player.action_animation)
 			player.visual.pause()
-			check("/ciruja/idle/" in player.visual.sprite_frames.get_frame_texture(player.visual.animation, 0).resource_path, "Throw preserves the new silhouette")
+			check("ciruja_disparo_naranja" in player.visual.sprite_frames.get_frame_texture(player.visual.animation, 0).resource_path, "Throw uses the normalized legacy frames")
 			var shot = route.get_node("Projectiles").get_child(-1)
 			shot.set_physics_process(false)
 			var height: float = CollisionFactory.opaque_bounds(player.visual.sprite_frames.get_frame_texture(player.visual.animation, player.visual.frame)).size.y * player.visual.scale.y

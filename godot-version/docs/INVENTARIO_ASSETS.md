@@ -154,3 +154,29 @@ Hay **un solo `project.godot`** (`godot-version/`); no existe un `godot-version`
 | `validation/*.log` baseline/final idénticos | salidas de tests, no assets | no se tocan |
 
 Lo que el proyecto carga realmente: `res://` = `godot-version/`; personajes NUEVOS por `res://characters/lote2_cuadros/**` (a través de `assets/animations/generated/*.tres`) y VIEJOS por `res://assets/*.png`.
+
+## e) Resolvedor con prioridad (después de este cambio)
+
+`scripts/prototype/batch_visuals.gd` resuelve cada estado en este orden: **1) NUEVO** (`characters/`), **2) VIEJO** (`assets/`) normalizado, **3) FALTA** (marcador magenta + `push_warning`). Ya no hay alias que escondan un estado detrás del idle.
+
+- Normalización de un cuadro VIEJO: se reescala una sola vez (textura precalculada) por la relación de alto reposo nuevo/viejo del personaje (Ciruja 191/197 ≈ 0,97), de modo que la escala visual del sprite sigue constante; pies en la misma línea de suelo (borde opaco inferior) y eje horizontal en el centro de los pies, con el signo corregido cuando `flip_h` espeja el cuadro.
+- Ciruja lanza con `ciruja_disparo_naranja0-6` y `ciruja_disparo_cascote0-5`. El proyectil, el fogonazo y el temblor salen en el cuadro de liberación: `CIRUJA_THROW` en `feel_config.gd` (`release_frame`, `hand`) más `CIRUJA_THROW_START_LAG`. Latencia agregada al disparo ≈ 0,23 s (naranja, 28 fps) y ≈ 0,23 s (piedra, 24 fps).
+- **F3** (solo builds de desarrollo): sobre cada personaje, animación, estado y origen NUEVO / VIEJO / FALTA.
+- El estilo del arte VIEJO de Ciruja es el mismo personaje y combina con el nuevo, así que no se modificó ningún asset (ver `tests/screenshots/asset_merge/poses_normalizadas.png`).
+
+### Cobertura real (`tools/audit_coverage.gd`, juego completo)
+
+| Origen | Estados | Cuáles |
+|---|---|---|
+| NUEVO | 24 | Ciruja: Idle, Run, Punch, Headbutt, Death · Agente: run, disparar, Punch, Death · Hipster: run, lanzar, Death · Grandote: run, punch, ground_slam, Death · Palermitano: boss_run, boss_idle, boss_punch*, boss_joke*, boss_order*, Death, idle_v2, golpe_v2 |
+| VIEJO | 5 | Ciruja: Jump, Throw Orange, Throw Stone, Hit · Palermitano: boss_cofee |
+| FALTA | 0 | — |
+
+\* `boss_punch` usa `idle` (decisión previa `BOSS_CHAIN_ANIMATED=false`), `boss_joke` y `boss_order` usan `idle_v2`: son sustitutos deliberados por configuración, no huecos silenciosos. El Drone no tiene paquete nuevo (solo VIEJO) y queda fuera del resolvedor.
+
+### Capturas (`tests/screenshots/asset_merge/`)
+
+- `tira_naranja.png`, `tira_piedra.png`: 6 cuadros de F5 con el brazo y el proyectil saliendo de la mano.
+- `poses_normalizadas.png`: Idle/Run (NUEVO) junto a Jump, Hit, Throw Orange/Stone (VIEJO): misma altura y pies.
+- `f3_origenes.png`: F3 con NUEVO, VIEJO y FALTA (el estado "inexistente" se fuerza a propósito en el script de captura).
+- Se regeneran con `tests/capture_asset_merge.gd` (con ventana, `--fixed-fps 60`).

@@ -4,6 +4,7 @@ extends Node
 
 const CFG = preload("res://scripts/prototype/feel_config.gd")
 const FX = preload("res://scripts/prototype/feel_fx.gd")
+const BATCH_VISUALS = preload("res://scripts/prototype/batch_visuals.gd")
 const FLASH_SHADER := "shader_type canvas_item;\nuniform float amount : hint_range(0.0, 1.0) = 0.0;\nvoid fragment() { COLOR.rgb = mix(COLOR.rgb, vec3(1.0), amount); }\n"
 
 var fx: Node2D
@@ -107,7 +108,15 @@ func shake(intensity: float, duration: float) -> void:
 		_shake_total = duration
 
 
-func _on_player_shot(origin: Vector2, _lane: int, direction: Variant, _kind: String, _team: String) -> void:
+func _on_player_shot(origin: Vector2, _lane: int, direction: Variant, kind: String, _team: String) -> void:
+	# Con el lanzamiento VIEJO el fogonazo y el temblor salen en el cuadro de la mano, igual que el proyectil.
+	var delay := BATCH_VISUALS.throw_release_delay(player, kind)
+	if delay > 0.0:
+		var offset: Vector2 = origin - player.global_position
+		await get_tree().create_timer(delay, false).timeout
+		if not is_instance_valid(player):
+			return
+		origin = BATCH_VISUALS.throw_hand_origin(player, kind, player.global_position + offset, direction)
 	fx.muzzle_flash(origin, direction if direction is Vector2 else Vector2(float(direction), 0.0))
 	shake(CFG.SHAKE_SHOT_INTENSITY, CFG.SHAKE_SHOT_DURATION)
 

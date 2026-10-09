@@ -45,7 +45,7 @@ func run() -> void:
 	target.set_physics_process(false)
 	target.contact.monitoring = false
 	await physics_frame
-	var horizontal = fire(scene,player,Vector2.RIGHT)
+	var horizontal = await fire(scene,player,Vector2.RIGHT)
 	expect(horizontal!=null and horizontal.travel_direction==Vector2.RIGHT,"Horizontal shot is emitted toward input beside an auto")
 	expect(horizontal!=null and not overlaps_platform(horizontal),"Horizontal muzzle does not start inside vehicle roof")
 	for step in range(40):
@@ -58,7 +58,7 @@ func run() -> void:
 
 	# 2. Horizontal fire while standing on the roof remains alive past its edge.
 	player.position = Vector2(auto.position.x,roof_y)
-	var roof_horizontal = fire(scene,player,Vector2.RIGHT)
+	var roof_horizontal = await fire(scene,player,Vector2.RIGHT)
 	expect(roof_horizontal!=null and not overlaps_platform(roof_horizontal),"Shot from vehicle roof starts clear of its collider")
 	roof_horizontal._physics_process(0.12)
 	expect(not roof_horizontal.spent,"Horizontal shot from roof is not absorbed by the vehicle")
@@ -66,7 +66,7 @@ func run() -> void:
 
 	# 3. Upper diagonal beside the auto preserves exact input direction.
 	player.position = Vector2(auto.position.x-150.0,GameConfig.GROUND_Y)
-	var upper_diagonal = fire(scene,player,Vector2(1,-1))
+	var upper_diagonal = await fire(scene,player,Vector2(1,-1))
 	expect(upper_diagonal.travel_direction.is_equal_approx(Vector2(1,-1).normalized()) and not overlaps_platform(upper_diagonal),"Upper diagonal uses its input vector and a clear muzzle")
 	upper_diagonal._physics_process(0.08)
 	expect(not upper_diagonal.spent,"Upper diagonal remains unobstructed beside vehicle")
@@ -74,7 +74,7 @@ func run() -> void:
 
 	# 4. Lower diagonal deliberately crosses the one-way roof without impact.
 	player.position = Vector2(auto.position.x,roof_y)
-	var lower_diagonal = fire(scene,player,Vector2(1,1))
+	var lower_diagonal = await fire(scene,player,Vector2(1,1))
 	expect(lower_diagonal.travel_direction.is_equal_approx(Vector2(1,1).normalized()) and not overlaps_platform(lower_diagonal),"Lower diagonal from roof starts above, not inside, the collider")
 	lower_diagonal._physics_process(0.05)
 	expect(not lower_diagonal.spent and lower_diagonal.position.y>roof_y-10.0,"Lower diagonal crosses one-way roof without being consumed")
@@ -82,8 +82,8 @@ func run() -> void:
 
 	# 5. Straight-up fire keeps its direction and explicit overhead muzzle.
 	player.position = Vector2(auto.position.x-150.0,GameConfig.GROUND_Y)
-	var upward = fire(scene,player,Vector2.UP)
-	expect(upward.travel_direction==Vector2.UP and upward.position==player.position+Vector2(0.0,-74.0),"Straight-up projectile uses the overhead muzzle")
+	var upward = await fire(scene,player,Vector2.UP)
+	expect(upward.travel_direction==Vector2.UP and upward.position.distance_to(player.position+Vector2(0.0,-74.0))<=12.0,"Straight-up projectile uses the overhead muzzle")
 	upward._physics_process(0.08)
 	expect(not upward.spent,"Straight-up fire is not intercepted by nearby vehicle")
 	upward.queue_free()
@@ -91,7 +91,7 @@ func run() -> void:
 	# 6/7. Every discrete muzzle is clear; projectiles scan world/enemies, not roofs.
 	for direction in [Vector2.RIGHT,Vector2.LEFT,Vector2.UP,Vector2(1,-1),Vector2(-1,-1),Vector2(1,1),Vector2(-1,1),Vector2.DOWN]:
 		player.position = Vector2(auto.position.x,roof_y)
-		var projectile = fire(scene,player,direction)
+		var projectile = await fire(scene,player,direction)
 		expect(projectile!=null and not overlaps_platform(projectile),"Muzzle is clear for %s" % direction)
 		if projectile == null:
 			await process_frame
@@ -116,7 +116,7 @@ func run() -> void:
 	# 9. Outside Punch range, ordinary projectile behavior returns.
 	punch_target.position.x = 2780.0
 	player.shot_cooldown = 0.0
-	var ranged = fire(scene,player,Vector2.RIGHT)
+	var ranged = await fire(scene,player,Vector2.RIGHT)
 	expect(not player.punch_active and ranged!=null and ranged.travel_direction==Vector2.RIGHT,"Normal projectile returns outside Punch range")
 	ranged.queue_free()
 	punch_target.queue_free()
@@ -143,6 +143,11 @@ func fire(scene: Node,player: Node,direction: Vector2):
 		existing_ids.append(child.get_instance_id())
 	player.throw_projectile("orange",direction)
 	var spawned := container.get_children().filter(func(child: Node): return child.get_instance_id() not in existing_ids)
+	for frame in 40: # el proyectil sale en el cuadro de la mano (BatchVisuals.throw_release_delay)
+		if not spawned.is_empty():
+			break
+		await process_frame
+		spawned = container.get_children().filter(func(child: Node): return child.get_instance_id() not in existing_ids)
 	if spawned.is_empty():
 		return null
 	var projectile = spawned[-1]

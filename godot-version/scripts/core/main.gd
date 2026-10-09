@@ -4,6 +4,7 @@ signal flow_state_changed(previous_state: int, current_state: int)
 const INPUT_SETUP = preload("res://scripts/core/input_setup.gd")
 const PROJECTILE_SCENE = preload("res://scenes/actors/projectile.tscn")
 const CFG = preload("res://scripts/prototype/feel_config.gd")
+const BATCH_VISUALS = preload("res://scripts/prototype/batch_visuals.gd")
 const PROJECTILE_FX = preload("res://scripts/prototype/projectile_fx.gd")
 const ARC_SHOT = preload("res://scripts/prototype/arc_shot.gd")
 const GAME_SESSION = preload("res://scripts/core/game_session.gd")
@@ -44,7 +45,7 @@ const DEBUG_BOSS_TELEPORT_X := 7300.0 # Río Seco, antes de trigger_x (7425) del
 
 func _ready() -> void:
 	INPUT_SETUP.configure()
-	player.shot_requested.connect(_spawn_projectile)
+	player.shot_requested.connect(_on_player_shot)
 	route.aimed_shot_requested.connect(_spawn_projectile)
 	player.died.connect(_on_player_died)
 	player.respawn_requested.connect(_on_player_respawn_requested)
@@ -380,6 +381,17 @@ func _close_gallery() -> void:
 		change_state(GAME_SESSION.DemoState.RESULT, true)
 	else:
 		change_state(state_before_gallery)
+
+## Con el lanzamiento VIEJO de Ciruja, el proyectil sale en el cuadro de la mano (CFG.CIRUJA_THROW), no al apretar.
+func _on_player_shot(origin: Vector2,lane: int,direction: Variant,kind: String,team: String) -> void:
+	var delay := BATCH_VISUALS.throw_release_delay(player,kind)
+	if delay > 0.0:
+		var offset: Vector2 = origin-player.global_position
+		await get_tree().create_timer(delay,false).timeout
+		if not is_instance_valid(player) or player.state == player.State.DEATH:
+			return
+		origin = BATCH_VISUALS.throw_hand_origin(player,kind,player.global_position+offset,direction)
+	_spawn_projectile(origin,lane,direction,kind,team)
 
 func _spawn_projectile(origin: Vector2,lane: int,direction: Variant,kind: String,team: String) -> void:
 	if current_state != GAME_SESSION.DemoState.GAMEPLAY:

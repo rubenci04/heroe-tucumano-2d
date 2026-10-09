@@ -9,6 +9,14 @@ const CHARACTER_PROPORTIONS := {
 }
 # Measured on the new 320x256 source frames: gun tip / throwing hand.
 const BATCH_MUZZLE_SOURCE := {"agente": Vector2(110, 101), "hipster": Vector2(146, 132)}
+# Lanzamientos de Ciruja: el paquete nuevo no trae "lanzar", se usan los cuadros VIEJOS (assets/ciruja_disparo_*).
+# release_frame: cuadro en el que el proyectil sale (brazo extendido); hand: mano en píxeles de ese cuadro, mirando a la derecha.
+# La animación arranca un tick de física después del pedido de disparo.
+const CIRUJA_THROW_START_LAG := 1.0 / 60.0 + 0.003
+const CIRUJA_THROW := {
+	"orange": {"release_frame": 6, "hand": Vector2(125, 98)},
+	"stone": {"release_frame": 5, "hand": Vector2(119, 107)},
+}
 
 # Altura objetivo del Hipster (jinete + monopatín) en px. Tocala acá; hitbox y punto de lanzamiento escalan solos.
 const HIPSTER_TARGET_HEIGHT := 92.0

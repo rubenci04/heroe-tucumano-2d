@@ -64,7 +64,7 @@ func _ready() -> void:
 	stains = STAIN_MANAGER.new()
 	add_child(stains)
 	stains.setup(world,player,feel.fx)
-	player.shot_requested.connect(_spawn_projectile.bind(player))
+	player.shot_requested.connect(_on_player_shot)
 	player.respawn_requested.connect(_on_player_respawn_requested)
 	_refill_player()
 	_add_contact_shadow(player, "ciruja")
@@ -229,6 +229,17 @@ func _spawn_car() -> void:
 	car.configure(&"auto1",0.95,0,-1,120.0)
 	car.position = Vector2(ARENA_RIGHT+120.0,GameConfig.GROUND_Y)
 	vehicles.add_child(car)
+
+
+func _on_player_shot(origin: Vector2,lane: int,direction: Variant,kind: String,team: String) -> void:
+	var delay := BATCH_VISUALS.throw_release_delay(player, kind)
+	if delay > 0.0:
+		var offset: Vector2 = origin - player.global_position
+		await get_tree().create_timer(delay, false).timeout
+		if not is_instance_valid(player) or player.state == player.State.DEATH:
+			return
+		origin = BATCH_VISUALS.throw_hand_origin(player, kind, player.global_position + offset, direction)
+	_spawn_projectile(origin, lane, direction, kind, team, player)
 
 
 func _spawn_projectile(origin: Vector2,_lane: int,direction: Variant,kind: String,team: String, emitter: Node2D = null) -> void:
