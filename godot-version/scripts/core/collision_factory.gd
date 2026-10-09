@@ -8,22 +8,33 @@ static func opaque_bounds(texture: Texture2D) -> Rect2:
 	if cached_bounds.has(key):
 		return cached_bounds[key]
 	var image: Image = texture.get_image()
-	var left: int = image.get_width()
-	var top: int = image.get_height()
-	var right: int = 0
-	var bottom: int = 0
-	for y in range(image.get_height()):
-		for x in range(image.get_width()):
-			if image.get_pixel(x, y).a > 0.1:
-				left = mini(left, x)
-				right = maxi(right, x + 1)
-				top = mini(top, y)
-				bottom = maxi(bottom, y + 1)
+	# get_used_rect() (nativo) da el recuadro con alpha > 0; se ajusta a alpha > 0.1 revisando solo los bordes.
+	# Antes se recorrían todos los píxeles en GDScript (~30 ms por cuadro nuevo = tirón al aparecer cada enemigo).
+	var used := image.get_used_rect()
+	var left: int = used.position.x
+	var top: int = used.position.y
+	var right: int = used.end.x
+	var bottom: int = used.end.y
+	while left < right and not _line_opaque(image, left, top, left, bottom - 1):
+		left += 1
+	while right > left and not _line_opaque(image, right - 1, top, right - 1, bottom - 1):
+		right -= 1
+	while top < bottom and not _line_opaque(image, left, top, right - 1, top):
+		top += 1
+	while bottom > top and not _line_opaque(image, left, bottom - 1, right - 1, bottom - 1):
+		bottom -= 1
 	var bounds := Rect2(0, 0, image.get_width(), image.get_height())
 	if right > left and bottom > top:
 		bounds = Rect2(left, top, right - left, bottom - top)
 	cached_bounds[key] = bounds
 	return bounds
+
+static func _line_opaque(image: Image, x0: int, y0: int, x1: int, y1: int) -> bool:
+	for y in range(y0, y1 + 1):
+		for x in range(x0, x1 + 1):
+			if image.get_pixel(x, y).a > 0.1:
+				return true
+	return false
 
 static func add_shape(body: CollisionObject2D, texture: Texture2D, image_scale: float, feet_anchor: bool = false, width_ratio: float = 0.7) -> CollisionShape2D:
 	var bounds: Rect2 = opaque_bounds(texture)

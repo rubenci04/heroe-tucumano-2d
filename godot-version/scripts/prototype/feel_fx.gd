@@ -7,6 +7,7 @@ const CFG = preload("res://scripts/prototype/feel_config.gd")
 var _particles: Array = []
 var _flashes: Array = []
 var _casings: Array = []
+var _drawn_empty := false
 
 
 func _ready() -> void:
@@ -14,6 +15,13 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	if _particles.is_empty() and _flashes.is_empty() and _casings.is_empty():
+		if _drawn_empty:
+			return
+		_drawn_empty = true
+		queue_redraw()
+		return
+	_drawn_empty = false
 	for p in _particles:
 		p.life -= delta
 		p.vel.y += p.gravity * delta

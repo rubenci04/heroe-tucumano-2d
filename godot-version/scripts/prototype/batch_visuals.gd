@@ -34,7 +34,28 @@ var _entries: Array[Dictionary] = []
 func _ready() -> void:
 	# Después de la animación procedural, igual que la arena prototipo.
 	process_priority = 100
+	prewarm()
 
+
+var _loaded: Dictionary = {}
+
+## SpriteFrames de un personaje, retenidos mientras viva este nodo: el caché de recursos es débil y, sin esto,
+## cada oleada volvía a decodificar sus ~40 texturas desde disco (tirón de 30-50 ms al aparecer el primer enemigo).
+func _frames_for(character: String) -> SpriteFrames:
+	if not _loaded.has(character):
+		_loaded[character] = load(BATCH_FRAMES + character + ".tres") as SpriteFrames
+	return _loaded[character]
+
+## Calcula una vez los recuadros opacos de todos los cuadros nuevos (lectura de textura + escaneo), para que no
+## aparezcan como tirones al salir cada enemigo por primera vez.
+func prewarm() -> void:
+	for character in ["ciruja", "agente", "hipster", "grandote", "palermitano"]:
+		var frames := _frames_for(character)
+		if frames == null:
+			continue
+		for animation in frames.get_animation_names():
+			for index in frames.get_frame_count(animation):
+				CollisionFactory.opaque_bounds(frames.get_frame_texture(animation, index))
 
 ## Cambia los cuadros de un actor. aliases: nombre de animación del actor -> carpeta del lote.
 ## El actor conserva sus colisiones; se escala con CHARACTER_SCALE (Ciruja no cambia de escala).
@@ -45,7 +66,7 @@ func attach(actor: Node2D, character: String, aliases: Dictionary, scale_actor: 
 	if not ResourceLoader.exists(path):
 		push_warning("Build character frames first: " + path)
 		return false
-	var incoming := load(path) as SpriteFrames
+	var incoming := _frames_for(character)
 	var sprite: AnimatedSprite2D = actor.visual
 	release(sprite) # idempotente: se puede volver a llamar tras re-aplicar la definición del jugador
 	if not sprite.has_meta("batch_legacy_ratio"):
@@ -121,7 +142,7 @@ func attach_npc(sprite: AnimatedSprite2D, character: String, start_animation: St
 	if not ResourceLoader.exists(path):
 		push_warning("Build character frames first: " + path)
 		return false
-	sprite.sprite_frames = load(path) as SpriteFrames
+	sprite.sprite_frames = _frames_for(character)
 	sprite.play(start_animation)
 	sprite.set_meta("batch_character", character)
 	sprite.set_meta("batch_ground_y", FEET_Y)
@@ -392,6 +413,9 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _update_debug(actor: Node2D, sprite: AnimatedSprite2D) -> void:
+	# Camino normal (F3 apagado y sin estados faltantes): costo cero por cuadro.
+	if not _debug_overlay and not _debug_labels.has(sprite) and sprite.get_meta("batch_missing", []).is_empty():
+		return
 	var texture := sprite.sprite_frames.get_frame_texture(sprite.animation, sprite.frame)
 	var origin := _current_origin(sprite)
 	var head := actor.global_position - Vector2(0.0, 28.0)
