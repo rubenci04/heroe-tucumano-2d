@@ -52,6 +52,7 @@ func run() -> void:
 	check(boss.boss_state==boss.BossState.TELEGRAPH and patterns.size()==1 and route.get_node("Projectiles").get_child_count()==0 and boss.get_live_summon_count()==0,"First action begins as a telegraph without projectile, summon or hitbox")
 
 	# 2/4/5. Triple coffee has a readable tell, three spaced shots and recovery.
+	route.encounter_director.camera_center_x = boss.position.x # el jefe dispara solo dentro del encuadre (route_38._relay_shot)
 	set_decide(boss)
 	boss.last_pattern = boss.Pattern.SUMMON_AGENTS
 	boss._coffee_cooldown_remaining = 0.0

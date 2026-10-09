@@ -262,10 +262,15 @@ func _relay_shot(emitter: Node2D,origin: Vector2,lane: int,direction: Variant,ki
 
 
 func _emitter_in_view(emitter: Node2D) -> bool:
+	# Encuadre del director (update_safety, el mismo que ve el resto del encuentro) o de la cámara activa;
+	# en juego son la misma cámara. Sin ninguna, no hay encuadre que respetar.
 	var camera := get_viewport().get_camera_2d()
-	if camera == null or not is_instance_valid(emitter):
+	if not is_instance_valid(emitter) or (camera == null and is_nan(encounter_director.camera_center_x)):
 		return true
-	return absf(emitter.global_position.x-camera.get_screen_center_position().x) <= get_viewport_rect().size.x*0.5+40.0
+	var margin: float = encounter_director.OFFSCREEN_MARGIN
+	if not is_nan(encounter_director.camera_center_x) and absf(emitter.global_position.x-encounter_director.camera_center_x) <= encounter_director.viewport_width*0.5+margin:
+		return true
+	return camera != null and absf(emitter.global_position.x-camera.get_screen_center_position().x) <= get_viewport_rect().size.x*0.5+margin
 
 
 func _add_contact_shadow(actor: Node2D,character: String) -> void:
