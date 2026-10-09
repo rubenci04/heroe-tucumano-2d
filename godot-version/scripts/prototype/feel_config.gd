@@ -227,6 +227,10 @@ const BOSS_INTRO_DURATION := 2.0       # s con cámara bloqueada, nombre y barra
 # Encuadre de la ruta (main.gd). Zoom elegido en docs/INVENTARIO_ASSETS.md / informe de encuadre.
 const VIEW_WIDTH := 800.0
 const VIEW_HEIGHT := 450.0
+# Vehículo de agentes destruido: temblor de cámara.
+const AGENT_VEHICLE_SHAKE_INTENSITY := 3.0
+const AGENT_VEHICLE_SHAKE_DURATION := 0.25
+
 const ROUTE_CAMERA_ZOOM := 1.4
 const ROUTE_ARENA_CAMERA_ZOOM := 1.0     # arenas de jefe: son más anchas que la vista con zoom
 const ROUTE_ZOOM_SPEED := 1.2            # zoom/s al entrar y salir de una arena

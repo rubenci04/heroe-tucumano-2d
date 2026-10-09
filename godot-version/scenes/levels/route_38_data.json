@@ -216,6 +216,40 @@
 			"rest": 1
 		},
 		{
+			"id": "route_vehicle_acheral",
+			"activation": {
+				"type": "player_x_at_least",
+				"value": 2250
+			},
+			"completion": "all_enemies_defeated",
+			"enemies": [
+				{
+					"enemy_id": "agent_vehicle_van",
+					"x_offset": 460,
+					"lane": 0,
+					"delay": 0
+				}
+			],
+			"rest": 1
+		},
+		{
+			"id": "route_vehicle_monteros",
+			"activation": {
+				"type": "player_x_at_least",
+				"value": 3150
+			},
+			"completion": "all_enemies_defeated",
+			"enemies": [
+				{
+					"enemy_id": "agent_vehicle_pickup",
+					"x_offset": 460,
+					"lane": 0,
+					"delay": 0
+				}
+			],
+			"rest": 1
+		},
+		{
 			"id": "route_wave_03",
 			"activation": {
 				"type": "player_x_at_least",
@@ -503,6 +537,23 @@
 			"rest": 0.8
 		},
 		{
+			"id": "route_vehicle_quinteros",
+			"activation": {
+				"type": "player_x_at_least",
+				"value": 5950
+			},
+			"completion": "all_enemies_defeated",
+			"enemies": [
+				{
+					"enemy_id": "agent_vehicle_truck",
+					"x_offset": 460,
+					"lane": 0,
+					"delay": 0
+				}
+			],
+			"rest": 1
+		},
+		{
 			"id": "route_micro_06",
 			"activation": {
 				"type": "player_x_at_least",
@@ -604,5 +655,77 @@
 		"location": "Río Seco",
 		"escape_destination": "Ingenio La Providencia",
 		"next_level": "Interior de la fábrica (pendiente)"
+	},
+	"vehicle_types": {
+		"_nota": "Vehículos de agentes (AgentVehicle). Solo arte existente. Tiempos en s, distancias en px, vida en golpes de naranja/cascote (1 daño).",
+		"agent_vehicle_van": {
+			"asset": "camioneta3",
+			"scale": 0.673,
+			"health": 5,
+			"agents": 2,
+			"speed": 260,
+			"stop_from_edge": 170,
+			"brake_distance": 220,
+			"warning_time": 1,
+			"unload_delay": 0.45,
+			"unload_interval": 0.55,
+			"leave_delay": 1.4,
+			"slot_wait_limit": 6,
+			"smoke_ratio": 0.5,
+			"flash": 0.1,
+			"hit_immunity": 0.08,
+			"coins_min": 1,
+			"coins_max": 2,
+			"points": 150,
+			"agent_points": 100,
+			"wreck_linger": 0.8,
+			"wreck_fade": 0.9
+		},
+		"agent_vehicle_pickup": {
+			"asset": "camioneta1",
+			"scale": 0.774,
+			"health": 6,
+			"agents": 2,
+			"speed": 270,
+			"stop_from_edge": 180,
+			"brake_distance": 230,
+			"warning_time": 1,
+			"unload_delay": 0.45,
+			"unload_interval": 0.55,
+			"leave_delay": 1.4,
+			"slot_wait_limit": 6,
+			"smoke_ratio": 0.5,
+			"flash": 0.1,
+			"hit_immunity": 0.08,
+			"coins_min": 1,
+			"coins_max": 3,
+			"points": 150,
+			"agent_points": 100,
+			"wreck_linger": 0.8,
+			"wreck_fade": 0.9
+		},
+		"agent_vehicle_truck": {
+			"asset": "camion_limones",
+			"scale": 0.749,
+			"health": 8,
+			"agents": 2,
+			"speed": 240,
+			"stop_from_edge": 190,
+			"brake_distance": 240,
+			"warning_time": 1,
+			"unload_delay": 0.5,
+			"unload_interval": 0.6,
+			"leave_delay": 1.6,
+			"slot_wait_limit": 6,
+			"smoke_ratio": 0.5,
+			"flash": 0.1,
+			"hit_immunity": 0.08,
+			"coins_min": 2,
+			"coins_max": 3,
+			"points": 250,
+			"agent_points": 100,
+			"wreck_linger": 0.8,
+			"wreck_fade": 0.9
+		}
 	}
 }

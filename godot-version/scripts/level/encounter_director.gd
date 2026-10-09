@@ -36,6 +36,13 @@ const EDGE_INSET := 30.0
 const VOID_Y := 900.0
 
 func actor_visual_rect(enemy: Node2D) -> Rect2:
+	var plain := enemy.get_node("Visual") as Sprite2D # vehículos de agentes: Sprite2D centrado
+	if plain != null:
+		var plain_bounds := CollisionFactory.opaque_bounds(plain.texture)
+		plain_bounds.position -= plain.texture.get_size()*0.5
+		if plain.flip_h:
+			plain_bounds.position.x = -plain_bounds.end.x
+		return plain.global_transform*plain_bounds
 	var visual: AnimatedSprite2D = enemy.get_node("Visual")
 	var texture := visual.sprite_frames.get_frame_texture(visual.animation,visual.frame)
 	var bounds := CollisionFactory.opaque_bounds(texture)
@@ -154,8 +161,8 @@ func _rescue_stray(encounter_id: StringName,enemy: Node2D,center_x: float,width:
 		_remove_enemy_reference(encounter_id,enemy.get_instance_id())
 		enemy.queue_free()
 		return true
-	if enemy.get("archetype") == "drone":
-		return false
+	if enemy.get("archetype") == "drone" or enemy.get("archetype") == "agent_vehicle":
+		return false # el vehículo se mueve por su propio ciclo (llega, frena, baja, se va)
 	var half := width*0.5
 	var dx := enemy.global_position.x-center_x
 	if absf(dx) <= half+OFFSCREEN_MARGIN:
@@ -213,6 +220,16 @@ func advance_spawns(delta: float,player_x: float = NAN) -> void:
 			_pending.erase(pending)
 			_spawn_entry(pending.id,pending.data,entry_origin,true)
 			_record_group(pending.group)
+
+## Cupo libre para enemigos que bajan de un vehículo (respeta el máximo simultáneo).
+func free_slots(x: float) -> int:
+	return maxi(0,population_limit(x)-_population())
+
+## Registra en un encuentro a un enemigo creado fuera del flujo de oleadas (agentes que bajan del vehículo).
+func adopt_enemy(encounter_id: StringName,enemy: Node) -> void:
+	if not _active_enemies.has(encounter_id):
+		return
+	_track_enemy(encounter_id,enemy)
 
 func population_limit(x: float) -> int:
 	return CFG.WAVE_MAX_ADVANCED if x >= CFG.WAVE_ADVANCED_X else CFG.WAVE_MAX_EARLY

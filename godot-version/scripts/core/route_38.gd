@@ -24,6 +24,7 @@ const GENERIC_PLATFORM = preload("res://scenes/actors/generic_platform.tscn")
 const ENCOUNTER_DIRECTOR = preload("res://scripts/level/encounter_director.gd")
 const TRAFFIC_DIRECTOR = preload("res://scripts/level/traffic_director.gd")
 const CHECKPOINT_SCENE = preload("res://scenes/level/checkpoint.tscn")
+const AGENT_VEHICLE = preload("res://scripts/actors/agent_vehicle.gd")
 const BATCH_VISUALS = preload("res://scripts/prototype/batch_visuals.gd")
 const BOSS_DIRECTOR = preload("res://scripts/prototype/boss_director.gd")
 const CFG = preload("res://scripts/prototype/feel_config.gd")
@@ -294,8 +295,41 @@ func spawn_encounter_actor(archetype: String,x: float,lane: int) -> Node2D:
 		return spawn_drone(x,lane,formation_index,5)
 	if archetype == "drone":
 		return spawn_drone(x,lane)
+	if data.get("vehicle_types",{}).has(archetype):
+		return spawn_agent_vehicle(archetype,x)
 	return spawn_enemy(archetype,x,lane)
 
+
+## Vehículo de agentes (tipo en data.vehicle_types): los agentes que baja se registran en su mismo encuentro.
+func spawn_agent_vehicle(type_id: String,x: float) -> Node2D:
+	if demo_closing:
+		return null
+	var vehicle = AGENT_VEHICLE.new()
+	vehicle.config = data.vehicle_types[type_id]
+	vehicle.target = player
+	vehicle.fx = feel.fx
+	vehicle.position = Vector2(x,GameConfig.GROUND_Y)
+	vehicle.dismount_handler = _dismount_agent.bind(vehicle)
+	vehicle.destroyed_handler = _on_agent_vehicle_destroyed
+	vehicle.defeated.connect(_on_enemy_defeated)
+	$Enemies.add_child(vehicle)
+	return vehicle
+
+func _dismount_agent(vehicle: Node2D) -> Node2D:
+	var encounter_id: StringName = vehicle.get_meta("encounter_id",&"")
+	if encounter_id.is_empty() or encounter_director.free_slots(player.position.x) <= 0:
+		return null
+	var agent := spawn_enemy("agente",vehicle.position.x-34.0-22.0*vehicle.agents_released,0)
+	if agent != null:
+		encounter_director.adopt_enemy(encounter_id,agent)
+	return agent
+
+func _on_agent_vehicle_destroyed(vehicle: Node2D) -> void:
+	screen_shake_requested.emit(CFG.AGENT_VEHICLE_SHAKE_INTENSITY,CFG.AGENT_VEHICLE_SHAKE_DURATION)
+	var count := randi_range(int(vehicle.config.get("coins_min",1)),int(vehicle.config.get("coins_max",3)))
+	for index in count:
+		var offset := (float(index)-float(count-1)*0.5)*34.0
+		add_pickup("empanada","empanada",vehicle.position.x+offset,0,0.14,-1.0,StringName("agentveh_%d_%d" % [vehicle.get_instance_id(),index]))
 
 func spawn_drone(x: float,lane: int,formation_index: int = 0,formation_size: int = 1) -> Node2D:
 	if demo_closing:
