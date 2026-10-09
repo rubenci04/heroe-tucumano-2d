@@ -180,3 +180,16 @@ Lo que el proyecto carga realmente: `res://` = `godot-version/`; personajes NUEV
 - `poses_normalizadas.png`: Idle/Run (NUEVO) junto a Jump, Hit, Throw Orange/Stone (VIEJO): misma altura y pies.
 - `f3_origenes.png`: F3 con NUEVO, VIEJO y FALTA (el estado "inexistente" se fuerza a propósito en el script de captura).
 - Se regeneran con `tests/capture_asset_merge.gd` (con ventana, `--fixed-fps 60`).
+
+## f) Limpieza aplicada (nada se borró)
+
+Movido a `_archivo/` (raíz del repo, misma ruta relativa; ver `_archivo/LEEME.md`):
+
+- `godot-version/characters/lote2_cuadros/ciruja/ciruja/` (idéntica a `ciruja/idle/`).
+- `godot-version/characters/lote2_cuadros/paquete_unico_cuadros.zip` (ignorado por git; queda solo en disco).
+
+No hizo falta actualizar ninguna referencia `res://` (ninguna apuntaba a esas rutas). Quedan **pendientes de decisión**: `ciruja_run{0-5} - copia.png` (contenido distinto, citados en `validation/asset_baseline_v2.json`), las copias `- copia` y el `assets/` HTML de la raíz (protegido por `AGENTS.md`), los ~45 `.png.import` huérfanos y el renombre `campeona empanadas.png` (WIP del usuario).
+
+## g) Verificación
+
+Suites con `tests/run_headless_suites.ps1` sobre una copia, antes y después: mismo resultado. Fallos que ya existían antes: `migration_smoke` (16 líneas de error, mismas) y `vertical_slice_profile` (exit 1, 2 errores: respawn local del Drone y de oleada en el ciclo 1). Se actualizaron dos tests que fijaban el contrato viejo: `cartoon_revision_checks` (el lanzamiento ya no es el idle) y `player_vehicle_shot_checks` (el proyectil sale en el cuadro de la mano, ~0,23 s después de pedirlo).
